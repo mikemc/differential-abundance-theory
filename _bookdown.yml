@@ -8,6 +8,8 @@ history: https://github.com/mikemc/bda-theory/commits/main/%s
 rmd_files: [
   "index.Rmd",
   # "introduction.Rmd",
-  # "models.Rmd",
+  "models.Rmd",
   "references.Rmd",
 ]
+
+before_chapter_script: "_common.R"
