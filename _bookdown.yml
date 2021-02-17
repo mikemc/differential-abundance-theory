@@ -1,0 +1,13 @@
+repo: https://github.com/mikemc/bda-theory
+delete_merged_file: true
+new_session: false
+view: https://github.com/mikemc/bda-theory/blob/master/%s
+edit: https://github.com/mikemc/bda-theory/edit/master/%s
+history: https://github.com/mikemc/bda-theory/commits/main/%s
+
+rmd_files: [
+  "index.Rmd",
+  # "introduction.Rmd",
+  # "models.Rmd",
+  "references.Rmd",
+]

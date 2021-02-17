@@ -1,0 +1,12 @@
+bookdown::gitbook:
+  number_sections: true
+  config:
+    sharing:
+      facebook: no
+      github: yes
+      twitter: no
+      linkedin: no
+      weibo: no
+      instapaper: no
+      vk: no
+      all: ['facebook', 'twitter', 'linkedin', 'weibo', 'instapaper']
