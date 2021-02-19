@@ -1,0 +1,119 @@
+# (APPENDIX) Appendix {-}
+
+# Proofs of regression results
+
+```{theorem, label = "regression-linearity", name = "Linearity of regression coefficients", echo = TRUE}
+Consider a scalar response variable with $J$ observations, which I represent by the vector $y$, that equals a sum of $K$ component response variables $y^{(k)}$ each scaled by a non-zero factor $c^{(k)}$, 
+\begin{align}
+  (\#eq:y-sum)
+  y = \sum_{k = 1}^K c^{(k)} y^{(k)}.
+\end{align}
+(We may need to assume that the $y^{(k)}$ are linearly independent.)
+Let $X$ be a $J$-by-$p$ matrix of covariates for the $J$ observations, with linearly independent columns.
+Let $\hat \gamma$ denote the least-squares estimate of the coefficient matrix $\gamma$ in the linear regression
+\begin{align}
+  y = X \gamma + \epsilon.
+\end{align}
+Similarly, let $\hat \gamma^{(k)}$ denote the least-squares estimates for the $K$ linear regressions
+\begin{align}
+  y^{(k)} = X \gamma^{(k)} + \epsilon^{(k)}.
+\end{align}
+The least-squares coefficient estimates for $y$ are given by the sum of those of the $y^{(k)}$,
+\begin{align}
+  \hat \gamma = \sum_{k=1}^K c^{(k)} \hat \gamma^{(k)}.
+\end{align}
+```
+
+```{proof, echo = TRUE}
+The Moore-Penrose pseudoinverse of $X$ is $X^+ = (X^T X)^{-1} X^T$.
+The least squares estimates are given by multiplying the matrix $X^+$ by the corresponding response vector ([Wikipedia](https://en.wikipedia.org/wiki/Ordinary_least_squares#Matrix/vector_formulation)), so that $\hat \gamma = X^+ y$ and $\hat \gamma^{(k)} = X^+ y^{(k)}$ (for $k = 1, \dots, K$).
+The result then follows from the stipulation \@ref(eq:y-sum) and the linearity of matrix multiplication,
+\begin{align}
+  \hat \gamma 
+  = X^+ y 
+  = X^+ \sum_{k = 1}^K c^{(k)} y^{(k)}
+  = \sum_{k = 1}^K c^{(k)} X^+ y^{(k)}
+  = \sum_{k = 1}^K c^{(k)} \hat \gamma^{(k)}.
+\end{align}
+```
+
+We can use \@ref(thm:regression-linearity) to describe how measurement error, such as that caused by experimental bias, affects least-squares estimates of regression coefficients.
+
+```{theorem, label = "regression-error", echo = TRUE, name = "Error in regression coefficients"}
+Suppose that $y$ is some response variable in nature, $z$ is our imperfect measurement of $y$, and $d = z - y$ the difference between the two, so that $z =  y + d$.
+Let each be a vector of length $J$ describing a set of $J$ observations.
+Let $X$ be a $J$-by-$p$ matrix of covariates for the $J$ observations, with linearly independent columns.
+Consider the linear regression equations for $y$, $d$, and $z$,
+\begin{align}
+  y &= X \gamma^{(y)} + \epsilon^{(y)} \\
+  z &= X \gamma^{(z)} + \epsilon^{(z)} \\
+  d &= X \gamma^{(d)} + \epsilon^{(d)}.
+\end{align}
+The relationship between the least-squares estimates mirrors that between the variables themselves,
+\begin{align}
+  \hat \gamma^{(z)} = \hat \gamma^{(y)} + \hat \gamma^{(d)}.
+\end{align}
+```
+
+```{proof, echo = TRUE}
+The result follows directly from $z =  y + d$ and \@ref(thm:regression-linearity).
+```
+
+```{corollary, label = "regression-error-simple", echo = TRUE}
+For the special case of simple linear regression,
+\begin{align}
+  y &= \gamma_0^{(y)} + \gamma_1^{(y)} x + \epsilon^{(y)} \\
+  z &= \gamma_0^{(z)} + \gamma_1^{(z)} x + \epsilon^{(z)} \\
+  d &= \gamma_0^{(d)} + \gamma_1^{(d)} x + \epsilon^{(d)},
+\end{align}
+the estimates for the intercept and slope coefficients satisfy
+\begin{align}
+  \hat \gamma_0^{(z)} &= \hat \gamma_0^{(y)} + \hat \gamma_0^{(d)} \\
+  \hat \gamma_1^{(z)} &= \hat \gamma_1^{(y)} + \hat \gamma_1^{(d)}.
+\end{align}
+```
+
+Next, aiming to show the forms for the different transformations of interest.
+It might be useful to cover the case where $d$ is split into a constant and a sample-specific part, since probably everything of interest will follow from that.
+
+What, if any general results should go in the main text?
+
+Also relate the expected values of $y$ and $z$ conditional on $X$?.
+
+To figure out what I need:
+
+1. extend the below result for log proportions to multiple regression
+2. work out the derivation in terms of \@ref(thm:regression-error)
+3. Write a corollary if it seems to be useful for doing all the cases (e.g. logit etc)
+
+### Linear regression of microbiome abundances
+
+First, consider log proportions.
+In this case, the intercept coefficient is biased upward by $\log B_i$ and the other coefficients are biased downward by the corresponding coefficient of $\log \bar B$, based on the error formulas for individual samples.
+
+TODO: write the general result (for multiple regression, assuming that an intercept term is present.
+
+```{proposition, echo = TRUE}
+Consider the linear equations
+\begin{align}
+  (\#eq:least-squares-formulation)
+  \log a_i    &= \alpha_0 + \alpha_1 x \\
+  \log \bar B &= \beta_0 + \beta_1 x   \\
+  \log m_i    &= \gamma_0 + \gamma_1 x,
+\end{align}
+and let $\hat \alpha_0$, etc. denote the least-squares estimates for these equations supposing perfect information (i.e., that the $a_i$ and $B_i$ are known).
+The coefficients for $\log m_i$ are related to those for $\log a_i$ and $\log \bar B$ through the equations
+\begin{align}
+  (\#eq:least-squares-estimates)
+  \hat \gamma_0 &= \hat \alpha_0 + \log B_i - \hat \beta_0 \\
+  \hat \gamma_1 &= \hat \alpha_1 - \hat \beta_1,
+\end{align}
+so that the fitted model for $\log m_i$ is given by the right-hand side of
+\@ref(eq:expected-observed-abundance-log-linear-regression) with the coefficients replaced by the fitted values.
+```
+
+```{proof, echo = TRUE}
+```
+
+
+

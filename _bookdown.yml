@@ -8,7 +8,9 @@ history: https://github.com/mikemc/bda-theory/commits/main/%s
 rmd_files: [
   "index.Rmd",
   # "introduction.Rmd",
+  # "overview.Rmd",
   "models.Rmd",
+  "proofs.Rmd",
   "references.Rmd",
 ]
 
