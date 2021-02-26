@@ -1,6 +1,6 @@
 # Measurement models {#models}
 
-Deterministic measurement error models that extends the @McLaren2019 model of metagenomics measurement to 1) describe absolute as well as relative abundance, 2) include spike-in taxa, and 3) include supplementary measurements of bulk and targeted (absolute) abundance.
+Deterministic measurement error models that extends the @mclaren2019cons model of metagenomics measurement to 1) describe absolute as well as relative abundance, 2) include spike-in taxa, and 3) include supplementary measurements of bulk and targeted (absolute) abundance.
 
 <!-- TODO: go through org notes and make sure all incorporated. -->
 
@@ -9,18 +9,21 @@ Deterministic measurement error models that extends the @McLaren2019 model of me
 (For now) Number of samples = J; Number of taxa = I.
 
 $A_{ij}$ is the actual absolute abundance of taxon $i$ in sample $j$, in the target units.
+For variables that hold matrixes or vectors, capital letters denote absolute abundances and lower case letters denote proportions.
+Thus $a_{ij}$ is the matrix of actual relative abundances in terms of cells as a proportion of the total amount of cells in the sample; $a_{ij} = A_{ij} / A_{Tj}$.
+Let $A_{Tj}$ (or $A_{\cdot j}$??) be the total abundance in sample $j$, $A_{Tj} = \sum_i A_{ij}$.
+For a subset of taxa $Q \subset \{1, \dots, I\}$, define $A_{Qj} \equiv \sum_{i \in Q} A_{ij}$ to be the total abundance of the taxa in $Q$.
+
 Unless specified otherwise, $A$ always refers to abundance in the original sample material, not in extracted DNA.
 I will assume the target units are concentration of cells per unit mass. However, other units (such as biomass per volume) may be relevant.
 
-Let $A_{Tj}$ (or $A_{\cdot j}$??) be the total abundance in sample $j$, $A_{Tj} = \sum_i A_{ij}$.
-
-For variables that hold matrixes or vectors, capital letters denote absolute abundances and lower case letters denote proportions.
-Thus $a_{ij}$ is the matrix of actual relative abundances in terms of cells as a proportion of the total amount of cells in the sample; $a_{ij} = A_{ij} / A_{Tj}$.
+To consider various addition information that can be used for absolute abundance inference, I let $B$ denote bulk abundance measurements (such as via flow cytometry or broad-range 16S qPCR), $S$ genome the known taxon abundances of a spike-in, and $T$ denote the abundances of a set of taxa made via targeted measurement.
+I let $R \subset \{1, \dots, I\}$ denote the set of _reference taxa_ whose abundance is known independently from the metagenomics measurement (up to experimental bias factors) because they were spiked at a known density, subjected to a targeted measurement, or have been determined through some other means to have a constant or known abundance across samples.
 
 Bias vectors $B^{(P)}$ are vectors of length $I$ indicating the taxon-specific bias associated with a measurement protocol $P$.
 I generally assume these to be sample-independent.
-An overbar denotes the average value over taxa weighted by actual abundance; 
-i.e., $\bar B_j = I^{-1} \sum_i B_i a_{ij}$.
+An overbar denotes the average value over taxa weighted by actual abundance; i.e., $\bar B_j = I^{-1} \sum_i B_i a_{ij}$.
+An overbar and a subcript set of taxa indicates the mean bias within that subset: $\bar B_{Qj} = \sum_{i\in Q} B_i a_{ij} / \sum_{i\in Q} a_{ij}$.
 
 <!-- Table  -->
 
@@ -29,28 +32,29 @@ Measurement type        Units                              Abundance matrix     
 **A**ctual abundance    [cells]                            $A$, $a$ ($I\times J$)           -
 **M**etagenomics        counts                             $M$, $m$ ($I\times J$)           $B^{(M)}$
 Bul**k** abundance      [cells], [DNA], or [gene copies]   $K$ ($I\times 1$ column vector)  $B^{(K)}$
-**T**argeted abundance  [cells], [DNA], or [gene copies]   $T$ ($|I_T| \times J$)           $B^{(T)}$
-**S**pike-in abundance  [cells], [DNA], or [gene copies]   $S$ ($|I_S| \times J$)           $B^{(S)}$
+**T**argeted abundance  [cells], [DNA], or [gene copies]   $T$ ($I \times J$)               $B^{(T)}$
+**S**pike-in abundance  [cells], [DNA], or [gene copies]   $S$ ($I \times J$)               $B^{(S)}$
 
-Let $I_T$ and $I_S$ be the sets of taxa with targeted abundance measurements or known spike-in abundances, respectively.
-Question: Will it be more convenient for $S$ and $T$ to have the standard shape $I\times J$?
+Note: $S_{ij}$ and $T_{ij}$ are only defined for the reference taxa $i \in R$.
 
 ## Metagenomics measurement
 
-$M$ is a X BY X matrix representing the (marker-gene or) metagenomics measurement; $M_{ij}$ is the sequencing count associated with taxon $i$ in sample $j$, such that $M_{ij} = 10$ indicates that 10 fragments of DNA were sequenced and assigned to taxon $i$ and sample $j$.
+$M$ is an $I\times J$ matrix representing the (marker-gene or) metagenomics measurement; $M_{ij}$ is the sequencing count associated with taxon $i$ in sample $j$, such that $M_{ij} = 10$ indicates that 10 fragments of DNA were sequenced and assigned to taxon $i$ and sample $j$.
 In the case of paired-end sequencing, a single fragment of DNA yields two reads, which may or may not be counted jointly or independently by different algorithms; here I assume that read-pairs are assigned jointly, and will use "read" and "fragment" interchangeably.
 For simplicity, I ignore the possibility for index switching or other sources of cross-contamination and assume that reads assigned to sample $j$ truly arose from sample $j$.
 
-Following the notation defined above, I let $M_{Tj} = \sum_i M_{ij}$ is the total count for sample $j$; I will sometimes refer to this number as the *sequencing depth* or *read depth* of the sample, though in reality the total count will be less than the sample's sequencing depth since often a significant fraction of reads are lost by filtering steps prior to producing the final count matrix.
+Following the notation defined above, I let $M_{Tj} = \sum_i M_{ij}$ be the total count for sample $j$; I will sometimes refer to this number as the *sequencing depth* or *read depth* of the sample, though in reality the total count will be less than the sample's sequencing depth since often a significant fraction of reads are lost by filtering steps prior to producing the final count matrix.
 I use $m_{ij} = M_{ij} / M_{Tj}$ to denote the proportion of reads assigned to taxon $i$ in sample $j$.
 
-I assume that the composition (relative abundances) is given by the deterministic error model presented in @McLaren2019.
+I assume that the composition (relative abundances) is given by the deterministic error model presented in @mclaren2019cons.
 In this model, the bias vector $B^{(M)}$ represents the *relative* efficiencies with which various taxa are measured, and so has the same effect on measurement if we rescale it $B \to cB$ for any $c > 0$.
 To remove this degree of freedom, I will suppose that $B^{(M)}_{1} = 1$, so that $B^{(M)}_i$ is the efficiency of taxon $i$ relative to the first taxon.
 We may take the definition of the MWC model as being that, conditional on the total count $M_{Tj}$, the observed read count of taxon $i$ is proportional to its actual abundance times its efficiency times a taxon-independent factor $C_j$ chosen to make sample $j$'s counts sum to $M_{Tj}$,
 \begin{align}
   (\#eq:M)
-  M_{ij} = A_{ij} B^{(M)}_{i} C_j, && C_j = \frac{M_{Tj}}{\sum_i A_{ij} B^{(M)}_{i}}.
+  M_{ij} = A_{ij} B^{(M)}_{i} C_j, && 
+  C_j = \frac{M_{Tj}}{\sum_i A_{ij} B^{(M)}_{i}}
+      = \frac{M_{Tj}}{A_{Tj} \bar B^{(M)}_j}.
 \end{align}
 In this model, the ratios among taxa are distorted by constant factors; for two taxa $i$ and $i'$,
 \begin{align}
@@ -67,23 +71,6 @@ The observed proportion of a taxon equals its actual proportion multiplied by it
   m_{ij} = a_{ij} \cdot \frac{B_i}{\bar B^{(M)}_j}.
 \end{align}
 
-## Spike-ins
-
-Let the set $I_S$ denote the indexes of the spiked taxa, which I assume are also measured by the metagenomics experiment and so also correspond to rows in $M$.
-The $|I_S|\times J$ matrix $S$ describes the nominal abundances with which spike-in taxa were added to each sample.
-Spike-in experiments are often designed so that a taxon $i$ is added in the same concentration to all samples, which we can represent by supposing the columns of $S$ to be identical.
-
-The bias $B^{(S)}$ should be interpreted as error in the quantification of how much spike-in was added, such that
-\begin{align}
-  S_{ij} = A_{ij} B^{(S)}_i.
-\end{align}
-I assume that this error is constant across samples.
-The motivation for this error model is as follows: Suppose that we misestimated the proportion of spike-in taxon $s\in I_S$ in our original spike-in stock, by a factor $B^{(S)}_s$; now its true abundance will be off by that factor in any spike-in derived from the starting stock.
-Unlike the metagenomics efficiencies, these error factors are absolute numbers.
-
-Taxa can be added as cells (pre-extraction) or as DNA (post-extraction).
-In an application where DNA spike-ins are used to make inferences about changes in absolute cell abundances, we can include the difference between the nominal abundances $S$ (the spiked DNA concentration) and the actual abundances $A$ that are expected due to factors such as DNA extraction and copy-number variation in the bias term $B^{(S)}$, so long as DNA extraction is linear (see section on saturation effects below).
-
 ## Bulk absolute abundance measurement
 
 Consider estimating the total absolute abundance $A_{T}$ via an aggregate or broad-range measurement, such as cell counting, flow cytometry, universal 16S qPCR, or total DNA concentration (e.g. Qubit).
@@ -95,9 +82,10 @@ For example, cells of one taxon may be more reliably counted than another; and f
 Let $B^{(K)}_i$ denote the absolute efficiency with which a cell of taxon $i$ contributes to the measurement in sample $s$, which I assume is sample-independent.
 We can write the estimate as
 \begin{align}
+  (\#eq:K)
   K_j = \sum_i A_{ij} B^{(K)}_i = A_{Tj} \bar B^{(K)}_j,
 \end{align}
-where $bar B^{(K)}_j$ is the mean bulk-measurement efficiency in the sample.
+where $\bar B^{(K)}_j$ is the mean bulk-measurement efficiency in the sample.
 
 ## Targeted absolute abundance measurement
 
@@ -105,16 +93,45 @@ Targeted measurement of the absolute abundance of specific taxa can be made via 
 These measurements too may be subject to bias; 
 I suppose that the measurement of taxon $i$ is given by
 \begin{align}
+  (\#eq:T)
   T_{ij} = A_{ij} B^{(T)}_i,
 \end{align}
 where $B^{(T)}_i$ is the sample-independent, taxon-specific efficiency of the targeted measurement for taxon $i$.
+
+In discussing the case of multiple reference taxa, it will be useful to refer to the total targeted and metagenomics abundance and the average targeted and metagenomics efficiencies of the reference taxa.
+I do so with the notation $A_{Rj}$ and $M_{Rj}$ (total abundances) and $\bar B^{(T)}_{Rj}$ and $\bar B^{(M)}_{Rj}$ (mean efficiencies) as defined above.
+Note that
+\begin{align}
+  (\#eq:T-Rj)
+  T_{Rj} 
+    &= A_{Rj} \cdot \sum_{r \in R} \frac{A_{rj}}{A_{Rj}} \bar B^{(T)}_{Rj}
+  \\&= A_{Rj} \bar B^{(T)}_{Rj}.
+\end{align}
+
+## Spike-ins
+
+The matrix $S$ describes the nominal abundances with which spike-in taxa were added to each sample.
+Spike-in experiments are often designed so that a taxon $i$ is added in the same concentration to all samples, which we can represent by supposing the defined columns of $S$ to be identical.
+The bias $B^{(S)}$ should be interpreted as error in the quantification of how much spike-in was added, such that
+\begin{align}
+  (\#eq:S)
+  S_{ij} = A_{ij} B^{(S)}_i.
+\end{align}
+I assume that this error is constant across samples.
+The motivation for this error model is as follows: Suppose that we misestimated the proportion of spike-in taxon $s\in I_S$ in our original spike-in stock, by a factor $B^{(S)}_s$; now its true abundance will be off by that factor in any spike-in derived from the starting stock.
+Unlike the metagenomics efficiencies, these error factors are absolute numbers.
+
+Taxa can be added as cells (pre-extraction) or as DNA (post-extraction).
+In an application where DNA spike-ins are used to make inferences about changes in absolute cell abundances, we can include the difference between the nominal abundances $S$ (the spiked DNA concentration) and the actual abundances $A$ that are expected due to factors such as DNA extraction and copy-number variation in the bias term $B^{(S)}$, so long as DNA extraction is linear (see section on saturation effects below).
+
+(If we want to allow for different targeted and spike-in taxa, we can use $R_S$ and $R_T$.)
 
 ## Complications 
 
 These models are the simplest for these types of experiments that have taxon-specific bias.
 They therefore are idealizations that may be violated by real experiments in ways that affect our conclusions.
 Here I list some relevant complications that we will return to in our analysis.
-For more considerations, see the Discussion of @McLaren2019.
+For more considerations, see the Discussion of @mclaren2019cons.
 
 ### Abundances units and protocol stages
 
@@ -124,6 +141,9 @@ qPCR measurements directly estimating the concentration of a marker gene in the 
 Efficiency factors can translate the units from DNA to cell concentration *and* account for the bias imposed by extraction and marker-gene CNV (copy-number variation).
 Sometimes we may want to refer to the DNA concentrations in the sample after extraction, and in that case I will use the variable $D$, and (perhaps) use $B^{(T/D)}$ to refer to the bias of the targeted measurement vs the DNA concentrations it was applied to.
 This can be useful when we are considering qPCR and also DNA spike-ins.
+
+Note that the "actual" units could be chosen by the researcher to be something other than cell density; e.g. biomass, or even 16S density.
+But for concreteness I'll take to be cell density, as this seems to be what is most typically meant.
 
 ### Saturation in DNA extraction yields
 
@@ -142,7 +162,7 @@ Achieving this situation in practice requires careful attention to things like p
 
 One important special case where this assumption breaks down is when measurements aggregate one or more of the *atomic taxa* (corresponding to the rows in $A$), possibly in different ways by different measurement types.
 This raises at least two sorts of complications.
-First, constant multplicative bias at the level of atomic taxa does not translate into constant bias at the level of aggregate taxa [@McLaren2019].
+First, constant multplicative bias at the level of atomic taxa does not translate into constant bias at the level of aggregate taxa [@mclaren2019cons].
 Second, measurements may target different aggregates.
 For example, if our metagenomics protocol provides ASV or species-level estimates but our PCR-based targeted measurements may quantify a genus or family.
 Often through sufficiently careful bioinformatics we can at least nest the metagenomics taxa within the targeted taxon, but complications remain if efficiency varies within the aggregates.

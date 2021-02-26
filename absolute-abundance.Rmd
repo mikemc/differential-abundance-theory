@@ -1,0 +1,165 @@
+# Differential absolute abundance {#absolute}
+
+This section considers various ways to estimate absolute abundances of individual taxa for the purposes of estimating log fold changes (LFCs) in absolute abundance, or more generically of performing linear regression on log absolute abundance.
+
+## Using bulk abundance measurements
+
+The absolute abundance of taxon $i$ is estimated by multiplying its metagenomics proportion by the bulk abundance measurement,
+\begin{align}
+  (\#eq:A-hat-bulk)
+  \hat A_{ij} &= m_{ij} K_j.
+\end{align}
+The error in this estimate due to the experimental bias in $M$ and $K$ is given by substituting equations \@ref(eq:m) and \@ref(eq:K) into \@ref(eq:A-hat-bulk), giving
+\begin{align}
+  (\#eq:error-bulk)
+  \hat A_{ij} &= \frac{a_{ij} B^{(M)}_i}{\bar B^{(M)}_j} \cdot A_{Tj} \bar B^{(K)}_j
+  \\&= A_{ij} \cdot \frac{B^{(M)}_i \bar B^{(K)}_j}{\bar B^{(M)}_j}.
+\end{align}
+The fold error in the estimated abundance of a particular taxon in a particular sample thus equals the metagenomics efficiency of that taxon times the ratio of the sample mean efficiencies of the bulk measurement to the metagenomics measurement.
+Next I consider the error in the estimated fold change in $A_i$ between two samples $j$ and $j'$.
+As in the case of log proportion estimates, the taxon-specific, sample-independent error term ($B^{(M)}_i$) cancels, but the taxon-independent, sample-specific error term (${\bar B^{(K)}_j}/{\bar B^{(M)}_j}$) does not, giving
+\begin{align}
+  (\#eq:fc-bulk)
+  \frac{\hat A_{ij'}}{\hat A_{ij}}
+  &= \frac{A_{ij'}}{A_{ij}} 
+  \cdot \frac{\bar B^{(M)}_j \bar B^{(K)}_{j'}}{\bar B^{(M)}_{j'} \bar B^{(K)}_j}.
+  \\&= \frac{A_{ij'}}{A_{ij}} 
+  \cdot \frac{\bar B^{(K)}_{j'} / \bar B^{(M)}_{j'}}{\bar B^{(K)}_j / \bar B^{(M)}_j }.
+\end{align}
+In words, the fold error in the estimated fold change in the absolute abundance of any taxon equals the fold change in the ratio of the mean efficiency of the bulk abundance measurement to that of the metagenomics measurement.
+
+TODO: Add regression result.
+
+### Shared bias components
+
+Motivation: Consider an experiment in which the community has been profiled by 16S sequencing and bulk abundance has been estimated by 16S qPCR.
+The taxon-specific bias associated with each of these measurements may be highly similar; both are measuring 16S copies in the same aliquot of already-extracted DNA, which has already been affected by DNA extraction bias and 16S copy-number variation.
+If the same primers are used then PCR bias might also be shared.
+How does having a large amount of bias being shared between the bulk and sequencing measurement affect the error in abundance estimates in individual samples and the fold changes between samples?
+
+In this case, the ratio of mean efficiencies, $\bar B^{(K)}_j / \bar B^{(M)}_j$, will vary much less across samples than either mean efficiency itself, such that the error term in  \@ref(eq:fc-bulk) will be small.
+Therefore the estimated fold changes may be accurate despite potentially large variation in the metagenomics sample mean efficiency across samples.
+Note that the estimated absolute abundance in the individual sample, \@ref(eq:error-bulk), remains inaccurate since the unknown taxon-specific efficiency remains.
+
+TODO: Add derivation, where we formally define $B^{(M)}$ and $B^{(K)}$ in terms of shared and non-shared components, and show that the variation in the ratio of mean efficiencies reduces to that of the non-shared components.
+
+## Using reference taxa
+
+TODO: Consider rewriting to be in terms of the ratio of counts * the reference abundance, to emphasize that this is a ratio-based method.
+
+### Taxa with targeted abundance measurements
+
+First consider the case of just a single reference taxon, $r$, for which we have  targeted measurements.
+We can estimate the absolute abundances of all taxa by scaling the read counts by the ratio of the abundance measurement to read count for the reference taxon,
+\begin{align}
+  (\#eq:A-hat-targeted)
+  \hat A_{ij} &= M_{ij} \cdot \frac{T_{rj}}{M_{rj}}.
+\end{align}
+Accounting for systematic error in both the metagenomcs measurement \@ref(eq:M) and the targeted measurement \@ref(eq:T) gives
+\begin{align}
+  (\#eq:error-targeted)
+  \hat A_{ij} &= A_{ij} \cdot \frac{B^{(M)}_i B^{(T)}_r}{B^{(M)}_r}.
+\end{align}
+Since the error in (\#eq:error-targeted) is sample-independent, it cancels out when we use this equation to compute the fold change between two samples,
+\begin{align}
+  (\#eq:fc-targeted)
+  \frac{\hat A_{ij'}}{\hat A_{ij}} &=\frac{\hat A_{ij'}}{\hat A_{ij}}.
+\end{align}
+Thus our model predicts that normalizing read counts to a reference taxon, while providing systematically-distorted abundance estimates, provides accurate fold-change estimates.
+
+### Cellular spike-ins
+
+Spike-ins are a way to create a reference taxon whose abundance is known by design and so doesn't need to be measured.
+Typically the spike-in is added in a fixed concentration to all samples; however, this is unnecessary, so long as we know the amount it was added.
+In either case we can use \@ref(eq:A-hat-targeted) to estimate the abundances of all taxa from the spike-in taxa, substituting the spike-in abundance $S_{ir}$ for $T_{ir}$,
+Our model predicts that normalizing read counts to a spike-in taxon gives systematically-distorted abundance estimates but accurate fold-change estimates for the same reason as in the targeted case.
+
+### DNA spike-ins
+
+
+
+
+### Taxa assumed to have a constant abundance
+
+By this approach, we identify one or more taxa that we assume to have a constant absolute abundance across samples.
+Inference proceeds as in the targeted and spike-in case, using \@ref(eq:A-hat-targeted) but with the reference abundance $T_r$ set to an arbitrary constant as we may not know the true abundance.
+In this case, the effect of bias cancels in fold-change calculations for the same reasons as the targeted and spike-in cases.
+Note: The reference taxon could be the host.
+
+### Multiple reference taxa
+
+Under the deterministic model we consider here, having multiple reference taxa in the same sample is completely redundant - we learn no new information.
+In reality, having information from multiple taxa from a single sample should allow us to make more precise estimates, provided that we use them in a way so that the effects of bias do not offset any reductions in noise.
+How might we leverage measurements of multiple reference taxa, $r \in R$, in a way that remains robust to bias?
+
+First consider the situation where we can assume that all reference taxa are in each sample, as would typically be the case for a spike-in.
+One possibility is to sum the metagenomic and targeted abundances from the different taxa,
+\begin{align}
+  (\#eq:A-hat-targeted-sum)
+  \hat A_{ij} &= M_{ij} \cdot \frac{\sum_{r \in R} T_{rj}}{\sum_{r \in R} M_{rj}}.
+\end{align}
+To see this, let $A_{Rj} = \sum_{r \in R} A_{rj}$ be the summed actual abundances of the reference taxa. 
+Similarly define $M_{Rj} = \sum_{r \in R} M_{rj}$ and $T_{Rj} = \sum_{r \in R} T_{rj}$ be the summed read counts and targeted measurements. 
+Now
+\begin{align}
+  \hat A_{ij} &= M_{ij} \cdot \frac{T_{Rj}}{M_{Rj}}.
+\end{align}
+Also let $\bar B^{(M)}_{Rj} = \sum_{r \in R} B^{(M)}_{rj} A_{rj} / A_{Rj}$ be the mean metagenomics efficiency among the reference taxa and similarly define $\bar B^{(T)}_{Rj}$ as the mean targeted efficiency.
+A little algebra shows that
+\begin{align}
+  (\#eq:T-Rj)
+  T_{Rj} 
+    &= A_{Rj} \cdot \sum_{r \in R} \frac{A_{rj}}{A_{Rj}} \bar B^{(T)}_{Rj}
+  \\&= A_{Rj} \bar B^{(T)}_{Rj}
+\end{align}
+while
+\begin{align}
+  (\#eq:M-Rj)
+  M_{Rj} &= A_{Rj} \bar B^{(M)}_{Rj} C_j.
+\end{align}
+And since $M_{ij} = A_{ij} B^{(M)}_{i} C_j$ \@ref(eq:M) we can write the estimated \@ref(eq:A-hat-targeted-sum) abundance of taxon $i$ as
+\begin{align}
+  (\#eq:error-targeted-sum)
+  \hat A_{ij} &= A_{ij} \cdot \frac{B^{(M)}_i \bar B^{(T)}_{Rj}}{\bar B^{(M)}_{Rj}}.
+\end{align}
+The error now depends on relative abundances among the reference taxa through their mean bias values.
+Therefore, fold changes estimated using this approach are not necessarily robust to bias if the relative abundances among the reference taxa vary.
+Spike-in experiments are typically designed so that the reference taxa typically have the same relative abundances with respect to each other in all samples, in which case this method would remain robust to bias.
+
+Another approach is to multiply by the geometric mean abundances of the taxa,
+\begin{align}
+  (\#eq:A-hat-targeted-prod)
+  \hat A_{ij} &= M_{ij} \cdot \left[\frac{\prod_{r \in R} T_{rj}}{\prod_{r \in R} M_{rj}}\right]^{1/|R|}.
+\end{align}
+The error in this case is
+\begin{align}
+  (\#eq:error-targeted-prod)
+  \hat A_{ij} 
+  &= A_{ij} B^{(M)}_r C_j \cdot 
+    \left[\frac{\prod_{r \in R} A_{rj} B^{(T)}_r} {\prod_{r \in R} A_{rj} B^{(M)}_r C_j} \right]^{1/|R|} \\
+  &= A_{ij} \cdot 
+    \left[\frac{\prod_{r \in R} B^{(T)}_r} {\prod_{r \in R} B^{(M)}_r} \right]^{1/|R|}.
+\end{align}
+The multiplicative error is now constant and will cancel in fold-change calculations even if the reference taxa vary in their relative abundances.
+
+Thus the geometric-mean method appears to be robust to bias, but as written it requires that all reference taxa are present in all samples, whereas the summation approach is sensitive to bias but only requires at least one reference taxon to be present in the sample.
+
+Now consider the case where different reference taxa are present (above our detection limit) in each sample, as might be the case for naturally occuring reference taxa.
+We can modify the geometric-mean approach to work (so long as at least one reference is present in each sample) as follows.
+From the samples where multiple references are present, we are able to measure the differnetial bias $B^{(M/T)}_r / B^{(M/T)}_{r'}$ among the references $r, r'$.
+From measurement of reference $r'$, we know the value of $T_{r'j} / M_{r'j}$, which combined with the differential bias tells us what the ratio $T_{rj} / M_{rj}$ should equal, namely
+\begin{align}
+  \frac{T_{rj}}{M_{rj}} = \frac{T_{r'j}}{M_{r'j}} \cdot \frac{B^{(M/T)}_r}{B^{(M/T)}_{r'}}.
+\end{align}
+Therefore, in samples where $r$ is missing but $r'$ is present, we can replace 
+$\frac{T_{rj}}{M_{rj}}$ in the product with its predicted value.
+(More generally, we can use the geometric mean of the values predicted by each of the reference taxa that are present).
+
+This imputation procedure is a simple plug-in approach to show that it is possible to use a multiplicative approach to using multiple references even when the references vary in their presence among samples. 
+Real inference should ideally be done with a fully generative statistical model that includes bias as well as noise-generating processes and can be used for maximum likelihood or Bayesian inference. In such models, the imputation might be implicitly handled as part of the likelihood, and more generally the values $\frac{T_{rj}}{M_{rj}}$ for various $r$ can be naturally and automatically weighted (in terms of their influence on $\hat A_{ij}$) according to their predicted precision by the model fitting procedure.
+
+<!-- TODO: Move the definitions and relevant intermediate results to models.Rmd and  trim the above derivations, including for the aggregates and the differential bias among multiple reference taxa. -->
+
+## Using an equivolumetric protocol
+
+## Computational methods

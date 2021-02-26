@@ -2,6 +2,23 @@
 
 # Proofs of regression results
 
+## General regression
+
+Regression analysis can often be framed as seeking the regression function $r(x)$ that describes how the expected value of some response variable $Y$ varies with the a vector of covariates $X$ (@wasserman2004allo),
+\begin{align}
+  r(x) = E [Y \mid X = x].
+\end{align}
+For example, the response might be log absolute abundance of a particular taxon.
+In our case, however, we don't know $Y$, but rather a measure that is subject to random and systematic error, which I call $Z$.
+Let $D = Z - Y$ be the difference between the true response $Y$ and its measurement $Z$, so that $Z = Y + D$.
+It follows that
+\begin{align}
+  (\#eq:regression-error)
+  E [Z \mid X] = E [Y \mid X] + E [D \mid X].
+\end{align}
+
+## Linear least-squares regression
+
 ```{theorem, label = "regression-linearity", name = "Linearity of regression coefficients", echo = TRUE}
 Consider a scalar response variable with $J$ observations, which I represent by the vector $y$, that equals a sum of $K$ component response variables $y^{(k)}$ each scaled by a non-zero factor $c^{(k)}$, 
 \begin{align}
@@ -40,7 +57,7 @@ The result then follows from the stipulation \@ref(eq:y-sum) and the linearity o
 We can use \@ref(thm:regression-linearity) to describe how measurement error, such as that caused by experimental bias, affects least-squares estimates of regression coefficients.
 
 ```{theorem, label = "regression-error", echo = TRUE, name = "Error in regression coefficients"}
-Suppose that $y$ is some response variable in nature, $z$ is our imperfect measurement of $y$, and $d = z - y$ the difference between the two, so that $z =  y + d$.
+Suppose that $y$ is the response variable we wish to understand, $z$ is our imperfect measurement of $y$, and $d = z - y$ the difference between the two, so that $z = y + d$.
 Let each be a vector of length $J$ describing a set of $J$ observations.
 Let $X$ be a $J$-by-$p$ matrix of covariates for the $J$ observations, with linearly independent columns.
 Consider the linear regression equations for $y$, $d$, and $z$,
@@ -51,6 +68,7 @@ Consider the linear regression equations for $y$, $d$, and $z$,
 \end{align}
 The relationship between the least-squares estimates mirrors that between the variables themselves,
 \begin{align}
+  (\#eq:regression-coefficient-error)
   \hat \gamma^{(z)} = \hat \gamma^{(y)} + \hat \gamma^{(d)}.
 \end{align}
 ```

@@ -10,6 +10,7 @@ rmd_files: [
   # "introduction.Rmd",
   # "overview.Rmd",
   "models.Rmd",
+  "absolute-abundance.Rmd",
   "proofs.Rmd",
   "references.Rmd",
 ]
