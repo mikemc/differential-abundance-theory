@@ -1,0 +1,612 @@
+---
+title: "Illustration of a spurious differential abundance result due to bias"
+description: |
+  Create illustration of a spurious differential abundance using the Leopold and Busby (2020) dataset.
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - bias sensitivity
+  - R
+  - ref:leopold2020host
+  - differential abundance
+date: 2021-04-26
+draft: false
+output:
+  distill::distill_article:
+    self_contained: false
+    dev: svg
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  cache = TRUE,
+  autodep = TRUE,
+  cache.comments = FALSE
+)
+```
+
+# Setup
+
+```{r libraries}
+# Tools for microbiome data
+library(speedyseq)
+# Tools for general purpose data manipulation and plotting
+library(tidyverse)
+# ggplot helpers
+library(ggbeeswarm)
+library(cowplot)
+library(patchwork)
+theme_set(theme_cowplot())
+# stats helpers
+library(broom)
+
+library(metacal); packageVersion("metacal")
+```
+
+```{r load-data, include = FALSE}
+## From the metacal 2.0 tutorial
+# Download data from https://zenodo.org/record/3872145
+data_path <- here::here("_data", "leopold2020host")
+# To use a temporary directory:
+# data_path <- file.path(tempdir(), "leopold2020")
+if (!dir.exists(data_path)) {
+  dir.create(data_path, recursive = TRUE)
+  download.file(
+    "https://zenodo.org/record/3872145/files/dleopold/Populus_priorityEffects-v1.2.zip",
+    file.path(data_path, "Populus_priorityEffects-v1.2.zip")
+  )
+  unzip(
+    file.path(data_path, "Populus_priorityEffects-v1.2.zip"), 
+    exdir = data_path
+  )
+}
+#> The microbiome data is stored in a phyloseq object,
+ps <- file.path(data_path, 
+  "dleopold-Populus_priorityEffects-8594f7c/output/compiled/phy.rds") %>%
+  readRDS
+
+sample_data(ps) <- sample_data(ps) %>%
+  transform(
+    Timepoint = factor(Timepoint)
+  )
+
+mock_actual <- file.path(data_path, 
+  "dleopold-Populus_priorityEffects-8594f7c/data/MockCommunities.csv") %>%
+  read.csv(row.names = 1) %>%
+  select(-Sym4) %>%
+  as("matrix") %>%
+  otu_table(taxa_are_rows = FALSE) %>%
+  transform_sample_counts(function(x) close_elts(1 / x))
+mock_taxa <- taxa_names(mock_actual)
+sam <- sample_data(ps) %>% as("data.frame") %>% as_tibble(rownames = "Sample")
+tax <- tax_table(ps) %>% as("matrix") %>% as_tibble(rownames = "Taxon")
+ps.mock <- ps %>% 
+  subset_samples(Samp_type == "Mock") %>%
+  prune_taxa(mock_taxa, .)
+```
+
+```{r estimate-bias}
+ps.mock.pseudo <- ps.mock %>%
+  transform_sample_counts(function(x) x + 1)
+mc_fit <- estimate_bias(ps.mock.pseudo, mock_actual, boot = TRUE) %>% print
+bias <- coef(mc_fit) %>% print
+```
+
+```{r}
+mc_fit.summary <- summary(mc_fit)
+print(mc_fit.summary)
+```
+
+```{r, fig.dim = c(5,3)}
+coef_tb <- mc_fit.summary$coefficients
+coef_tb %>%
+  mutate(taxon = fct_reorder(taxon, estimate)) %>%
+  ggplot(aes(taxon, estimate, 
+      ymin = estimate / gm_se^2, ymax = estimate * gm_se^2)) +
+  geom_hline(yintercept = 1, color = "grey") +
+  geom_pointrange() +
+  scale_y_log10() +
+  coord_flip()
+```
+
+```{r calibrate}
+ps.pseudo <- transform_sample_counts(ps, function(x) x + 1)
+ps.pseudo.cal <- calibrate(ps.pseudo, bias) %>% print
+```
+
+
+# Sample mean efficiency across samples
+
+To estimate the SMRE with formula `sum_i A_i E_i`, use the calibrated abundances.
+
+```{r}
+ps0 <- ps.pseudo.cal %>%
+  prune_taxa(names(bias), .)
+```
+
+```{r}
+otu <- ps0 %>% otu_table %>% orient_taxa(as = "cols") %>%
+  transform_sample_counts(close_elts)
+sam0 <- sample_data(ps0) %>% 
+  as("data.frame") %>% 
+  as_tibble(rownames = "Sample")
+```
+
+```{r}
+sme <- otu %>% psmelt %>%
+  left_join(bias %>% enframe("OTU", "Efficiency"), by = "OTU") %>%
+  group_by(Sample) %>%
+  summarize(SMRE = sum(Efficiency * Abundance)) %>%
+  left_join(sam0, by = "Sample") %>%
+  mutate(
+    across(Timepoint, as.factor),
+    across(Timepoint, fct_explicit_na, "Other"),
+  )
+```
+
+# Regression analysis
+
+First let's pick a subset of samples to work with.
+
+```{r}
+sam %>%
+  count(Samp_type, Timepoint)
+sam %>%
+  filter(Samp_type == "Experiment") %>%
+  count(Treatment, Timepoint)
+sam %>%
+  filter(Samp_type == "Experiment", Timepoint == 2) %>%
+  count(Region, Treatment)
+sam %>%
+  filter(Samp_type == "Experiment", Treatment != "Negative") %>%
+  count(Region, Timepoint)
+sam %>%
+  filter(Samp_type == "Experiment", Treatment != "Negative") %>%
+  with_groups(Genotype, summarize, n1 = sum(Timepoint == 1), n2 = sum(Timepoint == 2), tot = n())
+```
+
+The "Negative" treatment was not inoculated with commensals; let's drop that from the analysis.
+Note that there are 2 more West genotypes adn thus more West than East samples.
+
+
+## Time point
+
+Asks, how did taxa vary in proportion with the addition of Mel?
+Note, we expect the commensal taxa to typically decrease given that Mel successfully infects most plants.
+
+Want to do linear regression on the timepoint.
+
+starting point - observed and calibrated proportions in the experiment samples; SME in the experiment samples
+
+```{r}
+ps1.obs <- ps.pseudo %>%
+  subset_samples(Samp_type == "Experiment" & Treatment != "Negative") %>%
+  prune_taxa(mock_taxa, .) %>%
+  orient_taxa(as = "cols") %>%
+  transform_sample_counts(close_elts)
+ps1.cal <- ps1.obs %>% calibrate(bias)
+sam1 <- sample_data(ps1.obs) %>% as("data.frame")
+sme1 <- sme %>% filter(Sample %in% sample_names(ps1.obs)) %>% rename(Mean_efficiency = SMRE)
+```
+
+Note the different numbers of samples at each timepoint
+Should consider more sophisticated resgression models.
+
+```{r}
+fit.obs <- lm(log2(otu_table(ps1.obs)) ~ Timepoint, data = sam1)
+fit.cal <- lm(log2(otu_table(ps1.cal)) ~ Timepoint, data = sam1)
+fit.sme <- lm(log2(Mean_efficiency) ~ Timepoint, data = sme1)
+```
+
+Check that the observed changes - the calibrated changes are off by the expected constant shift,
+
+```{r}
+t(coef(fit.obs) - coef(fit.cal))
+coef(fit.sme)
+```
+
+```{r}
+coef(fit.obs) %>% t
+coef(fit.cal) %>% t
+```
+
+The effect of bias is significant; e.g. Aureobasidium and Trichoderma appear to decrease in proportion by 16X but actually decrease by 4X, and Penicillium appears to decrease by 5.9X but only decreases by 1.5X.
+
+
+Could use the case of Penicillium as our example.
+
+```{r}
+# Check expected relationship between coefficients on intercept and slope
+all.equal(
+  coef(fit.obs)[,"Penicillium"],
+  coef(fit.cal)[,"Penicillium"] + c(log2(bias["Penicillium"]), 0) - coef(fit.sme)
+)
+```
+
+```{r}
+tb <- bind_rows(
+  Observed = psmelt(ps1.obs),
+  Calibrated = psmelt(ps1.cal),
+  .id = "Type"
+) %>%
+  mutate(across(Type, fct_relevel, "Calibrated")) %>%
+  rename(Proportion = Abundance)
+```
+
+```{r}
+tb %>%
+  filter(OTU == "Penicillium") %>%
+  ggplot(aes(y = log2(Proportion), x = Timepoint, color = Type)) +
+  geom_quasirandom(alpha = 0.4) +
+  stat_smooth(aes(x = as.integer(Timepoint)), method = "lm", geom = "line",
+    size = 0.8) +
+  scale_color_brewer(type = "qual", palette = 6)
+```
+
+
+```{r}
+tb %>%
+  filter(OTU == "Penicillium") %>%
+  ggplot(aes(y = log2(Proportion), x = Timepoint)) +
+  geom_quasirandom(alpha = 0.4) +
+  stat_summary(fun = "mean", geom = "point", size = 3) +
+  stat_smooth(aes(x = as.integer(Timepoint)), method = "lm", geom = "line",
+    size = 0.8, arrow = grid::arrow(length = unit(0.15, "inches"))
+  ) +
+  facet_wrap(~Type)
+```
+
+TODO: Add a panel with the sample mean efficiency
+
+```{r}
+sme1 %>%
+  ggplot(aes(y = log2(Mean_efficiency), x = Timepoint)) +
+  geom_quasirandom(alpha = 0.4) +
+  stat_summary(fun = "mean", geom = "point", size = 3) +
+  stat_smooth(aes(x = as.integer(Timepoint)), method = "lm", geom = "line",
+    size = 0.8, arrow = grid::arrow(length = unit(0.15, "inches"))
+  )
+```
+
+Question: For the purposes of illustration, might we want to find the host region or host genotype with the largest change in SME?
+Ok as long as we're clear what we're doing.
+Reducing the number of data points and biological variation might actually make things cleaner as well (or could use boxplots), since the point is not to dwell on all the variation, but rather just the average effect.
+
+for paper, might be clearer to call "Corrected" instead of "Calibrated".
+
+
+Can easily split graph by region or host genotype:
+
+```{r}
+tb %>%
+  filter(OTU == "Penicillium") %>%
+  ggplot(aes(y = log2(Proportion), x = Timepoint, color = Region)) +
+  geom_quasirandom(alpha = 0.4) +
+  stat_summary(fun = "mean", geom = "point", size = 3) +
+  stat_smooth(aes(x = as.integer(Timepoint)), method = "lm", geom = "line",
+    size = 0.8, arrow = grid::arrow(length = unit(0.15, "inches"))
+  ) +
+  facet_wrap(~Type)
+```
+
+```{r}
+tb %>%
+  filter(OTU == "Penicillium") %>%
+  ggplot(aes(y = log2(Proportion), x = Timepoint)) +
+  geom_quasirandom(alpha = 0.3) +
+  #> stat_summary(fun = "mean", geom = "point", size = 3) +
+  stat_summary(fun.data = mean_cl_normal, fun.args = c(conf.int = 0.95), 
+    geom = "pointrange") +
+  stat_smooth(aes(x = as.integer(Timepoint)), method = "lm", geom = "line",
+    size = 0.8, arrow = grid::arrow(length = unit(0.15, "inches"))
+  ) +
+  facet_grid(Region~Type)
+```
+
+Note that the 95% CIs are small and hard to see.
+
+Want to plot the sme's with the change in proportion; make sure the y-axes have the same scale.
+One way to simplify this is to show the mean efficiency relative to the taxon in question;
+then it will give the difference between calibrated and observed.
+
+```{r}
+sme2 <- sme1 %>%
+  mutate(Mean_relative_efficiency = Mean_efficiency / bias["Penicillium"]) %>%
+  rename(Proportion = Mean_relative_efficiency) %>%
+  mutate(Type = "Mean relative efficiency")
+tb1 <- tb %>%
+  filter(OTU == "Penicillium") %>%
+  bind_rows(sme2) %>%
+  mutate(across(Type, fct_relevel, c("Calibrated", "Observed", "Mean relative efficiency")))
+```
+
+```{r}
+lyrs <- list(
+  geom_quasirandom(alpha = 0.3),
+  #> stat_summary(fun = "mean", geom = "point", size = 3),
+  stat_summary(fun.data = mean_cl_normal, fun.args = c(conf.int = 0.95), 
+    geom = "pointrange"),
+  stat_smooth(aes(x = as.integer(Timepoint)), method = "lm", geom = "line",
+    size = 0.8, arrow = grid::arrow(length = unit(0.15, "inches"))
+  )
+)
+tb1 %>%
+  ggplot(aes(y = log2(Proportion), x = Timepoint)) +
+  lyrs +
+  facet_grid(Region~Type)
+```
+
+```{r}
+tb1 %>%
+  mutate(across(Type, fct_reorder, Proportion)) %>%
+  ggplot(aes(y = log2(Proportion), x = Timepoint, color = Type)) +
+  geom_quasirandom(alpha = 0.3) +
+  stat_summary(fun = "mean", geom = "point", size = 3) +
+  stat_smooth(aes(x = as.integer(Timepoint)), method = "lm", geom = "line",
+    size = 0.8, arrow = grid::arrow(length = unit(0.15, "inches"))
+  ) +
+  scale_color_brewer(type = "qual", palette = 2) +
+  guides(color = guide_legend(reverse = TRUE)) +
+  facet_grid(.~Region) +
+  geom_text(data = tibble(Region = "West"), x = 2.7, y = 5,
+    color = "black", size = 4.5, hjust = 0, vjust = 1,
+    label = "Pathogen growth causes\nmean efficiency to increase,",
+  ) +
+  geom_text(data = tibble(Region = "West"), x = 2.7, y = -10,
+    color = "black", size = 4.5, hjust = 0, vjust = 1,
+    label = "which leads to larger-than-\nactual decreases in the\nfocal taxon Penicillium.",
+  ) +
+  coord_cartesian(xlim = c(1, 2), clip = "off") +
+  theme(
+    legend.position = "top",
+    plot.margin = margin(r = 2.5, unit = "in"),
+  ) +
+  plot_annotation(
+    title = "Effect of bias on Penicillium differential abundance"
+  )
+```
+
+Summary:
+
+- Regression of log2(Proportion) of the fungus Penicillium versus timepoint; timepoints 1 and 2 are pre- and post- challenge with the pathogen Melampsora. Data is split by the region the host plants are derived from.
+- Calibrated proportions = Observed proportions in the real, experimental samples after adjustment for the bias measured in mock communities
+- Mean efficiency of each community is inferred by treating the calibrated proportions as the truth, and multiplying by efficiencies estimated from the mocks
+- The pathogen Melampsora has a high measurement efficiency; thus once it infects the plants, the mean efficiency of the sample increases (purple points). Efficiency is here taken as relative to the focal taxon Penicillium.
+- West plants tend to be more resistant to the pathogen, which likely explains why the mean efficiency doesn't increase as much in the West plants
+- Penicillium is observed to decrease in log proportion, in both the East and West plants. But the calibrated measurements show that it actually slightly increases in the East plants, and has a lesser decrease in the West plants than what was observed before bias correction.
+- The difference between the Calibrated and Observed data points and regression lines equals the regression line of the mean efficiency: Orange = Green + Purple; Green = Orange - Purple
+- The absolute error in regression coeffiecients is the same for all taxa. I picked Penicillium for illustration since it has the smallest observed decrease, which makes the error due to bias have a particularly significant impact.
+<!--  -->
+
+```{r, eval = FALSE, echo = FALSE}
+ggsave("/tmp/leopold2020-example.pdf", units = "in", width = 6, height = 4, scale = 1.4)
+ggsave("/tmp/leopold2020-example.png", units = "in", width = 6, height = 4, scale = 1.4)
+```
+
+
+### Alt. plot
+
+```{r}
+tb2 <- tb1 %>%
+  mutate(
+    log2_proportion = log2(Proportion),
+    across(Type, fct_relevel, c("Observed", "Calibrated", "Mean relative efficiency")),
+    #> across(Type, fct_recode, Corrected = "Calibrated", Uncorrected = "Observed")
+  )
+```
+
+Let's show the calibrated, observed, and mean efficiency side by side, similar to my initial explanatory plot.
+
+
+Question: How to get the same y-axis range in each facet?
+We need to determine what we want the min and max y values for each facet to be.
+Choose so that the range in each panel equals the max data range for any one panel, and center the data range of each panel within the plot range.
+
+```{r}
+yr <- tb2 %>%
+  with_groups(c(Region, Type), summarize, 
+    across(log2_proportion, c(min = min, max = max), .names =  "data_{.fn}")
+ ) %>%
+  mutate(
+    data_range = data_max - data_min,
+    data_mid = (data_max + data_min) / 2,
+    y_min = data_mid - max(data_range) / 2,
+    y_max = data_mid + max(data_range) / 2
+  ) %>%
+  print
+stopifnot(yr %>% {sd((.$y_max - .$y_min))} < 1e-14)
+yr.long <- yr %>%
+  pivot_longer(c(y_min, y_max))
+```
+
+```{r, fig.dim = 1.7 * c(6, 4)}
+tb2 %>%
+  ggplot(aes(y = log2_proportion, x = Timepoint)) +
+  geom_quasirandom(alpha = 0.3) +
+  geom_blank(data = yr.long, aes(y = value, x = 1)) +
+  stat_summary(fun = "mean", geom = "point", size = 3) +
+  stat_smooth(aes(x = as.integer(Timepoint)), method = "lm", geom = "line",
+    size = 0.9, arrow = grid::arrow(length = unit(0.15, "inches")), color = "red"
+  ) +
+  scale_color_brewer(type = "qual", palette = 2) +
+  guides(color = guide_legend(reverse = TRUE)) +
+  facet_wrap(Region~Type, scales = "free_y") +
+  coord_cartesian(xlim = c(1, 2), clip = "off") +
+  scale_y_continuous(breaks = seq(-20, 10, by = 2)) +
+  labs(y = "log2(Proportion)")
+```
+
+
+```{r}
+text_tb <- yr %>%
+  filter(Type %in% c("Calibrated", "Observed")) %>%
+  mutate(
+    text = case_when(
+      Type == "Observed" ~ "=",
+      Type == "Calibrated" ~ "–",
+    ),
+    y = y_min + (y_max - y_min) / 2
+  )
+
+#> Label "Calibrated" as "Actual" for purposes of illustration?
+lblr <- function(labels) {
+  labels %>% pull(1) %>% fct_recode(Actual = "Calibrated") %>% as.character %>% list
+}
+
+lyrs <- list(
+  geom_quasirandom(alpha = 0.3),
+  #> stat_summary(fun = "mean", geom = "point", size = 3),
+  stat_summary(fun.data = "mean_cl_boot", geom = "pointrange"),
+  stat_smooth(aes(x = as.integer(Timepoint)), method = "lm", geom = "line",
+    #> arrow = grid::arrow(length = unit(0.15, "inches")),
+    size = 0.9, color = "red"
+  ),
+  scale_color_brewer(type = "qual", palette = 2),
+  guides(color = guide_legend(reverse = TRUE)),
+  facet_wrap(~Type, scales = "free_y", labeller = lblr),
+  #> theme_minimal_hgrid(),
+  scale_y_continuous(breaks = seq(-20, 10, by = 2)),
+  theme(
+    plot.title = element_text(face = "plain"),
+    legend.position = "top",
+    panel.spacing.x = unit(0.75, "in")
+  ),
+  labs(y = "log2(Proportion)"),
+  # Corrected = Observed - Mean relative efficiency
+  coord_cartesian(xlim = c(1, 2), clip = "off")
+)
+p1 <- tb2 %>%
+  filter(Region == "East") %>%
+  ggplot(aes(y = log2_proportion, x = Timepoint)) +
+  lyrs +
+  geom_blank(data = yr.long %>% filter(Region == "East"), aes(y = value, x = factor(1))) +
+  labs(title = "Eastern genotypes: Bias causes sign error") +
+  geom_text(
+    data = text_tb %>% filter(Region == "East"),
+    aes(y = y, label = text),
+    x = 2.9,
+    color = "black", size = 8, hjust = 0.5, vjust = 0.5,
+  )
+p2 <- tb2 %>%
+  filter(Region == "West") %>%
+  ggplot(aes(y = log2_proportion, x = Timepoint)) +
+  lyrs +
+  geom_blank(data = yr.long %>% filter(Region == "West"), aes(y = value, x = factor(1))) +
+  labs(title = "Western genotypes: Bias causes magnitude error") +
+  geom_text(
+    data = text_tb %>% filter(Region == "West"),
+    aes(y = y, label = text),
+    x = 2.9,
+    color = "black", size = 8, hjust = 0.5, vjust = 0.5,
+  )
+```
+
+```{r, fig.dim = 1.7 * c(6, 4)}
+p1 / p2 + 
+  plot_annotation(
+    #> title = "Effect of bias on Penicillium differential abundance",
+    tag_levels = "A"
+  )
+```
+
+This ^ is my favorite so far
+
+```{r, eval = FALSE, echo = FALSE}
+#> ggsave("/tmp/leopold2020-example.pdf", units = "in", width = 6, height = 4, scale = 1.7)
+ggsave("/tmp/leopold2020-example.png", units = "in", width = 6, height = 4, scale = 1.7)
+```
+
+
+TODO: 
+
+- Change y label to log2(value) and adding "proportion" to the two proportion facets
+- Change back to "Calibrated proportion" and "Observed proportion"?
+- Slightly increase spacing between patchwork  panels (rows)
+- Swap positions of calibrated and uncalibrated so that the equation is correct: Observed = Actual - Mean efficiency
+
+
+alternate approach using 2-d facet wrap:
+
+```{r, fig.dim = 1.5 * c(6, 3.5)}
+symbol_labels <- yr %>%
+  filter(Type %in% c("Calibrated", "Observed")) %>%
+  mutate(
+    text = case_when(
+      Type == "Observed" ~ "=",
+      Type == "Calibrated" ~ "–",
+      #> Type == "Mean relative efficiency" & Region == "East" ~ "Eastern\ngenotypes",
+      #> Type == "Mean relative efficiency" & Region == "West" ~ "Western\ngenotypes",
+    ),
+    y = y_min + (y_max - y_min) / 2
+  )
+region_labels <- yr %>%
+  filter(Type == "Mean relative efficiency") %>%
+  mutate(
+    text = case_when(
+      Region == "East" ~ "Eastern genotypes\n\nBias causes\nsign error",
+      Region == "West" ~ "Western genotypes\n\nBias causes\nmagnitude error",
+    ),
+    y = y_min + (y_max - y_min) / 2
+  )
+
+lyrs <- list(
+  geom_quasirandom(alpha = 0.3),
+  #> geom_blank(data = yr, aes(y = y_min, x = factor(1))),
+  #> geom_blank(data = yr, aes(y = y_max, x = factor(1))),
+  geom_blank(data = yr.long, aes(y = value, x = 1)),
+  stat_summary(fun = "mean", geom = "point", size = 3),
+  stat_smooth(aes(x = as.integer(Timepoint)), method = "lm", geom = "line",
+    size = 0.9, arrow = grid::arrow(length = unit(0.15, "inches")), color = "red"
+  ),
+  scale_color_brewer(type = "qual", palette = 2),
+  guides(color = guide_legend(reverse = TRUE)),
+  #> facet_wrap(~Type, scales = "free_y"),
+  #> theme_minimal_hgrid(),
+  scale_y_continuous(breaks = seq(-20, 10, by = 2)),
+  labs(y = "log2(Proportion)"),
+  # Calibrated = Observed - Mean relative efficiency
+  geom_text(
+    data = symbol_labels,
+    aes(y = y, label = text),
+    x = 2.9, color = "black", size = 8, hjust = 0.5, vjust = 0.5,
+  ),
+  geom_text(
+    data = region_labels,
+    aes(y = y, label = text),
+    x = 2.8, color = "black", size = 4.8, hjust = 0, vjust = 0.5,
+  ),
+  coord_cartesian(xlim = c(1, 2), clip = "off"),
+  theme(
+    legend.position = "top",
+    panel.spacing.x = unit(0.75, "in"),
+    plot.margin = margin(r = 1.75, unit = "in")
+  )
+)
+
+# labeller assuming first col is region, second is type
+lblr <- function(labels) {
+  labels %>% pull(2) %>% as.character %>% list
+}
+
+tb2 %>%
+  ggplot(aes(y = log2_proportion, x = Timepoint)) +
+  lyrs +
+  facet_wrap(Region~Type, scales = "free_y", 
+    labeller = lblr
+    #> labeller = labeller(Region = NULL, .multi_line = FALSE),
+    #> strip.position = "right"
+  )
+```
+
+
+
+# Session info {.appendix}
+
+<details><summary>Click for session info</summary>
+```{r, R.options = list(width = 83)}
+sessioninfo::session_info()
+```
+</details>

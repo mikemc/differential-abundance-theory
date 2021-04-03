@@ -1,0 +1,565 @@
+---
+title: >
+  Exploring the effect of bias in Leopold and Busby (2020)
+author: Michael McLaren
+date: '2019-10-21'
+categories:
+  - bias sensitivity
+  - R
+  - ref:leopold2020host
+description:
+bibliography: _references.bib
+draft: false
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: true
+    toc_float: true
+    dev: svg
+---
+
+```{r, include = FALSE}
+# knitr chunk options
+knitr::opts_chunk$set(
+  cache = TRUE,
+  autodep = TRUE,
+  cache.comments = FALSE
+)
+```
+
+Analysis of bias in @leopold2020host.
+
+# Setup
+
+```{r setup}
+# Tools for microbiome data
+library(speedyseq)
+# Tools for general purpose data manipulation and plotting
+library(tidyverse)
+# ggplot helpers
+library(ggbeeswarm)
+library(cowplot)
+library(patchwork)
+theme_set(theme_cowplot())
+
+# stats helpers
+library(broom)
+
+library(metacal); packageVersion("metacal")
+```
+
+```{r load-data, include = FALSE}
+## From the metacal 2.0 tutorial
+# Download data from https://zenodo.org/record/3872145
+data_path <- here::here("_data", "leopold2020host")
+# To use a temporary directory:
+# data_path <- file.path(tempdir(), "leopold2020")
+if (!dir.exists(data_path)) {
+  dir.create(data_path, recursive = TRUE)
+  download.file(
+    "https://zenodo.org/record/3872145/files/dleopold/Populus_priorityEffects-v1.2.zip",
+    file.path(data_path, "Populus_priorityEffects-v1.2.zip")
+  )
+  unzip(
+    file.path(data_path, "Populus_priorityEffects-v1.2.zip"), 
+    exdir = data_path
+  )
+}
+#> The microbiome data is stored in a phyloseq object,
+ps <- file.path(data_path, 
+  "dleopold-Populus_priorityEffects-8594f7c/output/compiled/phy.rds") %>%
+  readRDS
+
+sample_data(ps) <- sample_data(ps) %>%
+  transform(
+    Timepoint = factor(Timepoint)
+  )
+
+mock_actual <- file.path(data_path, 
+  "dleopold-Populus_priorityEffects-8594f7c/data/MockCommunities.csv") %>%
+  read.csv(row.names = 1) %>%
+  select(-Sym4) %>%
+  as("matrix") %>%
+  otu_table(taxa_are_rows = FALSE) %>%
+  transform_sample_counts(function(x) close_elts(1 / x))
+mock_taxa <- taxa_names(mock_actual)
+sam <- sample_data(ps) %>% as("data.frame") %>% as_tibble(rownames = "Sample")
+tax <- tax_table(ps) %>% as("matrix") %>% as_tibble(rownames = "Taxon")
+ps.mock <- ps %>% 
+  subset_samples(Samp_type == "Mock") %>%
+  prune_taxa(mock_taxa, .)
+```
+
+```{r estimate-bias}
+ps.mock.pseudo <- ps.mock %>%
+  transform_sample_counts(function(x) x + 1)
+mc_fit <- estimate_bias(ps.mock.pseudo, mock_actual, boot = TRUE) %>% print
+bias <- coef(mc_fit) %>% print
+```
+
+```{r}
+mc_fit.summary <- summary(mc_fit)
+print(mc_fit.summary)
+```
+
+```{r, fig.dim = c(5,3)}
+coef_tb <- mc_fit.summary$coefficients
+coef_tb %>%
+  mutate(taxon = fct_reorder(taxon, estimate)) %>%
+  ggplot(aes(taxon, estimate, 
+      ymin = estimate / gm_se^2, ymax = estimate * gm_se^2)) +
+  geom_hline(yintercept = 1, color = "grey") +
+  geom_pointrange() +
+  scale_y_log10() +
+  coord_flip()
+```
+
+```{r calibrate}
+ps.pseudo <- transform_sample_counts(ps, function(x) x + 1)
+ps.pseudo.cal <- calibrate(ps.pseudo, bias) %>% print
+```
+
+
+# Sample mean efficiency across samples
+
+To estimate the SMRE with formula `sum_i A_i E_i`, use the calibrated abundances.
+
+```{r}
+ps0 <- ps.pseudo.cal %>%
+  prune_taxa(names(bias), .)
+```
+
+```{r}
+otu <- ps0 %>% otu_table %>% orient_taxa(as = "cols") %>%
+  transform_sample_counts(close_elts)
+sam0 <- sample_data(ps0) %>% 
+  as("data.frame") %>% 
+  as_tibble(rownames = "Sample")
+```
+
+```{r}
+sme <- otu %>% psmelt %>%
+  left_join(bias %>% enframe("OTU", "Efficiency"), by = "OTU") %>%
+  group_by(Sample) %>%
+  summarize(SMRE = sum(Efficiency * Abundance)) %>%
+  left_join(sam0, by = "Sample") %>%
+  mutate(
+    across(Timepoint, as.factor),
+    across(Timepoint, fct_explicit_na, "Other"),
+  )
+```
+
+```{r}
+range(sme$SMRE)
+range(bias)
+```
+
+
+```{r}
+p1 <- ggplot(sme, aes(SMRE, fill = Samp_type)) +
+  geom_histogram() +
+  annotate("point", y = 200, x = bias, color = "black", shape = "|", size = 7) +
+  scale_x_log10() +
+  scale_y_sqrt(breaks = c(1, 10, 50, 100, 200)) +
+  expand_limits(x = range(bias)) +
+  scale_fill_brewer(type = "qual") +
+  labs(
+    # x = "Sample mean relative efficiency (SMRE)",
+    x = "Mean efficiency", 
+    y = "Number of samples",
+    fill = "Sample type"
+  )
+p1 +
+  plot_annotation(
+    title = "Distribution of sample mean relative efficiencies",
+  )
+```
+
+```{r, eval = F}
+ggsave("/tmp/leopold2020host-smre-distribution.svg", units = "in",
+  width = 6, height = 3, scale = 1.5)
+ggsave("/tmp/leopold2020host-smre-distribution.png", units = "in",
+  width = 6, height = 3, scale = 1.5)
+```
+
+In this case, the bimodal distribution is likely driven by the high proportion
+of Melampsora (pathogen) in ~half the samples.
+
+TODO: check this hypothesis. by making a histogram of melampspora %, and a scatterplot of the melamspora vs. SMRE. Can do with facet matrix from ggforce
+
+```{r}
+mel <- otu %>%
+  prune_taxa("Melampsora", .) %>%
+  psmelt %>%
+  select(-OTU, Melampsora = Abundance)
+sme0 <- left_join(sme, mel, by = "Sample")
+```
+
+```{r}
+# p2 <- ggplot(sme0, aes(SMRE, fill = Melampsora)) +
+p2 <- ggplot(sme0, aes(y = Melampsora, x = SMRE, color = Samp_type)) +
+  geom_point() +
+  # annotate("point", y = 1, x = bias, color = "black", shape = "|", size = 7) +
+  scale_x_log10() +
+  # scale_y_sqrt() +
+  scale_y_continuous(
+    trans = scales::pseudo_log_trans(sigma = 1e-2),
+    breaks = c(0, 0.01, 0.1, 0.5, 1)
+    ) +
+  expand_limits(x = range(bias)) +
+  scale_color_brewer(type = "qual") +
+  labs(
+    y = "Melampsora proportion",
+    # x = "Sample mean relative efficiency (SMRE)",
+    x = "Mean efficiency",
+    color = "Sample type"
+  )
+p2
+```
+
+```{r}
+(p1 + ggtitle("Distribution of the mean efficiency across samples")) / 
+  (p2 + ggtitle("Melampsora proportion vs. mean efficiency")) +
+  plot_annotation(tag_levels = "A")
+```
+
+```{r, eval = F}
+ggsave("/tmp/leopold2020host-smre-distribution.svg", units = "in",
+  width = 6, height = 6, scale = 1.5)
+ggsave("/tmp/leopold2020host-smre-distribution.pdf", units = "in",
+  width = 6, height = 6, scale = 1.5)
+ggsave("/tmp/leopold2020host-smre-distribution.png", units = "in",
+  width = 6, height = 6, scale = 1.5)
+```
+
+Note, the high-Mel samples are the timepoint 2 samples, and were not used for some (all?) of his analysis due to the dominance of Mel. Let's check this out,
+
+```{r}
+sme %>%
+  mutate(
+    across(Timepoint, as.factor),
+    across(Timepoint, fct_explicit_na, "Other"),
+  ) %>%
+  # filter(Samp_type == "Experiment") %>%
+  ggplot(aes(SMRE, fill = Timepoint)) +
+  geom_histogram() +
+  annotate("point", y = 200, x = bias, color = "black", shape = "|", size = 7) +
+  scale_x_log10() +
+  scale_y_sqrt(breaks = c(1, 10, 50, 100, 200)) +
+  expand_limits(x = range(bias)) +
+  scale_fill_brewer(type = "qual") +
+  labs(
+    x = "Mean efficiency", 
+    y = "Number of samples"
+  )
+```
+
+
+```{r}
+sme %>%
+  filter(Samp_type == "Experiment") %>%
+  ggplot(aes(SMRE, fill = Treatment)) +
+  geom_histogram() +
+  scale_x_log10() +
+  scale_y_sqrt(breaks = c(1, 10, 50, 100, 200)) +
+  scale_fill_brewer(type = "qual") +
+  labs(
+    x = "Mean efficiency", 
+    y = "Number of samples"
+  ) +
+  facet_wrap(~Timepoint, ncol = 1)
+```
+
+```{r}
+sme %>%
+  filter(Samp_type == "Experiment", Treatment != "Negative") %>%
+  ggplot(aes(SMRE, fill = Region)) +
+  geom_histogram() +
+  scale_x_log10() +
+  scale_y_sqrt(breaks = c(1, 10, 50, 100, 200)) +
+  scale_fill_brewer(type = "qual") +
+  labs(
+    x = "Mean efficiency", 
+    y = "Number of samples"
+  ) +
+  facet_wrap(~Timepoint, ncol = 1)
+```
+
+Can see that Eastern genotypes more susceptible (more Mel and higher SME)
+
+
+Are some western genotypes less susceptible?
+
+```{r}
+sme %>%
+  filter(Samp_type == "Experiment", Region == "West",
+    Treatment != "Negative") %>%
+  ggplot(aes(SMRE, fill = Genotype)) +
+  geom_histogram() +
+  scale_x_log10() +
+  scale_y_sqrt(breaks = c(1, 10, 50, 100, 200)) +
+  scale_fill_brewer(type = "qual") +
+  labs(
+    x = "Mean efficiency", 
+    y = "Number of samples"
+  ) +
+  facet_wrap(~Timepoint, ncol = 1)
+```
+
+Eastern?
+
+```{r}
+sme %>%
+  filter(Samp_type == "Experiment", Region == "East",
+    Treatment != "Negative") %>%
+  ggplot(aes(SMRE, fill = Genotype)) +
+  geom_histogram() +
+  scale_x_log10() +
+  scale_y_sqrt(breaks = c(1, 10, 50, 100, 200)) +
+  scale_fill_brewer(type = "qual") +
+  labs(
+    x = "Mean efficiency", 
+    y = "Number of samples"
+  ) +
+  facet_wrap(~Timepoint, ncol = 1)
+```
+
+### Alt plot
+
+Might be better to just focus on the treated experimental samples; can note
+that the bimodal distribution in SMRE is due to the presence of Mel in the
+timepoint 2, and thus we'd mess up our AA inferences if we tried to infer the
+change in AA after Mel introduction. We might also (if were were analyzing
+timepoint 2 samples) 
+
+Actually, including the bias values serves the important purpose of showing how
+the SME varies less than the efficiencies. For that reason it could even be
+worth having the single-isolate samples, though seems unneeded.
+
+Points
+
+* SME varies less across samples than efficiencies vary across taxa
+* SME much greater after rusting (timepoint 2) -> it will look like the growth of the
+  pathogen suppressed the proportion and absolute abundance of the colonizers
+  5-6X more than it actually did
+* The Mel prop and hence the SME varies significantly in the timepoint 2
+  samples. This may lead to systematic errors in certain inferences. E.g., if
+  host genotype affects Mel and another taxon, that other taxon's value will be
+  distorted (and, I think, the effect on Mel will be inflated).
+  * As an example, think through the case of more resistant host genotypes
+  * Might also consider the taxa found to suppress Mel; see paper
+
+```{r}
+p1.1 <- sme %>%
+  filter(Samp_type == "Experiment", Treatment != "Negative") %>%
+  ggplot(aes(SMRE, fill = Timepoint)) +
+  geom_histogram() +
+  annotate("point", y = 200, x = bias, color = "black", shape = "|", size = 7) +
+  expand_limits(x = range(bias)) +
+  scale_x_log10() +
+  scale_y_sqrt(breaks = c(1, 10, 50, 100, 200)) +
+  scale_fill_brewer(type = "qual") +
+  labs(
+    # x = "Sample mean relative efficiency (SMRE)",
+    x = "Mean efficiency", 
+    y = "Number of samples"
+  )
+p2.1 <- sme0 %>%
+  filter(Samp_type == "Experiment", Treatment != "Negative") %>%
+  ggplot(aes(y = Melampsora, x = SMRE, color = Timepoint)) +
+  geom_point() +
+  expand_limits(x = range(bias)) +
+  scale_x_log10() +
+  # scale_y_sqrt() +
+  scale_y_continuous(
+    trans = scales::pseudo_log_trans(sigma = 1e-2),
+    breaks = c(0, 0.01, 0.1, 0.5, 1)
+    ) +
+  scale_color_brewer(type = "qual") +
+  labs(
+    y = "Melampsora proportion",
+    x = "Mean efficiency"
+  )
+```
+
+```{r}
+(p1.1 + ggtitle("Distribution of the mean efficiency across samples")) / 
+  (p2.1 + ggtitle("Melampsora proportion vs. mean efficiency")) +
+  plot_annotation(tag_levels = "A")
+```
+
+TODO: Still need to determien if the y axis is accurate on histogram; I think
+its off when using pseudo-log. But perhaps can get away with linear?
+
+
+## Check errors in FCs
+
+We can use this distribution to pick examples of samples where bias
+approximately cancels in the FC estimates (because their SMRE's are similar),
+and samples where bias does not approximately cancel (because their SMRE's are
+very different). Could do for mock samples (using the ground truth) or for
+natural samples (using the calibrated composition). Might as well do it both
+ways; not sure which would be best for a paper. The mocks have the benefit of
+knowing the ground truth, while the natural samples demonstrate practical
+significance. Also, we can give nice intuitive description of what we're doing
+in the natural samples by saying that we're comparing samples w/ low-low,
+high-high, or low-high pathogen %.
+
+
+TODO ^^
+
+### mock samples
+
+
+To pick from the mock samples:
+
+```{r}
+sme0 %>%
+  filter(Samp_type == "Mock") %>%
+  select(Sample, SMRE, Melampsora) %>%
+  arrange(SMRE) %>%
+  mutate(
+    log10_SMRE = log10(SMRE),
+    diff = c(NA, diff(log10_SMRE))
+  )
+```
+
+- Mock.3 -> Mock.5 have the biggest difference in SMRE. Notably, its still only
+  a factor of 5.5 difference.
+- Mock.7 -> Mock.9 have the smallest log difference.
+
+Next: Compute the actual and observed FC in proportions, for each of these
+pairs of communities. Perhaps define a function to spit out the relevant data
+frame, given any pair of samples, the phyloseq object (or calibrated phyloseq
+object?), and the bias vector? Actually, for the mocks, should use the
+"actual" table instead of calibrated. 
+
+Use these objects,
+
+```{r}
+mock_actual
+ps.mock.pseudo
+```
+
+We can use `metacal::pairwise_ratios()` to compute the FCs in abundances
+between all samples + for all taxa, given a phyloseq object.
+
+```{r}
+fcs <- list(Actual = mock_actual, Observed = ps.mock.pseudo) %>%
+  map(transform_sample_counts, close_elts) %>%
+  map(pairwise_ratios, margin = "samples", filter = FALSE) %>%
+  map_dfr(psmelt, .id = "Type") %>%
+  # redo sample.1 and sample.2 since missing for the mock
+  select(-sample.1, -sample.2) %>%
+  rename(Pair = Sample, Fold_change = Abundance) %>%
+  separate(Pair, str_c("Sample.", 1:2), sep = ":", remove = FALSE) %>%
+  mutate(across(OTU, factor, levels = bias %>% sort %>% names)) %>%
+  left_join(sme0 %>% select(Sample.1 = Sample, SMRE, Melampsora), 
+    by = "Sample.1") %>%
+  left_join(sme0 %>% select(Sample.2 = Sample, SMRE, Melampsora), 
+    by = "Sample.2", suffix = c(".1", ".2"))
+```
+
+```{r}
+fcs %>%
+  filter(Pair %in% c("Mock.5:Mock.3", "Mock.9:Mock.7")) %>%
+  ggplot(aes(y = OTU, x = Fold_change, shape = Type, color = Type)) +
+  facet_grid(. ~ Pair) +
+  scale_shape_manual(values = c(Actual = 3, Observed = 1)) +
+  scale_color_brewer(type = "qual", palette = 6) +
+  geom_vline(xintercept = 1, color = "black", size = 0.2) +
+  geom_point(size = 2) +
+  theme_minimal_hgrid() +
+  scale_x_log10(limits = c(3e-3, 1e2), oob = scales::squish) +
+  labs(x = "Fold change in proportion") +
+  plot_annotation(
+    title = "Actual and observed fold changes between pairs of mocks"
+  )
+```
+
+```{r}
+ggsave("/tmp/leopold2020-fc-mock-examples.png", units = "in",
+  width = 6, height = 3, scale = 1.5)
+```
+
+
+Can see that on the left, the error is positive for all taxa, and of a similar
+magnitude (on the order of ~6X, as predicted) for all taxa except for
+Epicoccum, which dropped out during sequencing in Mock.5; and on the right, the
+error is smaller and not consistently positive or negative.  Sign errors
+correspond to the observed and actual fold changes being on opposing sides of
+the vertical red line at 1.
+
+todo: add the SMRE changes to the facet labels, and perhaps mark the expected 
+
+What other types of plots, which might use all pairs of samples?
+
+- we could plot the observed vs. predicted error
+
+- we could check that the error really is taxon independent; one way to do this
+  is to calc the correlation in LFC between observed and actual
+
+```{r}
+lvls <- sme0 %>% arrange(SMRE) %>% pull(Sample)
+fcs0 <- fcs %>%
+  # filter(Sample.1 < Sample.2) %>%
+  select(Type:Fold_change, SMRE.1:Melampsora.2) %>%
+  pivot_wider(names_from = Type, values_from = Fold_change) %>%
+  mutate(across(c(Sample.1, Sample.2), factor, levels = lvls))
+```
+
+```{r}
+fcs0 %>%
+  filter(as.integer(Sample.1) < as.integer(Sample.2)) %>%
+  ggplot(aes(Actual, Observed, color = OTU)) +
+  geom_abline(color = "grey") +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  facet_grid(Sample.1 ~ Sample.2) +
+  scale_color_brewer(type = "qual", palette = 3)
+```
+
+Note how (especially) for Mock 1 and 6, the points follow a straight line with
+a greater slope than predicted. This seems likely related to the systematic
+deviation from the model that I observed. 
+
+Check that there is indeed very high correlations; remove the Epicoccum Mock-5
+dropout first to avoid major distortions just from that.
+
+```{r}
+corrs <- fcs0 %>%
+  filter(
+    Sample.1 != Sample.2,
+    !((Sample.1 == "Mock.5" | Sample.2 == "Mock.5") & OTU == "Epicoccum")
+  ) %>%
+  mutate(across(c(Actual, Observed), log10)) %>%
+  group_by(Pair) %>%
+  summarize(correlation = cor(Actual, Observed, method = "pearson"))
+corrs %>% pull(correlation) %>% summary
+# qplot(corrs$correlation)
+```
+
+### Experiment samples
+
+We could just try picking a high and low Melampsora sample - perhaps from the
+mode of the peaks, rather than the extreme.
+
+```{r}
+sme0 %>%
+  filter(Samp_type == "Experiment") %>%
+  select(Sample, SMRE, Melampsora) %>%
+  arrange(SMRE) %>%
+  mutate(
+    log10_SMRE = log10(SMRE),
+    diff = c(NA, diff(log10_SMRE))
+  )
+```
+
+# Session info {.appendix}
+
+<details><summary>Click for session info</summary>
+```{r, R.options = list(width = 83)}
+sessioninfo::session_info()
+```
+</details>
