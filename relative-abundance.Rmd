@@ -1,0 +1,270 @@
+# Differential relative abundance {#relative}
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+TeX: {extensions: ["cancel.js"]}
+});
+</script>
+
+This section describes the effects of bias on common approaches to analyzing differential relative abundance.
+We introduce the critical distinction between analyses based on proportions and analyses based on ratios.
+Analyses based on proportions can be distorted by bias, whereas analyses of log fold changes (LFCs) in ratios of atomic taxa are invariant to bias.
+If atomic taxa may be aggregated into synthetic taxa by multiplication (or by adding log abundance), and ratios formed from such aggregates; LFCs for such generalized ratios remain bias invariant.
+But if atomic taxa are aggregated additively by summing their read counts—as often done to analyze higher-order taxa such as phyla—then bias invariance only applies if the aggregated taxa have the same efficiency.
+The error induced by bias in (some) proportion-based methods has a simple form that suggests tractable experimental methods by which it may be estimated and corrected, which we discuss in Section \@ref(calibration).
+Section \@ref(absolute) shows that methods for obtaining absolute abundances from MGS data can generally be split into those based on proportions and those based on ratios, so that the proportion-ratio dichotomy also provides a useful framework for understanding analyses of differential absolute abundance.
+
+## Proportion-based analyses
+
+### Log proportion
+
+To simplify notation where possible, I will write $B$ for $B^{(M)}$ when only the metagenomics measurements are relevant.
+
+It follows from  \@ref(eq:m) that the observed fold change in the proportion of taxon $i$ from sample $j$ to $j'$ is
+\begin{align}
+  (\#eq:m-fc)
+  \frac{m_{ij'}}{m_{ij}}
+  = \frac{a_{ij'} \cancel{B_i} / \bar B_{j'}}{a_{ij} \cancel{B_i} / \bar B_{j}}
+  = \frac{a_{ij'}}{a_{ij}} \cdot \frac{\bar B_j}{\bar B_{j'}}.
+\end{align}
+The taxon-specific error term ($B_i$) cancels, leaving a multiplicative error equal to the inverse change in the sample mean efficiency $\bar B^{(M)}$.
+Framed in terms of the log fold change, this equation becomes
+\begin{align}
+  (\#eq:m-lfc)
+  \underbrace{ \log m_{ij'} - \log m_{ij} }_\text{observed LFC}
+  &= \underbrace{ \log a_{ij'} - \log a_{ij} }_\text{true LFC}
+  - \underbrace{ \left(\log \bar B_{j'} - \log \bar B_j\right) }_\text{LFC in mean efficiency},
+\end{align}
+so that the additive error is the LFC in mean efficiency between the two samples.
+
+Analyzing fold changes in a regression framework typically entails considering the expectation of the logarithm of the response conditional on the value of a set of covariates $X$.
+I use $E [Y \mid X]$ as shorthand for $E [Y \mid X = x]$, the expected value of a random variable $Y$ given a vector of covariate values $x$.
+Applying logarithms to \@ref(eq:m) gives
+\begin{align}
+  (\#eq:m-log)
+  \log m_i = \log a_i + \log B_i - \log \bar B
+\end{align}
+which, after conditioning on the covariates, becomes
+\begin{align}
+  (\#eq:m-log-regression)
+  E [\log m_i \mid X] 
+  = E [\log a_i \mid X] + \log B_i - E [\log \bar B \mid X].
+\end{align}
+The taxon-specific term $\log B_i$ creates a constant error that is unproblematic for differential abundance analysis, which is typically ignores the baseline abundance of the taxon.
+However, the sample-specific error $\log \bar B$ can distort the inferred relationship between $X$ and the expected value of the true log proportion if its expected value also varies with $X$.
+
+**TODO: Explain this $\gamma$ notation for the regression coefficients, or find a more recognizable notation.**
+
+Consider the special case of the linear regression
+\begin{align}
+  \log a_i &= X \gamma + \epsilon,
+\end{align}
+where $X$ is a $J\times p$ covariate matrix and $\gamma$ is a $p\times 1$ vector of coefficients.
+Suppose we knew the values of each of the terms in \@ref(eq:m-log).
+Setting each term as the left-hand-side of its own corresponding regression, the least-squares coefficients are related as (\@ref(eq:regression-coefficient-error))
+\begin{align}
+  (\#eq:m-log-regression-coefficients)
+  \hat \gamma{(\log m_i)} = \hat \gamma{(\log a_i)} + \hat \gamma{(\log B_i)} - \hat \gamma{(\log \bar B)}.
+\end{align}
+For the simple linear regression,
+\begin{align}
+  \log a_i &= \gamma_0 + \gamma_1 x + \epsilon,
+\end{align}
+with an intercept coefficient $\gamma_0$ and a slope coefficient $\gamma_1$, the relation \@ref(eq:m-log-regression-coefficients) implies
+\begin{align}
+  (\#eq:m-log-simple-regression-coefficients)
+  \hat \gamma_0{(\log m_i)} &= \hat \gamma_0{(\log a_i)} + \log B_i - \hat \gamma_0{(\log \bar B)} \\
+  \hat \gamma_1{(\log m_i)} &= \hat \gamma_1{(\log a_i)} - \hat \gamma_1{(\log \bar B)},
+\end{align}
+Since $\log B_i$ is constant, it only affects the intercept.
+The slope estimate for the metagenomics proportions, $\hat \gamma_1{(\log m_i)}$, is systematically decreased from that of the true proportions, $\hat \gamma_1{(\log a_i)}$, by that for the sample mean efficiency, $\hat \gamma_1{(\log \bar B)}$.
+
+### Log odds (logit)
+
+The proportion of a taxon saturates at $1$ as its absolute abundance increases, while the odds, $a_i / (1 - a_i) = A_i / (A_T - A_i)$, continue to increase.
+For this reason it is often more natural to perform regression on the log odds, or *logit-transformed proportion*, rather than log proportion.
+
+The observed log odds of taxon $i$ is
+\begin{align}
+  \operatorname{logit} m_{ij} 
+  = \log \frac{m_{ij}}{1 - m_{ij}}
+  = \log \frac{M_{ij}}{M_{Tj} - M_{ij}}.
+\end{align}
+To understand the effects of bias on the measured log odds, it is helpful to define a variable $\bar B_{-i,j}$ to denote the mean efficiency in sample $j$ among 
+taxa *other than $i$*,
+\begin{align}
+  (\#eq:mean-efficiency-not-i)
+  \bar B_{-i,j} 
+  \equiv \frac{\sum_{k \ne i} B_k A_{kj}}{\sum_{k \ne i} A_{kj}}
+  = \frac{\sum_{k \ne i} B_k a_{kj}}{1 - a_{ij}}.
+\end{align}
+The measured proportion of non-$i$ taxa is
+\begin{align}
+  (\#eq:one-minus-m)
+  1 - m_{ij}
+  &= \sum_{k \ne i} m_{kj}
+\\&= \sum_{k \ne i} a_{kj} \cdot \frac{B_k}{\bar B_j}
+\\&= (1 - a_{ij}) \cdot \frac{\bar B_{-i,j}}{\bar B_j},
+\end{align}
+where the final expression follows from $\sum_{k\ne i} a_{kj} B_k = (1-a_{ij}) \bar B_{-i,j}$.
+Intuitively, Equation \@ref(eq:one-minus-m) says that the fold error in the proportion of "not-$i$" equals the mean efficiency of the "not-$i$" part of the sample relative to the mean efficiency of the sample as a whole.
+This result means that the measured odds of taxon $i$ is
+\begin{align}
+  (\#eq:m-odds)
+  \frac{m_{ij}}{1 - m_{ij}}
+  &= \frac{a_{ij}}{1 - a_{ij}} \cdot \frac{B_i}{\bar B_{-i,j}},
+\end{align}
+This formula resembles Equation \@ref(eq:M-ratio) for the measured ratio of two taxa $i$ and $i'$, but with taxon $i'$ corresponding to all not-$i$ taxa.
+In this case, however, the efficiency of not-$i$ varies among samples as changes in their relative abundances change $\bar B_{-i, j}$.
+Hence, in contrast to the ratio of two taxa, the error is not consistent across samples.
+
+The error in the logit of taxon $i$ is 
+\begin{align}
+  (\#eq:m-logit)
+  \operatorname{logit} m_i = \operatorname{logit} a_i + \log B_i - \log \bar B;
+\end{align}
+note the log rather than logit operators in the efficiency terms.
+The corresponding regression equation is
+\begin{align}
+  (\#eq:m-logit-regression)
+  E [\operatorname{logit} m_i \mid X] 
+  = E [\operatorname{logit} a_i \mid X] + \log B_i - E [\log \bar B_{-i} \mid X].
+\end{align}
+
+## Ratio-based analyses
+
+The previous section showed that differential abundance analyses based on proportions may be sensitive to bias, due to the dependence of the multiplicative error in measured proportions on the sample mean efficiency (Equation \@ref(eq:m)).
+In contrast, the multiplicative error in the ratios among taxa (Equation \@ref(eq:M-ratio)) is independent of sample composition, such that a differential abundance analysis based on log ratios is invariant to bias.
+The simplest such analysis is when "abundance" is equated with the log ratio of two specific taxa; however, any linear combination of log ratios may be used, which includes a variety of so-called Compositional Data Analysis (CoDA) methods that have recently been applied in microbiome DA analysis (see below).
+@mclaren2019cons described the bias invariance of ratio-based methods (see their Equations 6 and 7).
+Here we show how this general result applies to specific types of differential relative abundance.
+
+We first consider the ratio a pair of taxa $i$ and $i'$.
+It follows from Equation \@ref(eq:M-ratio) that the measured fold change in the ratio of taxon $i$ to taxon $i'$ from sample $j$ to sample $j'$ is
+\begin{align}
+  (\#eq:M-ratio-fc)
+  \frac{m_{ij'} / m_{i'j'}}{m_{ij} / m_{i'j}}
+  = \frac{a_{ij'} \cancel{B_i} / a_{i'j'} \cancel{B_{i'}}}
+         {a_{ij} \cancel{B_i} / a_{i'j} \cancel{B_{i'}}}
+  = \frac{a_{ij'} / a_{i'j'}}{a_{ij} / a_{i'j}}.
+\end{align}
+The error in each ratio, $B_i / B_{i'}$, is constant and so cancels completely, leaving the true fold change.
+To see the effect of bias on regression of log ratios, we note that the error equation \@ref(eq:M-ratio) implies
+\begin{align}
+  (\#eq:M-ratio-log)
+%  \log m_i - \log m_{i'} = \log a_i - \log a_{i'} + \log B_i - \log B_{i'} \\
+  \log \frac{m_i}{m_{i'}} = \log \frac{a_i}{a_{i'}} + \log \frac{B_i}{B_{i'}}.
+\end{align}
+Taking the conditional expectation given a covariate vector $X$ gives
+\begin{align}
+  (\#eq:m-ratio-log-regression)
+  E\left[ \log \frac{m_i}{m_{i'}} \mid X \right] 
+  = E\left[ \log \frac{a_i}{a_{i'}} \mid X \right] + \log \frac{B_i}{B_{i'}}.
+\end{align}
+In contrast to the case of a log proportion (Equation \@ref(eq:m-log-regression)), the effect of bias on the log ratio is simply to create a constant shift and therefore does not affect differential-abundance analysis.
+
+CoDA DA methods often draw upon generalized notion of ratio, in which the numerator and/or denominator consist of a product of powers of multiple taxa.
+Such a generalized ratio is determined by length-$I$ vectors $n$ and $d$ giving the power of each taxon in the numerator and denominator, with $n_i = 0$ indicating that the taxon does not affect the term.
+Denoting the actual value of a given generalized ratio in sample $j$ as $y_j$ and the observed as $z_j$, we have
+\begin{align}
+  (\#eq:generalized-ratio)
+  \text{actual:}   \quad  y_j = \frac{\prod_i A_{ij}^{n_i}}{\prod_i A_{ij}^{d_i}} &&
+  \text{observed:} \quad  z_j = \frac{\prod_i M_{ij}^{n_i}}{\prod_i M_{ij}^{d_i}}.
+\end{align}
+Under the MWC bias model, the observed and actual log ratios are related as
+\begin{align}
+  (\#eq:generalized-ratio-log)
+  \log z_j &= \log y_j + \log \frac{\prod_i B_{ij}^{n_i}}{\prod_i B_{ij}^{d_i}}.
+\end{align}
+Hence, as with the simple ratio between two taxa, the error due to bias is independent of sample composition and so does not affect the observed variation in $\log z_j$.
+
+Most of the log-ratio transformations that are used in CoDA DA analysis can be understood as particular applications of the generalized ratio \@ref(eq:generalized-ratio) and thus lead to bias-invariant DA results under the deterministic MWC model.
+For example, the additive log-ratio (ALR) transformation consists of computing the log of the ratios obtained by dividing each taxon's abundance by that of a particularly chosen reference taxon $r$,
+\begin{align}
+  (\#eq:alr)
+  \operatorname{alr} A_{j} = \left[ \log \frac{A_{ij}}{A_{rj}}, \dots, \log \frac{A_{Ij}}{A_{rj}} \right],
+\end{align}
+while the centered log-ratio (CLR) transformation instead sets the denominator to the geometric mean $g(A_j) = \left(\prod_i A_{ij}\right)^{1/I}$ of all taxa,
+\begin{align}
+  (\#eq:clr)
+  \operatorname{clr} A_{j} = \left[ \log \frac{A_{ij}}{g(A_{j})}, \dots, \log \frac{A_{Ij}}{g(A_{j})} \right].
+\end{align}
+More generally, one might choose any set $R$ of reference taxa and use their geometric mean in the denominator;
+the ALR and CLR transformations then correspond to taking $R=r$ and $R=I$, respectively.
+@quinn2019afie call this transformation the /multiple additive log-ratio/ (MALR) transformation,
+\begin{align}
+  (\#eq:malr)
+  \operatorname{malr} A_{j} = \left[ \log \frac{A_{ij}}{g(A_{R,j})}, \dots, \log \frac{A_{Ij}}{g(A_{R,j})} \right].
+\end{align}
+The actual and observed MALR-transformed abundance associated with a specific numerator taxon $i$ is
+\begin{align}
+  (\#eq:malr-error)
+  \operatorname{malr}(M_{j})_i = \operatorname{malr}(A_{j})_i + \operatorname{malr}(B)_i;
+\end{align}
+hence the error due to bias is constant and does not factor into the inferred changes in a DA analysis.
+Note: Unlike @quinn2019afie we do not include the "robust centered log-ratio transformation" of @martino2019anov as an example of an MALR; this transformation chooses a distinct set of reference taxa for each sample and so does not have bias invariance under the MWC model.
+
+Other generalized log-ratios commonly used in microbiome data analysis include *balances*.
+A balance is defined by two sets of taxa, $Q$ and $R$, and equals the log of the ratio of the geometric mean of $Q$ taxa to the geometric mean of $R$ taxa, multiplied by a scaling factor,
+\begin{align}
+  (\#eq:balance)
+  \sqrt{\frac{|Q| |R|}{|Q| + |R|}} \log \frac{g(A_{Q,j})}{g(A_{R,j})}.
+\end{align}
+Balances have become a popular tool for identifying biomarkers or groups of taxa associated with an environmental or health condition while operating within the CoDA framework (@washburne2017phyl, @riverapinto2018bala, @quinn2020inte).
+The exponential of a balance is an example of the generalized ratio in \@ref(eq:generalized-ratio) and so regression of balances is again invariant to bias.
+
+The products in the numerators and denominators in \@ref(eq:generalized-ratio) can be seen as a way to multiplicatively aggregate abundances of different taxa, as opposed to the additive aggregation that is commonly used when relative abundances are viewed as proportions.
+Multiplicative aggregation preserves the property of perturbation invariance that is the source of bias invariance under the MWC model.
+In contrast, additive aggregation (known as "amalgamation" in the CoDA literature) violates perturbation invariance and can lead to regression results that depend on bias even when they are ostensibly based on the ratios of two (non-atomic) taxa, as we now explain.
+
+## Higher-order taxa formed by additive aggregation
+
+Microbiome researchers often combine lower-order taxa into higher-order taxa prior to conducting a DA analysis.
+For instance, Amplicon Sequence Variants (ASVs), Operational Taxonomic Units (OTUs), or species-level counts may be aggregated into genus- or family-level counts by simply summing the counts within each group of lower-level taxa.
+Such aggregation can increase statistical power by reducing noise, sparsity, and the number of tests conducted.
+It also simplifies the task of interpretation by limiting the number of taxa considered.
+In addition, some degree of uncontrolled aggregation is inevitable due to the inherent limitations of our sequencing and bioinformatics protocols to distinguish sufficiently similar organisms (@mclaren2019), which may be lumped together into an OTU or species-level feature.
+Finally, though our focus is on analysis of taxa, we note that taxonomic aggregation also occurs (at least implicitly) in gene or function analyses, where counts are combined from different taxa that share the same genes or predicted functions.
+Hence, to understand the effects of bias on DA analysis as it is actually practiced, we must understand the effects of such taxonomic aggregation on differential abundance.
+
+Consider a set of atomic taxa given by the set $Q \subset \{1, \dots, I\}$ and let $A_{Qj}$ be the vector of abundances in sample $j$ of the taxa in $Q$.
+The actual absolute abundance of the synthetic taxon $Q$ is simply the sum of abundances of its component taxa, $\operatorname{sum}\left(A_{Q,j}\right) = \sum_{q \in Q} A_{qj}$.
+<!-- where $\operatorname{sum}$ so that -->
+Similarly, the actual proportion of $Q$ is given by the sum of proportions, $\operatorname{sum}\left(a_{Q,j}\right) = \sum_{q \in Q} a_{qj} = \operatorname{sum}\left(A_{Q,j}\right) / A_{Tj}$.
+The abundance of $Q$ in the metagenomics measurement is $\operatorname{sum}\left(M_{Q,j}\right)$, and its proportion $\operatorname{sum}\left(m_{Q,j}\right)$.
+
+Such a synthetic taxon has a consistent, composition-independent measurement efficiency only if its component taxa have equal efficiencies.
+Let $\bar B_{Q,j}$ denote the mean efficiency of the taxa in $Q$ in sample $j$,
+\begin{align}
+  (\#eq:subset-mean-efficiency)
+  \bar B_{Q,j} = \frac{\sum_{q \in Q} B_q A_{qj}}{\sum_{q \in Q} A_{qj}}.
+\end{align}
+Unless all the taxa in $Q$ have the same efficiency, the mean efficiency of $Q$ varies with the relative abundances among these taxa.
+Summing over Equation \@ref(eq:m) and performing some rearranging shows that the observed proportion of $Q$ is
+\begin{align}
+  (\#eq:sum-m)
+  \operatorname{sum}\left(m_{Q,j}\right) 
+  &= \frac{1}{\bar B_j} \sum_{q\in Q} a_{qj} B_q \sum_{q\in Q} m_{qj} \\
+  &= \operatorname{sum}\left(a_{Q,j}\right) \cdot \frac{\bar B_{Q,j}}{\bar B_j}.
+\end{align}
+In words, the error in the proportion of the aggregate taxon $Q$ is given by the mean efficiency of taxa in $Q$ relative to the sample mean.
+Hence only if the atomic taxa that make up $Q$ all have the same efficiencies or always appear in the same ratios to each other will the efficiency of $Q$ be constant across samples.
+This observation was first made in @mclaren2019cons (Discussion and Appendix 1) and is here extended to its general form.
+
+The lack of consistency in the efficiency of the synthetic taxon $Q$ complicates the form of the error in both proportion- and ratio-based DA analyses.
+The equivalent of the regression equation \@ref(eq:m-log-regression) for the log proportion of $Q$ is
+\begin{align}
+  (\#eq:sum-m-log-regression)
+  E \left[ \log \sum_{q\in Q} m_{q} \mid X \right] 
+  = E \left[ \log \sum_{q\in Q} a_{q} \mid X \right] + E\left[\log \bar B_{Q} - \log \bar B \mid X\right];
+\end{align}
+we can no longer move the log efficiency of the focal taxon out of the expectation operator and so must consider the variation in the mean efficiency of $Q$ as well as of the sample as a whole.
+To consider the effect on ratio-based analyses, we define another synthetic taxon $R\subset \{1, \dots, I\}$ and consider the ratio of $Q$ to $R$.
+The observed ratio,
+\begin{align}
+  (\#eq:M-ratio-u-v)
+  \frac{M_{Q,j}}{M_{R,j}}
+  &= \frac{A_{Q,j}}{A_{R,j}} \cdot \frac{\bar B_{Q,j}}{\bar B_{R,j}},
+\end{align}
+has an error equal to the ratio in mean efficiency of $Q$ to $R$, both of which can vary with the relative abundances of the component taxa.
+As the ratio no longer as a consistent error, it is possible for bias to lead to spurious inferences in the fold change in the ratio.
