@@ -1,5 +1,5 @@
 ---
-title: "Characterizing and mitigating the effects of experimental bias on differential (absolute) abundance analysis in microbiome studies"
+title: "A mathematical framework for understanding microbiome differential-abundance methods"
 author: "Michael R. McLaren"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
@@ -9,9 +9,13 @@ bibliography: [main.bib, packages.bib]
 biblio-style: apalike
 link-citations: yes
 github-repo: mikemc/bda-theory
-description: "Mathematical theory of the effects of experimental bias on differential (relative and absolute) abundance analysis in microbiome studies."
+description: "A mathematical framework for understanding (relative and absolute) microbiome differential-abundance methods"
 ---
 
 # Abstract
 
-This monograph develops a mathematical theory of the effects of protocol- and taxon-specific experimental bias on various types of differential (relative and absolute) abundance analyses in microbiome studies and uses it to formulate several mitigation strategies.
+This manuscript develops a mathematical framework for understanding microbiome differential-abundance analysis; 
+specifically, how taxonomic bias and other complications of real microbiome measurement can distort the results of commonly-used methods.
+This framework predicts that certain approaches to relative and absolute differential abundance are more sensitive to bias than others.
+The effects of bias can be mitigated by choosing an insensitive approach or performing a calibration procedure using targeted abundance measurements of one or more specific taxa.
+
