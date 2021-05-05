@@ -12,7 +12,7 @@ rmd_files: [
   "models.Rmd",
   "relative-abundance.Rmd",
   "absolute-abundance.Rmd",
-  "proofs.Rmd",
+  "app-regression.Rmd",
   "references.Rmd",
 ]
 
