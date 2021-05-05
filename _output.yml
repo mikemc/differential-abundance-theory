@@ -11,3 +11,7 @@ bookdown::gitbook:
       instapaper: no
       vk: no
       all: ['facebook', 'twitter', 'linkedin', 'weibo', 'instapaper']
+bookdown::pdf_book:
+  includes:
+    in_header: latex/preamble.tex
+  keep_tex: true
