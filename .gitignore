@@ -1,2 +1,3 @@
-# Local Netlify folder
+_book/
+_bookdown_files/
 .netlify
