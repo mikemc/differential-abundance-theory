@@ -1,0 +1,85 @@
+# DNA measurement and spike-ins
+
+This appendix aims to derive expressions for the error in individual samples and figure out whether the error is constant across samples (so that it cancels out LFC analysis). 
+Why difference? Extraction has occured prior to the targeted measurement.
+
+Punchline: Bias will cancel like before if and only if DNA extraction yield is perfectly proportional to input, in a particular sense I should perhaps create a name for. 
+It needs to be proportional to input for a fixed composition; it doesn't have to be proportional across compositions.
+
+## Expanded model and notation
+
+I partition the experiment into extraction and sequencing steps,
+\begin{align}
+  A_{ij} 
+  \overset{\text{extraction}}{\underset{F_{ij}'}\longrightarrow}
+  A_{ij}'
+  \overset{\text{sequencing}}{\underset{F_{ij}''}\longrightarrow}
+  \to A_{ij}'' = M_{ij}.
+\end{align}
+where $A'_{ij}$ denotes the absolute abundances after extraction.
+The abundances $A''_{ij}$ after sequencing are just the counts $M_{ij}$.
+I define a matrix $F_{ij}'$ of factors equalling the fold change in abundance during the extraction step, $F_{ij}' = A_{ij}' / A_{ij}$, and similarly let $F_{ij}''$ be the fold changes during the sequencing step,
+The total fold change is just the product: $F_{ij} = F'_{ij} F''_{ij} = M_{ij} / A_{ij}$.
+
+The MWC model implies that the relative values of $F_{ij}$ to $F_{i'j}$ are independent of $j$, for both the protocol as a whole and the individual steps.
+Therefore we can write the factors as product of the taxon-specific bias $B_i$ and a sample-specific scaling factor $C_j$, as in Section \@ref(models).
+I use $'$s to do this for the different steps, for example $F_{ij}' = B_i' C_j'$.
+The total metagenomics bias and scaling factors thus split into steps as $B_i = B_i' B_i''$ and $C_j = C_j' C_j''$.
+
+**TODO:** Add Note about units. We could be using bp, ng, genome copies, or marker-gene copies. It shouldn't affect the conclusions, but affects the units and values of the multipliers. Though perhaps it will help to pick ng DNA or genome copies
+
+What is $C'_j$?
+\begin{align}
+  C'_j = \frac{A'_{Tj}}{A_{Tj} \bar{B}'_j}.
+\end{align}
+Note that we have so far been defining the metagenomics efficiencies $B$ as being (arbitrarily) the efficiency relative to the first taxon, which affects the scale of $C'$.
+
+## Targeted DNA measurement
+
+**TODO:** explain the big picture of what I'm doing here
+
+Let $B^{(T)}_r$ be the conversion factor associated with the targeted measurement of reference taxon $r$ from the extracted DNA, which I assume is sample-independent but can vary by taxon.
+NOTE: I'm using $B$ for "bias" here but we need to keep in mind that I'm talking about the bias relative to the DNA and not the cellular abundance.
+In other words, the result of the targeted DNA measurement is 
+\begin{align}
+  (\#eq:T-dna)
+  T_{rj} 
+  &= A_{rj}' B^{(T)}_r \\
+  &= A_{rj} B'_r C'_j B^{(T)}_r.
+\end{align}
+Substituting the second expression for $T_{rj}$ in \@ref(eq:A-hat-targeted) gives an expression for the estimate of the abundance of taxon $i$ from the targeted measurement,
+\begin{align}
+  (\#eq:A-hat-targeted-dna)
+  \hat A_{ij} 
+  &= \frac{M_{ij}}{M_{rj}} \cdot T_{rj} \\
+  &= \frac{A_{ij} B_i C_j}{A_{rj} B_r C_j} \cdot A_{rj} B'_r C'_j B^{(T)}_r \\
+  &= A_{ij} \cdot \frac{B_i B^{(T)}_r}{B''_r} \cdot C'_j,
+\end{align}
+where I have replaced $B_r / B'_r$ by $B''_r$ in the denominator.
+Compared to the case of cellular measurement, the efficiency ratio for the reference taxon is just of the post-extraction steps, and we also have an additional term $C_j'$ that could vary across samples.
+
+Question: Is that the same as the mean DNA extraction efficiency varies across samples?
+
+
+## DNA spike-ins
+
+HERE: Do same thing as above, and get result that 
+
+Suppose we add the spike-in taxon $r$ to sample $j$ in amount $A'_{rj}$ with error 
+$B^{(T)}_r$, such that we believe the spike-in's abundance to be $T_{rj}$ in \@ref(eq:T-dna).
+As with the cellular spike-in, the abundance of taxon $i$ can be estimated by \@ref(eq:A-hat-targeted) (for the targeted cellular method);
+and as with the case of a targted DNA measurement above, the resulting estimate is given by \@ref(eq:A-hat-targeted-dna).
+
+## Implications
+
+These results show that, for both methods, the fold variation in the error across samples equals that in the scaling factor $C_j'$.
+Ideally, $C_j'$ would be constant, corresponding to the situation where doubling the cell concentration in a sample (while leaving the taxonomic composition unchanged) results in double the DNA yield.
+In this case, these DNA-based methods would work just as well with respect to bias not affecting fold-change estimates as their cell-based counterparts.
+ 
+Perhaps even easier to see why this is the "ideal" situation (and perhaps also a common default assumption when thinking about microbiome experiments), is to think in terms of the factors $F'_{ij} = B_i' C_j'$.
+Intuitively, we would like the factor increase for a taxon to be the same across samples; this situation corresponds to $C_j = c$ being constant across samples.
+(The value of $c$ depends on the experimental details but also how we've set $B_j' = 1$.)
+
+NOTE: Also need to consider whether it is true that the relative abundances are biased by a constant amount; and remember this is am important assumption I'm making as well, and we have some evidence that it can break down.
+But the motivation for how I've done it is that it seems reasonable to worry about saturation in the extraction yields that is independent of taxa once we account for variation in extraction efficiency and genome size that is simply due to the elution step.
+May need to give this motivation earlier.
