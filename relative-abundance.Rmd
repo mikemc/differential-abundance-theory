@@ -223,7 +223,7 @@ Microbiome researchers often combine lower-order taxa into higher-order taxa pri
 For instance, Amplicon Sequence Variants (ASVs), Operational Taxonomic Units (OTUs), or species-level counts may be aggregated into genus- or family-level counts by simply summing the counts within each group of lower-level taxa.
 Such aggregation can increase statistical power by reducing noise, sparsity, and the number of tests conducted.
 It also simplifies the task of interpretation by limiting the number of taxa considered.
-In addition, some degree of uncontrolled aggregation is inevitable due to the inherent limitations of our sequencing and bioinformatics protocols to distinguish sufficiently similar organisms (@mclaren2019), which may be lumped together into an OTU or species-level feature.
+In addition, some degree of uncontrolled aggregation is inevitable due to the inherent limitations of our sequencing and bioinformatics protocols to distinguish sufficiently similar organisms (@mclaren2019cons), which may be lumped together into an OTU or species-level feature.
 Finally, though our focus is on analysis of taxa, we note that taxonomic aggregation also occurs (at least implicitly) in gene or function analyses, where counts are combined from different taxa that share the same genes or predicted functions.
 Hence, to understand the effects of bias on DA analysis as it is actually practiced, we must understand the effects of such taxonomic aggregation on differential abundance.
 

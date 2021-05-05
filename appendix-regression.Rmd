@@ -119,15 +119,13 @@ Consider the linear equations
   \log \bar B &= \beta_0 + \beta_1 x   \\
   \log m_i    &= \gamma_0 + \gamma_1 x,
 \end{align}
-and let $\hat \alpha_0$, etc. denote the least-squares estimates for these equations supposing perfect information (i.e., that the $a_i$ and $B_i$ are known).
+and let $\hat \alpha_0$, etc. denote the least-squares estimates for the regression coefficients supposing perfect information (i.e., that the $a_i$ and $B_i$ are known).
 The coefficients for $\log m_i$ are related to those for $\log a_i$ and $\log \bar B$ through the equations
 \begin{align}
   (\#eq:least-squares-estimates)
   \hat \gamma_0 &= \hat \alpha_0 + \log B_i - \hat \beta_0 \\
-  \hat \gamma_1 &= \hat \alpha_1 - \hat \beta_1,
+  \hat \gamma_1 &= \hat \alpha_1 - \hat \beta_1.
 \end{align}
-so that the fitted model for $\log m_i$ is given by the right-hand side of
-\@ref(eq:expected-observed-abundance-log-linear-regression) with the coefficients replaced by the fitted values.
 ```
 
 ```{proof, echo = TRUE}
