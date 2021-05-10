@@ -191,7 +191,7 @@ while the centered log-ratio (CLR) transformation instead sets the denominator t
 \end{align}
 More generally, one might choose any set $R$ of reference taxa and use their geometric mean in the denominator;
 the ALR and CLR transformations then correspond to taking $R=r$ and $R=I$, respectively.
-@quinn2019afie call this transformation the /multiple additive log-ratio/ (MALR) transformation,
+@quinn2019afie call this transformation the *multiple additive log-ratio* (MALR) transformation,
 \begin{align}
   (\#eq:malr)
   \operatorname{malr} A_{j} = \left[ \log \frac{A_{ij}}{g(A_{R,j})}, \dots, \log \frac{A_{Ij}}{g(A_{R,j})} \right].
