@@ -1,0 +1,416 @@
+```{r vaginal-example-src, cache = TRUE}
+#### Vaginal microbiome example
+bias <- tibble(taxon = c("Lactobacillus", "Gardnerella", "Atopobium", "Spike-in"),
+  efficiency = c(4.68, 0.16, 0.285, 1)) %>%
+  mutate(across(efficiency, ~. / min(.)))
+# efficiency associated with the targeted measurement of Lactobacillus
+targeted_efficiency <- 2
+a0 <- tribble(
+  ~taxon, ~timepoint, ~abundance,
+  "Lactobacillus", "T1", 5,
+  "Lactobacillus", "T2", 0.5,
+  "Gardnerella", "T1", 2,
+  "Gardnerella", "T2", 8,
+  "Atopobium", "T1", 3,
+  "Atopobium", "T2", 1.5,
+) %>%
+  # Shrink abundance to have similar scale as proportions
+  mutate(across(abundance, ~ . / max(.))) %>%
+  left_join(bias, by = "taxon") %>%
+  with_groups(timepoint, mutate,
+    total_abundance = sum(abundance),
+    proportion = close_elts(abundance),
+    biased_abundance = efficiency * abundance,
+    biased_proportion = close_elts(biased_abundance),
+    biased_count = biased_proportion * 1e3,
+    abundance_estimate_bulk = biased_proportion * total_abundance,
+    #> abundance_estimate_spikein = biased_count / biased_count[taxon == "Spike-in"],
+    abundance_estimate_targeted = biased_count * targeted_efficiency *
+      abundance[taxon == "Lactobacillus"] / biased_count[taxon == "Lactobacillus"],
+  )
+a1 <- a0 %>%
+  select(-total_abundance) %>%
+  pivot_longer(-c(taxon, efficiency, timepoint), names_to = "type")
+ptb <- a1 %>%
+  filter(
+    type %in% c("proportion", "biased_proportion"),
+  ) %>%
+  mutate(
+    across(type, fct_relevel, "proportion", "biased_proportion"),
+    across(type, fct_recode,
+      "Actual" = "proportion",
+      "Observed" = "biased_proportion"),
+  )
+
+## Panels showing the error in measurement and in differential abundance
+shared_layers <- list(
+  geom_path(aes(group = taxon), 
+    arrow = grid::arrow(length = unit(0.15, "inches"))),
+  geom_point(size = 2),
+  scale_color_brewer(type = "qual", palette = 1, guide = FALSE),
+    # guide = guide_legend(reverse = TRUE)),
+  labs(y = "Proportion", color = "Taxon"),
+  scale_y_log10(),
+  coord_cartesian(clip = "off"),
+  # scale_y_log10(breaks = c(1e-2, 3e-2, 1e-1, 3e-1, 1)) +
+  expand_limits(y = 1e-2),
+  theme(plot.margin = unit(c(0, 1.3, 0, 0), units = "in"))
+)
+# How much to nudge the taxon labels and proportions
+nudge.taxon <- 0.48
+nudge.prop <- 0.24
+# In future iterations, consider labelling the taxa in both facets
+p.meas <- ptb %>%
+  ggplot(aes(type, value, color = taxon)) +
+  facet_wrap(~timepoint, nrow = 1, scales = "fixed", 
+    labeller = as_labeller(function(x) str_c("Time point ", x))
+  ) +
+  shared_layers +
+  geom_text(data = ~filter(., type == "Actual"), 
+    aes(label = round(value, 2)), nudge_x = -nudge.prop) +
+  geom_text(data = ~filter(., type == "Observed"), 
+    aes(label = round(value, 2)), nudge_x = nudge.prop) +
+  geom_text(data = ~filter(., timepoint == "T2", type == "Observed"), 
+    aes(label = taxon), nudge_x = nudge.taxon, hjust = 0) +
+  labs(
+    x = "Type",
+    title = "Measurement error at each time point"
+  )
+p.fc <- ptb %>%
+  ggplot(aes(timepoint, value, color = taxon)) +
+  facet_wrap(~type, nrow = 1, scales = "fixed") +
+  shared_layers +
+  geom_text(data = ~filter(., timepoint == "T1"), 
+    aes(label = round(value, 2)), nudge_x = -nudge.prop) +
+  geom_text(data = ~filter(., timepoint == "T2"), 
+    aes(label = round(value, 2)), nudge_x = nudge.prop) +
+  geom_text(data = ~filter(., timepoint == "T2", type == "Observed"), 
+    aes(label = taxon), nudge_x = nudge.taxon, hjust = 0) +
+  labs(
+    x = "Time point",
+    title = "Actual and observed fold changes"
+  )
+## Panel showing the efficiencies of individual taxa and the sample means
+sme <- a0 %>%
+  with_groups(timepoint, summarize, mean_efficiency = sum(proportion * efficiency))
+sme0 <- sme %>%
+  mutate(label = str_glue("mean ({timepoint})")) %>%
+  select(label, efficiency = mean_efficiency)
+sme1 <- sme %>%
+  mutate(taxon = "Mean", type = "Mean") %>%
+  select(taxon, efficiency = mean_efficiency, timepoint, type)
+bias1 <- bias %>% 
+  filter(taxon != "Spike-in") %>% 
+  expand(nesting(taxon, efficiency), timepoint = c("T1", "T2")) %>%
+  mutate(type = "Taxon")
+lvls = c("Atopobium", "Gardnerella", "Lactobacillus", "Mean")
+etb1 <- bind_rows(bias1, sme1) %>%
+  mutate(across(taxon, factor, levels = lvls))
+
+lvls = c("Gardnerella", "Atopobium", "Lactobacillus")
+bias2 <- bias %>% 
+  filter(taxon != "Spike-in") %>% 
+  expand(nesting(taxon, efficiency), timepoint = c("T1", "T2")) %>%
+  mutate(
+    type = "Taxon",
+    across(taxon, factor, levels = lvls),
+    x = as.integer(taxon)
+  ) %>%
+  left_join(sme, by = "timepoint")
+
+clrs <- c(RColorBrewer::brewer.pal(n = 3, "Accent"), rep("#585858", 2))
+p.eff <- bias2 %>%
+  ggplot(aes(x = x, y = efficiency, color = taxon)) + 
+  geom_point(size = 2) +
+  geom_text(data = ~filter(., timepoint == "T2"),
+    aes(label = taxon), x = 3.3, hjust = 0) +
+  geom_segment(aes(xend = x, yend  = efficiency, y = mean_efficiency),
+    arrow = grid::arrow(length = unit(0.15, "inches"))) +
+  geom_segment(data = sme, 
+    aes(x = 1, xend = 3, y = mean_efficiency, yend = mean_efficiency), 
+    color = "#585858",
+    inherit.aes = FALSE) +
+  geom_text(data = sme0 %>% mutate(timepoint = "T2"),
+    aes(label = label, y = efficiency), x = 3.3, hjust = 0,
+    color = "#585858",
+    inherit.aes = FALSE) +
+  scale_color_manual(values = clrs) +
+  labs(y = "Relative efficiency", x = NULL, color = "Taxon", 
+    title = "Taxonomic bias of protocol"
+  ) +
+  scale_y_log10(limits = c(1, 100) / 2,
+    breaks = etb1$efficiency, 
+    labels = signif(etb1$efficiency, 2)
+  ) +
+  xlim(c(0.0, 4)) +
+  facet_wrap(~timepoint, nrow = 1, scales = "fixed", 
+    labeller = as_labeller(function(x) str_c("Time point ", x))
+  ) +
+  coord_cartesian(clip = "off") +
+  theme(
+    axis.line.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank(),
+    legend.position = "none",
+    plot.margin = unit(c(0, 1.0, 0, 0), units = "in")
+  )
+```
+
+# Introduction
+
+Most microbiome research aims to go beyond qualitative descriptions to make quantitative conclusions about associations between specific microbes or community states and key host or environmental properties.
+But there is serious disagreement about whether the microbiome measurements made by marker-gene and metagenomic sequencing (MGS) are or can ever be truly quantitative. A primary reason is that taxa vary in how they respond to each step in an MGS protocol, from sample collection to bioinformatic classification.
+<!-- TODO: Possible references: Mallick et al., 2017 DOI 10.1186/s13059-017-1359-z; Barlow et al. 2020 https://doi.org/10.1038/s41467-020-16224-6 -->
+As a result taxa can differ dramatically (e.g. 10-1000X) in how efficiently they are measured—that is, converted from cells into taxonomically classified sequencing reads—making the relative abundances we observe by MGS inaccurate representations of the actual sample compositions.
+Although often associated with variation in primer binding and amplification rates and marker-gene copy-number, large variation in DNA extraction efficiency and in the ability to correctly classify reads among taxa make this taxonomic bias a feature of shotgun metagenomic measurements as much as marker-gene measurements.
+Taxonomic bias is protocol specific (@mclaren2019cons) and can even vary among batches within an experiment (@yeh2018taxo); it thus not only makes MGS measurements inaccurate, but also incomparable between studies.
+Taxonomic bias thereby poses a major challenge for any seeking to draw quantitative conclusions from MGS studies.
+
+The field's current answer to this challenge is methods standardization, prioritizing consistency over accuracy.
+By treating each sample within a study in exactly the same manner, we can ensure that observed differences between samples are not simply due to methodological differences.
+Yet standardization does not guarantee that these observed differences reflect the actual differences in taxonomic composition among samples.
+Consider what might be the simplest and most common inference made from MGS: How does the proportion of a taxon vary between samples? An observation that *Escherichia* coli makes up 10% of the sequencing reads in a fecal sample might, thanks to bias, have arisen from a sample in which the proportion of *E. coli* is actually 50% or 1%.
+Yet many hope that if we observe the proportion of *E. coli* to increase from 10% to 20% between two samples, its proportion must have actually doubled—by fixing the taxonomic bias of our measurements through standardization, we have (so the argument goes) fixed the measurement error in both samples so that it will cancel when estimate the fold change.
+Unfortunately, the results of @mclaren2019cons show that reality is not so neat.
+Because the taxa compete for sequencing effort within a sample, the effect that taxonomic bias has on the observed proportions depends on the taxonomic composition of the sample.
+As a result, MGS measurements can lead to spurious inferences about changes across samples even when taxonomic bias is constant for each taxon across samples.
+
+This problem posed by taxonomic bias intersects with a second, growing concern within the microbiome field: that the relative abundances measured by MGS can present a misleading view of absolute-abundance dynamics.
+**Absolute abundances are more relevant for certain biological questions such as...**
+<!-- TODO: Give sentence or two motivating the measurement of absolute abundances -->
+This concern has led to a recent rise in methods for supplementing MGS measurements to allow inference of absolute abundances.
+<!-- Cite various approaches -->
+The most popular approach is to multiply the proportions from MGS by an independent measurement of total microbial abundance.
+<!-- studies to cite using this approach: in environmental microbiology (Props2017, Kevorkian2018, Lloyd2020) but also increasingly in human microbiome studies (TettamantiBoshier2020,Contijoch2019,Vandeputte2017,Vieira-Silva2019). -->
+Multiplying inaccurate proportions by a measurement of cell concentration results in inaccurate absolute abundances that are subject to the same limitations on the accuracy of fold changes as standard MGS proportions alone.
+
+Here we summarize recent advances in our understanding of how taxonomic bias affects our ability to accurately determine how taxa vary in relative and absolute abundance across samples from different conditions—the inference problem known as *differential abundance (DA) analysis*.
+We first explain how taxonomic bias can lead to spurious DA results and consider the biological conditions in which such spurious results are likely.
+But we then describe several experimental and computational methods that can be used to avoid or correct these errors.
+Collectively, these methods may provide practical solutions to mitigating the effects of taxonomic bias on DA analysis for a majority of microbiome studies.
+
+# Bias can cause spurious results in proportion-based DA analysis
+
+```{r vaginal-example, fig.dim = c(8, 6) * 1.5, fig.cap = '(ref:vaginal-example)', dependson = "vaginal-example-src"}
+p.meas + p.eff + p.fc + plot_spacer() + 
+  plot_layout(byrow = TRUE, ncol = 2, widths = c(1, 0.6)) +
+  plot_annotation(tag_levels = "A")
+```
+
+(ref:vaginal-example) **Taxonomic bias can distort differential abundance results even when it is consistent for each taxon across samples.** Panel A shows the actual and observed proportions for hypothetical community samples from two time points, which differ in their relative abundance of three taxa. Panel B shows taxonomic bias in terms of the relative efficiencies of the three taxa against the mean efficiency of each sample; the difference between the taxon's efficiency and the sample's mean (vertical arrows) determines the fold error seen in Panel A. Panel C rearranges the plot from Panel A to show the actual and observed fold changes between time points. The efficiencies of individual taxa were estimated by @mclaren2019cons from mock community data from @brooks2015thet. The abundances are hypothetical but inspired by observations from the human vaginal microbiome; see main text.
+
+We illustrate the problems posed by taxonomic bias for differential abundance using an example where the bias of an MGS protocol was explicitly measured using mock communities.
+To analyze the effects of taxonomic bias on measurements of the human vaginal microbiome, @brooks2015thet performed 16S rRNA gene sequencing of mock communities of seven key vaginal species using a similar protocol to that of the Vaginal Human Microbiome Project (VaHMP).
+@mclaren2019cons used this data to estimate the relative measurement efficiency of the seven species.
+They found that the most efficiently measured species, *Lactobacillus iners*, had an efficiency that was 29X that of the least efficiently measured species, *Gardnerella vaginalis*, primarily due to a greater DNA extraction efficiency and 16S copy number.
+A third species, *Atopobium vaginae*, had an efficiency 1.8X that of *G. vaginalis*.
+A common aim of human vaginal microbiome studies, including the VaHMP, is to understand the causes and consequences of shifts in communities from being dominated by a particular *Lactobacillus* species to dominance by a non-*Lactobacillus* species such as *G. vaginalis*, which have been associated with deleterious health outcomes including an increased risk of preterm births in pregnant women.
+It is therefore important to know whether the efficiency variation found by @mclaren2019cons affects the observed differential abundances between *Lactobacillus*-dominated and *Gardnerella*-dominated communities.
+
+Figure \@ref(fig:vaginal-example) illustrates the effects of taxonomic bias on the measured proportions for hypothetical vaginal samples from a single woman at two points in time, during which the community shifts from being dominated by *Lactobacillus* to being dominated by *Gardnerella*.
+In each case, we observe a greater proportion of *Lactobacillus* than is truly present, and less of the other two species (Figure \@ref(fig:vaginal-example)A).
+This positive multiplicative error arises because *Lactobacillus* is more efficiently measured than the average species in each sample.
+@mclaren2019cons showed that the observed and actual proportions of a taxon $i$ in a sample $s$ are related by the equation
+\begin{align}
+  (\#eq:error)
+  \text{observed}_{i}(s) = \text{actual}_{i}(s) \cdot \frac{\text{efficiency}_{i}}{\text{mean efficiency}(s)}
+\end{align}
+where $\text{mean efficiency}(s)=\text{actual}_j(s)*\text{efficiency}_j$ in the denominator is the average efficiency of all taxa in that sample.
+Intuitively, Equation \@ref(eq:error) says that the taxon will be overrepresented by the extent to which its measurement efficiency is greater than the average efficiency of cells in the sample.
+Figure \@ref(fig:vaginal-example)B shows the efficiencies of the three taxa and the mean efficiency in each sample.
+The (multiplicative) difference between the taxon efficiencies and the mean efficiency determines the (multiplicative) error in each sample; for example, the mean efficiency in the second sample is 2.5, leading to a 29/2.5=11.6X error in the proportion of *Lactobacillus*.
+The error in the second sample is larger — specifically, by 6X — than the first sample because the high proportion of *Gardnerella* has reduced the sample mean efficiency (and thus increased the efficiency of *Lactobacillus* relative to the mean) by 6X.
+
+The enrichment depends on the taxon’s efficiency relative to the sample average, rather than the efficiency itself, because the requirement that the proportions of all taxa sum to one locks the taxa in a zero-sum competition.
+Notably, competition occurs (though in a less absolute form) even at the level of the raw sequencing reads: DNA extractions and PCR reactions have limited output capacity; high-concentration samples are typically subsampled to fixed, lower concentrations; and sequencing libraries are given limited sequencing effort; so that the experimental process itself typically imposes competition to be sequenced.
+And it is competition that prevents the effects of taxonomic bias from canceling when we analyze how the proportions of individual taxa change across samples.
+
+Figure \@ref(fig:vaginal-example)C shows the consequences of measurement error on an analysis of the fold change in proportions between the two samples.
+In reality, *Gardnerella* changes by 4X, *Lactobacillus* by 0.1X, and *Atopobium* by 0.5X.
+Yet what is observed is that *Gardnerella* changes by 32X, *Lactobacillus* by 0.6X, and *Atopobium* by 3X.
+In other words, the change in each case is multiplied by 6X, causing a much larger increase in *Gardnerella* and a smaller decrease *Lactobacillus* than actual, and the appearance that *Atopobium* increased when it in fact decreased.
+Why do such errors occur?
+The multiplicative error in Equation \@ref(eq:error) has two parts: a taxon-specific term in the numerator that is the same in each sample, and a taxon-independent term in the denominator that depends on the composition of the sample through the mean efficiency.
+When we compute the fold change in a taxon i between samples s and t, 
+\begin{align}
+  \frac{\text{observed}_{i}(t)}{\text{observed}_{i}(s)}=\frac{\text{actual}_{i}(t)}{\text{actual}_{i}(s)}*\frac{\text{efficiency}_{i}}{\text{efficiency}_{i}}*\frac{\text{mean efficiency}(s)}{\text{mean efficiency}(t)}
+\end{align}
+the constant efficiency in the numerator of Equation \@ref(eq:error) cancels, but the varying mean efficiency does not, leaving an error that is equal to the inverse change in mean efficiency.
+As a result, we are here left inferring that the fold-changes in proportions have all increased less (or decreased more) than they truly have.
+In our example, the mean efficiency decreased by 6X (from 15 to 2.5) due to the shift in dominant taxon from the high-efficiency *Lactobacillus* to the low-efficiency *Gardnerella*, causing the observed fold changes to increase by 6X above the actual.
+This increase distorted the magnitudes of the changes in *Lactobacillus* and *Gardnerella* (decreasing the first and increasing the second) and changed the sign of *Atopobium* from negative to positive.
+Thus partial cancelling in the effect of a constant multiplicative bias may not be sufficient to protect against spurious results.
+
+Spurious results can occur for the same basic reason in proportion-based absolute-abundance inference.
+Suppose that the true total abundance in each sample can be determined experimentally.
+Because the absolute abundance estimate simply multiplies the erroneous observed proportions by this total, the estimated change in absolute abundance is wrong by the same factor as the fold change in proportions.
+In our Figure \@ref(fig:vaginal-example) example, if the change in total abundance between samples were 2X, then we would observed both *Lactobacillus* and *Atopobium* to have increased in absolute abundance (by 1.2X and 6X), when in fact *Lactobacillus* decreased (by 5X) and *Atopobium* remained the same.
+
+## Effect on regression of multiple samples
+
+We showed how fold changes of individual samples may be unreliable.
+But microbiome analyses often do not interpret such individual differences, and instead look for average patterns across many samples, such as how the abundance of a taxon varies with some covariate of interest.
+The covariate may be discrete, such as whether the sample is from a healthy or sick person, or it may be continuous, such as a measure of space, time, or temperature.
+Often these analyses can be framed as a regression problem.
+For example, we might hypothesize that the log absolute abundance of taxon $i$ changes with a variable $x$ according to the simple linear regression, 
+\begin{align}
+  E[\text{log abundance}_{i} \mid x] = a_{0} + a_{1}x
+\end{align}
+where $x$ is either continuous (e.g., sediment depth) or binary (e.g., $x=1$ for treated patients and $x=0$ for controls).
+Much of the effect of bias will be absorbed by the model intercept, which is typically not of interest to the researcher.
+However, variation in the mean efficiency creates additional variation (reducing statistical power to detect variation in the slope) and can also create a statistical bias in our slope estimate equal to the inverse slope of $E[\text{log mean efficiency}\mid x]$ as a function of $x$.
+Therefore if the mean efficiency varies across samples, but is not associated with the covariate $x$, its effect may simply be to create larger standard errors in our slope estimate.
+But the larger worry may be the systematically distorted slope ($a_1$) estimates that arise in situations where the mean efficiency changes with $x$.
+Notably, the error in an absolute sense is the same for all taxa—the slope is always reduced by the same amount—but the implications differ for various taxa depending on their slopes, causing magnitude or sign errors depending how the coefficient derived from the (unknown) true abundances compares to that of the mean efficiency (Figure \@ref(fig:regression-example)).
+
+```{r regression-example, fig.cap = '(ref:regression-example)'}
+svg_path <- here::here("figures/leopold2020host-example.svg")
+if (knitr::is_html_output()) {
+  knitr::include_graphics(svg_path)
+} else if (knitr::is_latex_output()) {
+  cowplot::ggdraw() + cowplot::draw_image(svg_path)
+}
+rm(svg_path)
+```
+
+(ref:regression-example) **Taxonomic bias distorts multi-sample differential abundance inference when the mean efficiency of samples is associated with the covariate of interest.** Details to synthesize into a caption: Regression of log2(Proportion) of the commensal fungus Penicillium versus timepoint; timepoints 1 and 2 are pre- and post-challenge with the pathogen Melampsora. Data is split by the region the host plants are derived from (Eastern and Western US). Calibrated proportions = Observed proportions in the real, experimental samples after adjustment for the bias measured in mock communities. Mean efficiency of each community is inferred by treating the calibrated proportions as the truth, and multiplying by efficiencies estimated from the mocks. The pathogen Melampsora has a high measurement efficiency; thus once it infects the plants, the mean efficiency of the sample increases (purple points). Efficiency is here taken as relative to the focal taxon Penicillium. West plants tend to be more resistant to the pathogen, which likely explains why the mean efficiency doesn't increase as much in the West plants. Penicillium is observed to decrease in log proportion, in both the East and West plants. But the calibrated measurements show that it actually slightly increases in the East plants, and has a lesser decrease in the West plants than what was observed before bias correction. The difference between the Calibrated and Observed data points and regression lines equals the regression line of the mean efficiency: Orange = Green + Purple; Green = Orange - Purple. The absolute error in regression coefficients is the same for all taxa. I picked Penicillium for illustration since it has the smallest observed decrease, which makes the error due to bias have a particularly significant impact.
+
+# Implications for real-world inference 
+
+These observations show that the effects of taxonomic bias do in fact cause error in proportion-based differential abundance analyses.
+Yet if the mean efficiency varies much less across samples than the abundances of individual taxa, this error will be negligible.
+Alternatively, if variation in the mean efficiency is effectively random (not associated with regression covariates), the effect of bias may be to increase the residual variance and thus reduce our statistical power to assay differential abundance—unfortunate to be sure, but perhaps not as much as confidently inferring changes with the wrong sign or magnitude.
+But there are salient biological scenarios where substantial associations between the mean efficiency and covariate can in fact lead to spurious differential abundance inference.
+
+## Scenarios in which bias may cause spurious results
+
+Figure \@ref(fig:vaginal-example) illustrates how a change in dominance by from a high- to low- efficiency taxon (or vice versa) can easily create spurious DA results.
+Indeed, this scenario may be particularly common in vaginal microbiome studies.
+Human microbiomes often dominated by *Lactobacillus*, but can become dominated by non-*Lactobacillus* species such as *Gardnerella* vaginalis and *Atopobium vaginae*, and these low-*Lactobacillus* states are associated with the disease bacterial vaginosis and, in pregnant women, an increased risk of preterm birth.
+Using mock community measurements from @brooks2015thet, @mclaren2019cons showed that the efficiency of two common *Lactobacillus* species were 20-30X greater than *G. vaginalis* and *A. vaginae*.
+Therefore we should expect samples dominated by *Lactobacillus* to have a much larger mean efficiency than those those dominated by *G. vaginalis* and *A. vaginae*, which would distort the observed associations of all taxa with any covariate that is also associated with *Lactobacillus* dominance.
+The extraction and 16S sequencing protocol used by @brooks2015thet is similar to that used in the VaHMP MOMs-PI study also led by these researchers to investigate the associations of these taxa with preterm birth (@fettweis2019thev), demonstrating the potential for serious real-world consequences for these statistical/technical concerns.
+
+Similar dynamics occur in a plant-fungal interactions experiment performed by @leopold2020host (Figure \@ref(fig:regression-example)).
+The authors inoculated commensally-colonized trees with a fungal pathogen.
+Using DNA mock communities, they showed that (excluding bias from DNA extraction) the pathogen was 10X more efficiently measured than the median commensal and 40X more efficiently measured than the lowest-efficiency commensal.
+In most hosts, the pathogen increased rapidly between timepoints, driving an increase in the sample mean efficiency that in turn leads to larger decreases being observed in the proportions of commensal taxa than what is predicted using calibrated (bias-corrected) values (REF APPENDIX).
+For example, the calibrated proportions indicate that the commensal *Penicillium* slightly increased in hosts from the Eastern US and slightly decreased in hosts from the Western US.
+Yet the observed (uncalibrated) proportions show moderate and large decreases, respectively (Figure \@ref(fig:regression-example) above).
+
+These examples involved scenarios where individual taxa can constitute a large proportion of the community.
+But in samples from highly-diverse ecosystems such as human gut, soil, and ocean sediment, one species rarely dominates.
+In these cases it might seem intuitive that the mean efficiency should be relatively stable across samples: As diversity increases, the mean efficiency effectively averages over efficiencies from a greater number of taxa and so (by the central limit theorem) will converge to a constant value—if taxon efficiencies are statistically independent of taxon abundances (REF APPENDIX).
+In practice, associations between efficiencies and abundances may be common and can allow large shifts in mean efficiency to occur even in highly diverse samples.
+
+The human gut provides a clear example of how such associations might arise.
+Gut microbiomes typically have high diversity at the species level but are dominated by just a small number of phyla, and two in particular: The Bacteroidetes and the Firmicutes.
+The ratio of Bacteroidetes to Firmicutes can shift substantially between individuals and has been linked to a number of host traits and health conditions.
+In addition, many DNA extraction protocols more efficiently lyse Gram-negative Bacteroidetes species than Gram-positive Firmicutes species (though there can also be significant variation in extraction efficiency among species within these phyla (@mclaren2019cons).
+For such protocols, we should expect Bacteroidetes-dominated samples to have substantially larger mean efficiencies than Firmicutes-dominated samples, regardless of species-level diversity.
+This association of efficiency with phylum abundance will distort DA inferences at any taxonomic level if the covariate is also associated with these phyla.
+
+This example illustrates a general mechanism by which association between the abundances and efficiencies of taxa are created by the common influence of evolutionary history.
+Just as shared evolutionary history creates positive associations in ecological traits that drives positive correlations in how related taxa vary in abundance across samples, so does it create positive associations in bias-related traits that can lead to similar efficiencies among closely related taxa.
+Such phylogenically-associated, bias-affecting traits include cell-wall toughness, ribosomal-operon copy number, binding affinity for a given set of primers, and representativeness in taxonomic databases.
+Ecology and efficiency are both affected by the same evolutionary history, leading to positive associations between the two: A change in diet that increases the relative abundances of many Bacteroidetes species and in so doing also increases the relative abundance of many easy-to-lyse species.
+
+Associations between measurement efficiency and relative abundance can also arise because a single trait affects both.
+For example, microbes at the ocean floor are slowly buried, sinking into a low nutrient, low oxygen environment.
+@lloyd2020evid estimate the log fold change in the estimated absolute abundance of various taxa with sediment depth (as a proxy for time) to determine which taxa are able to persist and even grow in this difficult environment.
+It is plausible that microbes with tougher cell walls would tend to persist longer (alive or dead) in the sediment, while at the same time being more difficult to extract DNA from than microbes with weaker cell walls.
+As the relative abundance of tougher species increases with depth, the mean extraction efficiency decreases.
+This decrease would increase the inferred log fold changes and could lead to inferred growth of taxa that are actually just persisting or even slowly dying off.
+Another example of a trait that might simultaneously affect efficiency and relative abundance is ribosomal copy number, which increases the measurement efficiency in ribosomal amplicon experiments and is also linked to differences in ecology and population dynamics among species.
+
+### Error in absolute abundance measurements
+
+So far we have ignored error associated with our absolute abundance measurements.
+In fact, these measurements can also have a tendency to measure contributions from some taxa more efficiently than others.
+**TODO: State how this could create problems.
+Might also note the ambiguity in what the truth/target is (e.g.
+live cells, or all cells; cells, or 16S rRNA gene copies; observations in Jian, Salonen, and Korpela 2021).**
+Interestingly, taxonomic bias may actually make qPCR a better method for absolute quantification than cell counting for 16S rRNA gene sequencing experiments.
+16S rRNA gene qPCR measures the concentration of 16S rRNA gene copies in the extracted DNA and is therefore necessarily affected by three large sources of bias in 16S rRNA gene experiments: extraction, amplification, and copy-number variation.
+Yet these biases are shared by the sequencing measurement.
+Though they make qPCR measurements a bad proxy for total cell density, when used for absolute differential abundance inference the shared bias in the qPCR and sequencing measurements can cancel, leaving relative accurate fold changes.
+(Jian, Salonen, and Korpela 2021 suggests some of these ideas and APPENDIX gives a mathematical justification.)
+If common primers are used by qPCR and 16S rRNA gene sequencing, the bias due to primer mismatches and other sources of variation in amplification could even be accounted for in this manner.
+Yet ideally we would still be able to estimate and correct remaining error due to unshared bias or to mechanisms, such as saturation during DNA extraction, that could break the assumed proportionality between qPCR measurements and total abundance.
+
+## We cannot simply ignore taxonomic bias
+
+These examples show that there is potential for bias to distort DA results in both low and high diversity settings.
+We therefore need methods to control or correct for bias to ensure the validity of future results, as well as methods to probe the robustness of past results.
+It is possible that spurious results are unlikely in many experimental contexts.
+By applying such methods across a range of biological and experimental contexts we will deepen our understanding of when bias is unlikely to significantly distort biological findings and when additional measures are needed to mitigate its effects.
+
+# Potential solutions
+
+## Using control samples to calibrate relative abundances
+
+In principle, control ("mock") communities containing representative taxa from the environment of interest can be used to directly estimate the measurement efficiencies and correct bias in the MGS measurements ("calibration").
+Such an approach may be sufficient for synthetic-community experiments, where all taxa are culturable, and for relatively simple natural communities like the vaginal microbiome that are dominated by a small number of culturable taxa.
+But suitable mock controls may not be feasible for most complex natural ecosystems and require significant effort to develop.
+
+An closely-related alternative to mocks are controls derivedd from natural samples, which provide a way to calibrate measurements from protocols to a reference protocol (@mclaren2019cons).
+A natural fecal standard is currently being developed by [NIST](https://www.nist.gov/programs-projects/human-gut-microbiome-reference-material) and one has recently been made available commercially by Zymo Research ([ZymoBIOMICS Fecal Reference](https://www.zymoresearch.com/collections/zymobiomics-microbial-community-standards/products/zymobiomics-fecal-reference-with-trumatrix-technology)).
+Ensuring the stability and homogeneity of such control samples can be challenging.
+Careful testing is also needed to ensure that the preparation and storage of the controls has not significantly affected the taxonomic bias relative to the experimental samples in a given application.
+As it is feasible to characterize a single standard much more extensively than a typical community sample, we may be able to obtain an estimated composition we feel comfortable treating as the ground truth. 
+Yet even when this is not possible, such natural standards can allow us to reconcile results across studies despite not knowing the truth.
+
+## Ratio-based relative and absolute abundance inference
+
+A comprehensive approach of estimating the efficiency of all taxa is needed for getting calibrated relative abundances of all taxa within individual samples.
+But what if we only want calibrated DA analysis?
+That is, we are comfortable with not knowing whether *E. coli* is 10% of our sample if we can confidently determine that it doubled or halved between sample conditions?
+This problem is easier to solve, and one solution is to use analysis methods based on the ratios among taxa rather than the proportions of individual taxa.
+
+A subset of methods for analyzing differential relative abundance are derived from the field of Compositional Data Analysis (CoDA).
+The defining feature of CoDA methods is that they are based on fold-changes in ratios among elements (here, the taxa) (REF AITCHISON).
+The use of CoDA methods in microbiome analysis has largely been motivated by concerns over the negative correlations between taxa induced by the sum-to-one constraint in taxon proportions.
+But @mclaren2019cons showed that, due to their property of perturbation invariance (REF AITCHISON), the results of CoDA differential relative abundance analysis are invariant to consistent taxonomic bias.
+From Equation \@ref(eq:error), the observed ratio of a taxon $i$ to a taxon $j$ in a sample $s$ is
+\begin{align}
+  \frac{\text{observed}_{i}}{\text{observed}_{j}}=\frac{\text{actual}_{i}}{\text{actual}_{j}}*\frac{\text{efficiency}_{i}}{\text{efficiency}_{j}}
+\end{align}
+The error is independent of the sample composition and thus cancels in any function that is a fold-change of this (or any) ratio of taxa between samples.
+(Perhaps insert example from Figure \@ref(fig:vaginal-example)ABC all giving same ratio FCs.)
+
+Might ratio-based analysis also be used to overcome the effects of bias in differential absolute abundance?
+In fact, some methods for determining absolute abundance are based on ratios among taxa in the MGS measurement instead of proportions.
+Rather than using a measurement of total abundance, these methods require determining the abundance of one or more reference taxa.
+To estimate the abundance of a focal taxon $i$, this approach multiplies the ratio of reads (or proportions) of taxon i to a reference taxon $r$ by a known or estimated abundance of the reference taxon, (while ignoring bias)
+\begin{align}
+  \text{estimate}_{i} = \frac{\text{observed}_{i}}{\text{observed}_{r}}*\text{abundance}_{r}
+\end{align}
+So far this approach has been mainly used with spike-in experiments, in which an extraneous taxon is added in a known (and typically constant) abundance to each sample so that it can serve as the reference taxon.
+Yet the reference taxon could also be a naturally occurring taxon whose absolute abundance we have estimated using a method such as ddPCR directly on cells or (q/dd)PCR on the extracted DNA.
+Because taxa do not compete (or competition is greatly reduced) in such targeted measurements, any taxonomic bias associated with them is expected to create constant multiplicative error across samples and so not affect fold change estimates [APPENDIX].
+APPENDIX describe various theoretical and experimental considerations for both approaches.
+
+## Estimating error with targeted measurements of a small number of taxa
+
+Because targeted absolute-abundance measurements are expected to provide (relatively) accurate  estimates of fold changes, they can be used to validate and even correct the DA results derived from a proportion-based absolute DA analysis.
+We illustrate the basic idea using the @lloyd2020evid experiment described above.
+Absolute abundances in this study were estimated by multiplying MGS proportions by total abundance measured by cell counting; for comparison, qPCR was used to measure specific microbial taxa.
+Because the error in fold changes or a regression from the MGS measurements is taxon-independent, the difference between the two methods for these reference taxa informs us about the difference for all taxa.
+@lloyd2020evid found close agreement for the specific taxa also measured by qPCR (Table 1), suggesting that variation in sample mean efficiency did not significantly distort their results.
+In principle, a joint statistical analysis of all measurements would allow inferring variation in the sample mean efficiency across samples and obtaining calibrated fold change and regression estimates for all taxa [APPENDIX].
+
+## Computational approaches
+
+What can we do for experiments that have already been conducted without mock controls, targeted control measurements, or spike-ins?
+At least two purely computational approaches can still be used.
+
+**Bias sensitivity analysis:**
+A straightforward and universally available approach is to use computer simulation to determine how the results change under a range of possible sets of efficiencies, which can be randomly generated to reflect certain hypotheses about bias in the given system.
+The utility of such simulations can increase the more we learn about the magnitude of bias in different systems and the taxonomic and protocol features that determine it.
+Future work in developing tools and methods for simulating efficiency vectors and performing bias sensitivity analyses could be a valuable way to assay and improve the reliability of microbiome results—not just for differential absolute abundance, but for all microbiome analyses.
+
+**Bias-aware meta-analysis:**
+When the goal is to perform a meta-analysis that combines studies that have used different protocols, the unknown measurement efficiencies of each protocol can be explicitly included as parameters of the statistical model that is used.
+Unknown efficiencies can be included in "compositional" linear modeling frameworks such as ALDEx2, DivNet, and fido simply by adding a protocol-specific term to the linear model of taxon log ratios.
+Thus such bias-aware meta-analyses are already technically feasible and—if bias is truly consistent within a protocol or study—may provide a more powerful alternative to non-parametric or other meta-analysis methods that do not explicitly model bias.
