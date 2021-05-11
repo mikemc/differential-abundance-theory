@@ -12,8 +12,8 @@ rmd_files: [
   "models.Rmd",
   "relative-abundance.Rmd",
   "absolute-abundance.Rmd",
-  "appendix-regression.Rmd",
-  "appendix-dna.Rmd",
+  "derivations-regression.Rmd",
+  "derivations-dna.Rmd",
   "references.Rmd",
 ]
 

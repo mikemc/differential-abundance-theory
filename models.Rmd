@@ -1,3 +1,5 @@
+# (APPENDIX) Appendix {-}
+
 # Measurement models {#models}
 
 Deterministic measurement error models that extends the @mclaren2019cons model of metagenomics measurement to 1) describe absolute as well as relative abundance, 2) include spike-in taxa, and 3) include supplementary measurements of bulk and targeted (absolute) abundance.
