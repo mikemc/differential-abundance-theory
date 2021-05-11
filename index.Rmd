@@ -1,6 +1,9 @@
 ---
-title: "A mathematical framework for understanding microbiome differential-abundance methods"
-author: "Michael R. McLaren"
+title: "Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for"
+author:
+  - Michael R. McLaren^[North Carolina State University; send correspondence to m.mclaren42@gmail.com]
+  - Karen G. Lloyd^[University of Tennessee]
+  - Benjamin J. Callahan^[North Carolina State University]
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 output: bookdown::gitbook
@@ -8,14 +11,16 @@ documentclass: book
 bibliography: [main.bib, packages.bib]
 biblio-style: apalike
 link-citations: yes
+# description:
 github-repo: mikemc/bda-theory
-description: "A mathematical framework for understanding (relative and absolute) microbiome differential-abundance methods"
 ---
 
-# Abstract
+# Preface {-}
 
-This manuscript develops a mathematical framework for understanding microbiome differential-abundance analysis; 
-specifically, how taxonomic bias and other complications of real microbiome measurement can distort the results of commonly-used methods.
-This framework predicts that certain approaches to relative and absolute differential abundance are more sensitive to bias than others.
-The effects of bias can be mitigated by choosing an insensitive approach or performing a calibration procedure using targeted abundance measurements of one or more specific taxa.
-
+This manuscript addresses the effect that the taxonomic bias inherent in microbiome measurement has on microbial differential-abundance analysis.
+We describe the basic problem posed by taxonomic bias for measuring changes in the abundance of particular taxa across conditions and describe new strategies for mitigating the errors it induces.
+Analyses of both relative and absolute abundances are considered.
+In its current form, the manuscript sits somewhere between a standard scientific article and a monograph; 
+it consists of an article followed by a series of appendices which together give a comprehensive treatment of the implications of the @mclaren2019cons model of taxonomic bias for differential-abundance analysis and experimental design.
+It is licensed under a [CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/).
+See [the Zenodo record](https://doi.org/10.5281/zenodo.4552717) for how to cite the latest version.
