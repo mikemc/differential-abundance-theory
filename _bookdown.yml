@@ -1,9 +1,9 @@
-github-repo: mikemc/differential-abundance-theory
+repo: https://github.com/mikemc/differential-abundance-theory
 delete_merged_file: true
 new_session: false
-view: https://github.com/mikemc/bda-theory/blob/master/%s
-edit: https://github.com/mikemc/bda-theory/edit/master/%s
-history: https://github.com/mikemc/bda-theory/commits/main/%s
+view: https://github.com/mikemc/differential-abundance-theory/blob/main/%s
+edit: https://github.com/mikemc/differential-abundance-theory/edit/main/%s
+history: https://github.com/mikemc/differential-abundance-theory/commits/main/%s
 
 rmd_files: [
   "index.Rmd",
