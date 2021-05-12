@@ -1,1 +1,10 @@
 \usepackage{cancel}
+
+% Define note environment based on example from https://bookdown.org/yihui/rmarkdown-cookbook/custom-blocks.html
+\usepackage{color}
+\usepackage{framed}
+\setlength{\fboxsep}{.8em}
+\newenvironment{rmdnote}{
+  \definecolor{shadecolor}{RGB}{248,248,248}
+  \begin{shaded}}
+ {\end{shaded}}
