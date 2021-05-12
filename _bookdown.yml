@@ -1,4 +1,4 @@
-repo: https://github.com/mikemc/bda-theory
+github-repo: mikemc/differential-abundance-theory
 delete_merged_file: true
 new_session: false
 view: https://github.com/mikemc/bda-theory/blob/master/%s

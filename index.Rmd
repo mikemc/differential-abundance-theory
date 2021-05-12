@@ -6,13 +6,40 @@ author:
   - Benjamin J. Callahan^[North Carolina State University]
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
-output: bookdown::gitbook
-documentclass: book
 bibliography: [main.bib, packages.bib]
 biblio-style: apalike
 link-citations: yes
 # description:
-github-repo: mikemc/bda-theory
+# For pandoc latex processing
+documentclass: article
+geometry:
+  - top=1in
+  - bottom=1in
+  - left=1.5in
+  - right=1.5in
+output:
+  bookdown::gitbook:
+    css: style.css
+    number_sections: true
+    config:
+      sharing:
+        facebook: no
+        github: yes
+        twitter: no
+        linkedin: no
+        weibo: no
+        instapaper: no
+        vk: no
+        all: ['facebook', 'twitter', 'linkedin', 'weibo', 'instapaper']
+  bookdown::pdf_book:
+    includes:
+      in_header: latex/preamble.tex
+    keep_tex: true
+    dev: "pdf"
+    papersize: letter
+    toc_depth: 2
+    toc_unnumbered: yes
+    toc_appendix: yes
 ---
 
 # Preface {-}
