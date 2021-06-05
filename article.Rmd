@@ -177,13 +177,11 @@ Because the taxa compete for sequencing effort within a sample, the effect that 
 As a result, MGS measurements can lead to spurious inferences about changes across samples even when taxonomic bias is constant for each taxon across samples.
 
 This problem posed by taxonomic bias intersects with a second, growing concern within the microbiome field: that the relative abundances measured by MGS can present a misleading view of absolute-abundance dynamics.
-**Absolute abundances are more relevant for certain biological questions such as...**
-<!-- TODO: Give sentence or two motivating the measurement of absolute abundances -->
-This concern has led to a recent rise in methods for supplementing MGS measurements to allow inference of absolute abundances.
-<!-- Cite various approaches -->
-The most popular approach is to multiply the proportions from MGS by an independent measurement of total microbial abundance.
-<!-- studies to cite using this approach: in environmental microbiology (Props2017, Kevorkian2018, Lloyd2020) but also increasingly in human microbiome studies (TettamantiBoshier2020,Contijoch2019,Vandeputte2017,Vieira-Silva2019). -->
-Multiplying inaccurate proportions by a measurement of cell concentration results in inaccurate absolute abundances that are subject to the same limitations on the accuracy of fold changes as standard MGS proportions alone.
+Without making further assumptions (which are often difficult or impossible to verify) one cannot tell whether a doubling in the proportion of a taxon reflects an increase in its abundance or a decrease in the abundances of other taxa.
+This concern has motivated the development of various experimental methods to enable researchers to convert the relative abundances measured by MGS into absolute abundances (methods to be reviewed in the Appendix in a future version).
+An increasingly popular approach in the study of both environmental and host-associated microbiomes involves making an independent measurement of total microbial abundance in each sample (@props2017abso,@kevorkian2018esti,@lloyd2020evid,@tettamantiboshier2020comp,@contijoch2019gutm,@vandeputte2017quan,@vieirasilva2019quan).
+This estimate is then multiplied by the MGS proportions to convert them to estimates of absolute abundance.
+This simple calibration procedure directly transfers the error in the MGS proportions due to taxonomic bias to the estimated absolute abundances, leading to estimates that are not only individually inaccurate but can imply inaccurate variation in abundance across samples.
 
 Here we summarize recent advances in our understanding of how taxonomic bias affects our ability to accurately determine how taxa vary in relative and absolute abundance across samples from different conditions—the inference problem known as *differential abundance (DA) analysis*.
 We first explain how taxonomic bias can lead to spurious DA results and consider the biological conditions in which such spurious results are likely.
@@ -220,7 +218,7 @@ where $\text{mean efficiency}(s)=\text{actual}_j(s)*\text{efficiency}_j$ in the 
 Intuitively, Equation \@ref(eq:error) says that the taxon will be overrepresented by the extent to which its measurement efficiency is greater than the average efficiency of cells in the sample.
 Figure \@ref(fig:vaginal-example)B shows the efficiencies of the three taxa and the mean efficiency in each sample.
 The (multiplicative) difference between the taxon efficiencies and the mean efficiency determines the (multiplicative) error in each sample; for example, the mean efficiency in the second sample is 2.5, leading to a 29/2.5=11.6X error in the proportion of *Lactobacillus*.
-The error in the second sample is larger — specifically, by 6X — than the first sample because the high proportion of *Gardnerella* has reduced the sample mean efficiency (and thus increased the efficiency of *Lactobacillus* relative to the mean) by 6X.
+The error in the second sample is larger—specifically, by 6X—than the first sample because the high proportion of *Gardnerella* has reduced the sample mean efficiency (and thus increased the efficiency of *Lactobacillus* relative to the mean) by 6X.
 
 The enrichment depends on the taxon’s efficiency relative to the sample average, rather than the efficiency itself, because the requirement that the proportions of all taxa sum to one locks the taxa in a zero-sum competition.
 Notably, competition occurs (though in a less absolute form) even at the level of the raw sequencing reads: DNA extractions and PCR reactions have limited output capacity; high-concentration samples are typically subsampled to fixed, lower concentrations; and sequencing libraries are given limited sequencing effort; so that the experimental process itself typically imposes competition to be sequenced.
