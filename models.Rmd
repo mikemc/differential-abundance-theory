@@ -19,7 +19,7 @@ For a subset of taxa $Q \subset \{1, \dots, I\}$, define $A_{Qj} \equiv \sum_{i 
 Unless specified otherwise, $A$ always refers to abundance in the original sample material, not in extracted DNA.
 I will assume the target units are concentration of cells per unit mass. However, other units (such as biomass per volume) may be relevant.
 
-To consider various addition information that can be used for absolute abundance inference, I let $B$ denote bulk abundance measurements (such as via flow cytometry or broad-range 16S qPCR), $S$ genome the known taxon abundances of a spike-in, and $T$ denote the abundances of a set of taxa made via targeted measurement.
+To consider various addition information that can be used for absolute abundance inference, I let $B$ denote bulk abundance measurements (such as via flow cytometry or broad-range 16S qPCR), $S$ denote the known taxon abundances of a spike-in, and $T$ denote the abundances of a set of taxa made via targeted measurement.
 I let $R \subset \{1, \dots, I\}$ denote the set of _reference taxa_ whose abundance is known independently from the metagenomics measurement (up to experimental bias factors) because they were spiked at a known density, subjected to a targeted measurement, or have been determined through some other means to have a constant or known abundance across samples.
 
 Bias vectors $B^{(P)}$ are vectors of length $I$ indicating the taxon-specific bias associated with a measurement protocol $P$.
