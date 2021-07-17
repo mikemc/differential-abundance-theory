@@ -1,0 +1,254 @@
+---
+title: 'Hypothetical example of spurious fold changes in proportions in the vaginal microbiome'
+author: Michael R. McLaren
+date: '2021-05-10'
+description: >
+    This doc develops a hypothetical example in which bias leads to a spurious
+    differential abundance result. It is based on a real case of bias measured
+    among three species of vaginally-associated bacteria.
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: true
+    dev: svg
+---
+
+**Changelog**
+
+- 2021-07-17: Cleaned up the doc and updated to use the cleaner code and
+  include the caption from /article.Rmd
+
+# Setup
+
+```{r}
+set.seed(42)
+
+knitr::opts_chunk$set(
+  comment = "#>",
+  collapse = TRUE,
+  cache = FALSE,
+  echo = TRUE
+)
+
+library(tidyverse)
+library(here)
+library(cowplot)
+library(patchwork)
+theme_set(theme_cowplot(12))
+
+close_elts <- function(x) x / sum(x)
+```
+
+# Simulate data
+
+```{r}
+bias <- tibble(taxon = c("Lactobacillus", "Gardnerella", "Atopobium", "Spike-in"),
+  efficiency = c(4.68, 0.16, 0.285, 1)) %>%
+  mutate(across(efficiency, ~. / min(.)))
+# efficiency associated with the targeted measurement of Lactobacillus
+targeted_efficiency <- 2
+a0 <- tribble(
+  ~taxon, ~timepoint, ~abundance,
+  "Lactobacillus", "T1", 5,
+  "Lactobacillus", "T2", 0.5,
+  "Gardnerella", "T1", 2,
+  "Gardnerella", "T2", 8,
+  "Atopobium", "T1", 3,
+  "Atopobium", "T2", 1.5,
+) %>%
+  # Shrink abundance to have similar scale as proportions
+  mutate(across(abundance, ~ . / max(.))) %>%
+  left_join(bias, by = "taxon") %>%
+  with_groups(timepoint, mutate,
+    total_abundance = sum(abundance),
+    proportion = close_elts(abundance),
+    biased_abundance = efficiency * abundance,
+    biased_proportion = close_elts(biased_abundance),
+    biased_count = biased_proportion * 1e3,
+    abundance_estimate_bulk = biased_proportion * total_abundance,
+    #> abundance_estimate_spikein = biased_count / biased_count[taxon == "Spike-in"],
+    abundance_estimate_targeted = biased_count * targeted_efficiency *
+      abundance[taxon == "Lactobacillus"] / biased_count[taxon == "Lactobacillus"],
+  )
+a1 <- a0 %>%
+  select(-total_abundance) %>%
+  pivot_longer(-c(taxon, efficiency, timepoint), names_to = "type")
+# data frame for plots
+ptb <- a1 %>%
+  filter(
+    type %in% c("proportion", "biased_proportion"),
+  ) %>%
+  mutate(
+    across(type, fct_relevel, "proportion", "biased_proportion"),
+    across(type, fct_recode,
+      "Actual" = "proportion",
+      "Observed" = "biased_proportion"),
+  )
+```
+
+# Plots
+
+Panels showing the error in measurement and in differential abundance
+
+```{r}
+shared_layers <- list(
+  geom_path(aes(group = taxon),
+    arrow = grid::arrow(length = unit(0.15, "inches"))),
+  geom_point(size = 2),
+  scale_color_brewer(type = "qual", palette = 1, guide = "none"),
+  labs(y = "Proportion", color = "Taxon"),
+  scale_y_log10(),
+  coord_cartesian(clip = "off"),
+  # scale_y_log10(breaks = c(1e-2, 3e-2, 1e-1, 3e-1, 1)) +
+  expand_limits(y = 1e-2),
+  theme(plot.margin = unit(c(0, 1.3, 0, 0), units = "in"))
+)
+# How much to nudge the taxon labels and proportions
+nudge.taxon <- 0.48
+nudge.prop <- 0.24
+# In future iterations, consider labelling the taxa in both facets
+p.meas <- ptb %>%
+  ggplot(aes(type, value, color = taxon)) +
+  facet_wrap(~timepoint, nrow = 1, scales = "fixed",
+    labeller = as_labeller(function(x) str_c("Time point ", x))
+  ) +
+  shared_layers +
+  geom_text(data = ~filter(., type == "Actual"),
+    aes(label = round(value, 2)), nudge_x = -nudge.prop) +
+  geom_text(data = ~filter(., type == "Observed"),
+    aes(label = round(value, 2)), nudge_x = nudge.prop) +
+  geom_text(data = ~filter(., timepoint == "T2", type == "Observed"),
+    aes(label = taxon), nudge_x = nudge.taxon, hjust = 0) +
+  labs(
+    x = "Type",
+    title = "Measurement error at each time point"
+  )
+p.fc <- ptb %>%
+  ggplot(aes(timepoint, value, color = taxon)) +
+  facet_wrap(~type, nrow = 1, scales = "fixed") +
+  shared_layers +
+  geom_text(data = ~filter(., timepoint == "T1"),
+    aes(label = round(value, 2)), nudge_x = -nudge.prop) +
+  geom_text(data = ~filter(., timepoint == "T2"),
+    aes(label = round(value, 2)), nudge_x = nudge.prop) +
+  geom_text(data = ~filter(., timepoint == "T2", type == "Observed"),
+    aes(label = taxon), nudge_x = nudge.taxon, hjust = 0) +
+  labs(
+    x = "Time point",
+    title = "Actual and observed fold changes"
+  )
+```
+
+Panel showing the efficiencies of individual taxa and the sample means
+
+```{r}
+# First, compute the mean efficiency, then join with the taxon efficiencies in
+# a table for plotting.
+sme <- a0 %>%
+  with_groups(timepoint, summarize, mean_efficiency = sum(proportion * efficiency))
+sme0 <- sme %>%
+  mutate(label = str_glue("mean ({timepoint})")) %>%
+  select(label, efficiency = mean_efficiency)
+sme1 <- sme %>%
+  mutate(taxon = "Mean", type = "Mean") %>%
+  select(taxon, efficiency = mean_efficiency, timepoint, type)
+bias1 <- bias %>%
+  filter(taxon != "Spike-in") %>%
+  expand(nesting(taxon, efficiency), timepoint = c("T1", "T2")) %>%
+  mutate(type = "Taxon")
+lvls = c("Atopobium", "Gardnerella", "Lactobacillus", "Mean")
+etb1 <- bind_rows(bias1, sme1) %>%
+  mutate(across(taxon, factor, levels = lvls))
+
+lvls = c("Gardnerella", "Atopobium", "Lactobacillus")
+bias2 <- bias %>%
+  filter(taxon != "Spike-in") %>%
+  expand(nesting(taxon, efficiency), timepoint = c("T1", "T2")) %>%
+  mutate(
+    type = "Taxon",
+    across(taxon, factor, levels = lvls),
+    x = as.integer(taxon)
+  ) %>%
+  left_join(sme, by = "timepoint")
+
+clrs <- c(RColorBrewer::brewer.pal(n = 3, "Accent"), rep("#585858", 2))
+p.eff <- bias2 %>%
+  ggplot(aes(x = x, y = efficiency, color = taxon)) +
+  geom_point(size = 2) +
+  geom_text(data = ~filter(., timepoint == "T2"),
+    aes(label = taxon), x = 3.3, hjust = 0) +
+  geom_segment(aes(xend = x, yend  = efficiency, y = mean_efficiency),
+    arrow = grid::arrow(length = unit(0.15, "inches"))) +
+  geom_segment(data = sme,
+    aes(x = 1, xend = 3, y = mean_efficiency, yend = mean_efficiency),
+    color = "#585858",
+    inherit.aes = FALSE) +
+  geom_text(data = sme0 %>% mutate(timepoint = "T2"),
+    aes(label = label, y = efficiency), x = 3.3, hjust = 0,
+    color = "#585858",
+    inherit.aes = FALSE) +
+  scale_color_manual(values = clrs) +
+  labs(y = "Relative efficiency", x = NULL, color = "Taxon",
+    title = "Taxonomic bias of protocol"
+  ) +
+  # Set the vertical span to match the other plots
+  scale_y_log10(limits = c(1, 100) / 2,
+    breaks = etb1$efficiency,
+    labels = signif(etb1$efficiency, 2)
+  ) +
+  xlim(c(0.0, 4)) +
+  facet_wrap(~timepoint, nrow = 1, scales = "fixed",
+    labeller = as_labeller(function(x) str_c("Time point ", x))
+  ) +
+  coord_cartesian(clip = "off") +
+  theme(
+    axis.line.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank(),
+    legend.position = "none",
+    plot.margin = unit(c(0, 1.0, 0, 0), units = "in")
+  )
+```
+
+Plot as a multi-panel figure
+
+```{r vaginal-example-proportions-timepoints, fig.dim = c(8, 6) * 1.5}
+p.meas + p.eff + p.fc + plot_spacer() + 
+  plot_layout(byrow = TRUE, ncol = 2, widths = c(1, 0.6)) +
+  plot_annotation(tag_levels = "A")
+```
+
+```{r save, include = FALSE, eval = FALSE}
+fmts <- c("svg", "png", "pdf")
+str_c("figures/example-vaginal-microbiome.", fmts) %>%
+  here %>%
+  walk(ggsave, units = "in", width = 8, height = 6, scale = 1.5)
+```
+
+Caption (copied from main article version 47ce39c): 
+**Taxonomic bias can distort differential abundance results even when it is consistent for each taxon across samples.** 
+Panel A shows the actual and observed proportions for hypothetical community samples from two time points, which differ in their relative abundance of three taxa.
+Panel B shows taxonomic bias in terms of the relative efficiencies of the three taxa against the mean efficiency of each sample; the difference between the taxon's efficiency and the sample's mean (vertical arrows) determines the fold error seen in Panel A.
+Panel C rearranges the plot from Panel A to show the actual and observed fold changes between time points.
+The efficiencies of individual taxa were estimated by @mclaren2019cons from mock community data from @brooks2015thet.
+The abundances are hypothetical but inspired by observations from the human vaginal microbiome; see main text.
+
+Some ideas for improvement:
+
+- Experiment with ways to make the connections even clearer between the efficiency differences and the error. 
+- Try making the arrows vertical, so that they are directly connected to the fold changes in proportion and in efficiency.
+- Can also split the third plot into T1 and T2.
+- Might consider changing "Time point T1" to "Sample S1", to fit the primary language of the text.
+- Can mention in the text that these could be samples from different women, or the same woman at different times.
+- also use a shape scale for the taxa, to give a second way besides color to distinguish them
+
+## Session info {.appendix}
+
+<details><summary>Click for session info</summary>
+
+```{r, R.options = list(width = 83)}
+sessioninfo::session_info()
+```
+
+</details>
