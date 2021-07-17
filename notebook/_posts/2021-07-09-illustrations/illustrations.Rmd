@@ -1,0 +1,574 @@
+```{r}
+set.seed(42)
+
+knitr::opts_chunk$set(
+  comment = "#>",
+  collapse = TRUE,
+  cache = FALSE,
+  echo = FALSE
+  #> out.width = "70%",
+  #> fig.align = 'center',
+  #> fig.width = 6,
+  #> fig.asp = 0.618,
+  #> fig.show = "hold"
+)
+
+#> options(dplyr.print_min = 6, dplyr.print_max = 6)
+#> options(crayon.enabled = FALSE)
+
+library(tidyverse)
+library(here)
+library(cowplot)
+library(patchwork)
+theme_set(theme_cowplot(12))
+
+close_elts <- function(x) x / sum(x)
+```
+
+
+## Example 1
+
+Three species, with exponential growth rates of 0, <0, and >0.
+
+```{r}
+taxa <- tibble(
+  taxon = c("Lactobacillus", "Gardnerella", "Atopobium", "Spike-in"),
+  efficiency = c(4.68, 0.16, 0.285, 1),
+  growth_rate = c(-1, 1, 0, 0) / 10
+) %>%
+# for now, ignore the spike-in
+  filter(taxon != "Spike-in") %>%
+  mutate(across(efficiency, ~. / min(.)))
+```
+
+Simulate expoential growth
+```{r}
+x <- taxa %>%
+  expand(nesting(taxon, efficiency, growth_rate), time = seq(0, 20)) %>%
+  with_groups(time, mutate,
+    abundance = exp(growth_rate * time),
+    total_abundance = sum(abundance),
+    proportion = close_elts(abundance),
+    observed_proportion = close_elts(efficiency * abundance),
+    # Assuming perfect measurement of total abundance
+    observed_abundance = observed_proportion * total_abundance
+  )
+```
+
+
+```{r}
+x %>%
+  select(taxon:time, actual = abundance, observed = observed_abundance) %>%
+  pivot_longer(c(actual, observed), names_to = "type", values_to = "abundance") %>%
+  ggplot(aes(time, abundance, color = taxon)) +
+  facet_wrap(~type) +
+  scale_color_brewer(type = "qual", palette = 1) +
+  geom_line()
+```
+
+Now let's try to show the values as stacked regions.
+Strategy: Calculate ymin and ymax for each (taxon, time) value, then use `geom_ribbon()`.
+
+We want
+
+- ymin of first taxon = 0
+- ymin of one taxon = ymax of the previous taxon
+- ymax of each taxon = its ymin + its abundance
+<!--  -->
+
+We can calculate the values by just accumlating the abundances, then pull the mins and maxs.
+
+```{r}
+stack_abundance <- function(y, labels = NULL) {
+  stopifnot(is.null(labels) | identical(length(y), length(labels)))
+  vals <- accumulate(y, sum, .init = 0)
+  ymin <- vals[seq_along(y)]
+  ymax <- vals[1 + seq_along(y)]
+  x <- tibble(ymin, ymax)
+  if (!is.null(labels))
+    x <- add_column(x, label = labels, .before = 1)
+  x
+}
+
+stack_abundance(1:3)
+stack_abundance(1:3, letters[1:3] %>% rev)
+```
+
+
+```{r}
+x %>%
+  select(taxon:time, actual = abundance, observed = observed_abundance) %>%
+  pivot_longer(c(actual, observed), names_to = "type", values_to = "abundance") %>%
+  with_groups(c(time, type), mutate,
+    stack_abundance(abundance)
+  ) %>%
+  ggplot(aes(time, color = taxon, fill = taxon)) +
+  facet_wrap(~type) +
+  scale_color_brewer(type = "qual", palette = 1) +
+  scale_fill_brewer(type = "qual", palette = 1) +
+  geom_ribbon(aes(ymin = ymin, ymax = ymax))
+```
+
+This actually seems to be working, though I'm not sure how reliable this method is.
+E.g. this is assuming the taxa are in a consistent order.
+
+
+```{r}
+y <- x %>%
+  select(taxon:time, actual = abundance, observed = observed_abundance) %>%
+  pivot_longer(c(actual, observed), names_to = "type", values_to = "abundance") %>%
+  arrange(time, type, taxon) %>%
+  group_by(time, type) %>%
+  nest() %>%
+  mutate(stacked = map(data, ~stack_abundance(.$abundance))) %>%
+  unnest(c(data, stacked))
+```
+
+
+```{r}
+y %>%
+  ggplot(aes(time, color = taxon, fill = taxon)) +
+  facet_wrap(~type) +
+  scale_color_brewer(type = "qual", palette = 1) +
+  scale_fill_brewer(type = "qual", palette = 1) +
+  geom_ribbon(aes(ymin = ymin, ymax = ymax))
+```
+
+reverse the taxon order,
+
+```{r}
+z <- x %>%
+  select(taxon:time, actual = abundance, observed = observed_abundance) %>%
+  pivot_longer(c(actual, observed), names_to = "type", values_to = "abundance") %>%
+  arrange(time, type, desc(taxon)) %>%
+  group_by(time, type) %>%
+  nest() %>%
+  mutate(stacked = map(data, ~stack_abundance(.$abundance))) %>%
+  unnest(c(data, stacked)) %>%
+  ungroup
+z %>%
+  ggplot(aes(time, color = taxon, fill = taxon)) +
+  facet_wrap(~type) +
+  scale_color_brewer(type = "qual", palette = 1) +
+  scale_fill_brewer(type = "qual", palette = 1) +
+  geom_ribbon(aes(ymin = ymin, ymax = ymax))
+```
+
+It seems like these plots don't actually do a good job of showing what is happening for the top taxon.
+E.g. in this version, it looks like Atopobium is decreasing in actuality, even though it is actually fixed; and the observed increase is there but slight.
+
+```{r}
+z %>%
+  filter(taxon == "Atopobium", type == "actual") %>%
+  mutate(y = ymax - ymin) %>%
+  count(y)
+```
+
+This suggests an intersting problem for the use of these types of plots generally.
+I wonder if the problem goes away if we descretize / use stacked bars; this way we know the areas will be proportional to the abundance.
+
+
+```{r}
+x %>%
+  select(taxon:time, actual = abundance, observed = observed_abundance) %>%
+  pivot_longer(c(actual, observed), names_to = "type", values_to = "abundance") %>%
+  ggplot(aes(time, abundance, color = taxon, fill = taxon)) +
+  facet_wrap(~type) +
+  scale_color_brewer(type = "qual", palette = 1) +
+  scale_fill_brewer(type = "qual", palette = 1) +
+  geom_col()
+```
+
+This visualization still suffers from the same problem - it is hard to tell that Atopobium is not really increasing.
+
+
+What about the view of the proportions?
+
+```{r}
+x %>%
+  select(taxon:time, actual = proportion, observed = observed_proportion) %>%
+  pivot_longer(c(actual, observed), names_to = "type", values_to = "proportion") %>%
+  ggplot(aes(time, proportion, color = taxon, fill = taxon)) +
+  facet_wrap(~type) +
+  scale_color_brewer(type = "qual", palette = 1) +
+  scale_fill_brewer(type = "qual", palette = 1) +
+  geom_col()
+```
+
+
+Perhaps it would be easier to see what's going on if we just compared two time-points, like in Figure 2 of the eLife paper.
+
+
+
+```{r}
+y <- x %>%
+  filter(time %in% c(0, 10)) %>%
+  mutate(timepoint = str_c("T", time)) %>%
+  rename(
+    "actual absolute" = abundance,
+    "observed absolute" = observed_abundance,
+    "actual proportion" = proportion,
+    "observed proportion" = observed_proportion,
+  ) %>%
+  pivot_longer(c(starts_with("actual"), starts_with("observed"))) %>%
+  separate(name, into = c("measurement_type", "abundance_type"), sep = " ")
+```
+
+```{r}
+y %>%
+  ggplot(aes(timepoint, value, color = taxon, fill = taxon)) +
+  facet_grid(abundance_type~measurement_type, scales = "free_y") +
+  scale_color_brewer(type = "qual", palette = 1) +
+  scale_fill_brewer(type = "qual", palette = 1) +
+  geom_col(width = 0.4)
+```
+
+
+This example is interesting; can see Lct increasing in absolute abundance despite decreasing, and Atp increasing despite saying fixed.
+Probably instructive to think through why
+
+
+
+## Example 2
+
+Here the idea is to illustrate what happens when we increase Gard.
+Let's keep Lacto and Ato fixed.
+
+```{r}
+taxa <- tibble(
+  taxon = c("Lactobacillus", "Gardnerella", "Atopobium"),
+  initial_density = c(2, 1, 1),
+  efficiency = c(4.68, 0.16, 0.285),
+  growth_rate = c(0, 1, 0) / 10
+) %>%
+  mutate(across(efficiency, ~. / min(.)))
+x <- taxa %>%
+  expand(
+    nesting(taxon, initial_density, efficiency, growth_rate), 
+    time = seq(0, 20)
+  ) %>%
+  with_groups(time, mutate,
+    actual_density = initial_density * exp(growth_rate * time),
+    total_density = sum(actual_density),
+    actual_proportion = close_elts(actual_density),
+    observed_proportion = close_elts(efficiency * actual_density),
+    # Assuming perfect measurement of total abundance
+    observed_density = observed_proportion * total_density
+  )
+xl <- x %>%
+  pivot_longer(c(starts_with("actual"), starts_with("observed")), 
+    values_to = "abundance") %>% 
+  separate(name, into = c("type", "abundance_type"))
+```
+
+
+```{r}
+xl %>%
+  ggplot(aes(time, abundance, color = taxon)) +
+  facet_grid(abundance_type~type, scales = "free_y") +
+  scale_color_brewer(type = "qual", palette = 1) +
+  geom_line()
+```
+
+
+## Example 3: Minimal AA example
+
+Here the idea is to illustrate what happens when we increase Gard with just Lacto.
+
+```{r}
+taxa <- tibble(
+  taxon = c("Lactobacillus", "Gardnerella", "Atopobium", "Spike-in"),
+  initial_density = c(4, 1, 0, 0.5),
+  efficiency = c(4.68, 0.16, 0.285, 1),
+  growth_rate = c(0, 1, 0, 0) / 10
+) %>%
+  mutate(across(efficiency, ~. / min(.))) %>%
+  filter(initial_density > 0)
+
+x <- taxa %>%
+  filter(taxon != "Spike-in") %>%
+  expand(
+    nesting(taxon, initial_density, efficiency, growth_rate), 
+    time = seq(0, 20, by = 1)
+  ) %>%
+  with_groups(time, mutate,
+    actual_density = initial_density * exp(growth_rate * time),
+    total_density = sum(actual_density),
+    actual_proportion = close_elts(actual_density),
+    observed_proportion = close_elts(efficiency * actual_density),
+    # Assuming perfect measurement of total abundance
+    observed_density = observed_proportion * total_density,
+    mean_efficiency = sum(actual_proportion * efficiency)
+  )
+xl <- x %>%
+  pivot_longer(c(starts_with("actual"), starts_with("observed")), 
+    values_to = "abundance") %>% 
+  separate(name, into = c("type", "abundance_type"))
+```
+
+
+```{r}
+xl %>%
+  ggplot(aes(time, abundance, color = taxon)) +
+  facet_grid(abundance_type~type, scales = "free_y") +
+  scale_color_brewer(type = "qual", palette = 1) +
+  geom_line()
+```
+
+We see Lactobacillus increasing in AA, because the growth of Gard raises the total AA while dropping the SME.
+
+We can try plotting the total AA as well as the SME.
+
+```{r}
+# y <- x %>%
+#   select(time, total_density, mean_efficiency) %>%
+#   pivot_longer(
+xl %>%
+  filter(abundance_type == "density") %>%
+  ggplot(aes(time, abundance, color = taxon)) +
+  facet_wrap(~type) +
+  scale_color_brewer(type = "qual", palette = 1) +
+  geom_line() +
+  geom_line(data = x, aes(y = total_density), color = "grey") +
+  geom_line(data = x %>% mutate(type = "actual"), aes(y = mean_efficiency), color = "grey", linetype = "33")
+```
+
+Because here the mean efficiency drops faster than the total abundance grows, we see the observed abundance of Lactobacillus increase.
+
+Does it also help to show what's happening with the relative abundances?
+
+Here. Try showing this in the context of also showing how the QMP/AA method works, and the equations.
+
+
+Logic of understanding the observed AA estimates:
+
+Two ways:
+
+- The actual AA estimates
+- The observed proportions - Lacto dominates despite not actually dominating; hence the product with total AA shows Lacto increasing. In effect we're incorrectly assigning most of the increased cell density to Lacto
+    - or: its observed prop has decreased much less than the total AA
+
+- Compare the change in SME to the change in total abundance; use the equation for observed FC in terms of other stuff
+
+<!--  -->
+
+
+Might be better to put on log scale,
+```{r}
+xl %>%
+  filter(abundance_type == "density") %>%
+  ggplot(aes(time, abundance, color = taxon)) +
+  facet_wrap(~type) +
+  scale_y_log10() +
+  scale_x_continuous(breaks = c(0, 10, 20)) +
+  scale_color_brewer(type = "qual", palette = 1) +
+  geom_line() +
+  geom_line(data = x, aes(y = total_density), color = "grey") +
+  geom_line(data = x %>% mutate(type = "actual"), aes(y = mean_efficiency), color = "grey", linetype = "33")
+```
+
+### Compare to using spike-in (todo)
+
+### animated
+
+```{r}
+library(gganimate)
+```
+
+What if we show the growth of gard as an animation?
+(Note, for this it might be better to have linear growth)
+
+```{r}
+xl %>%
+  filter(abundance_type == "density") %>%
+  ggplot(aes(type, abundance, fill = taxon)) +
+  geom_col(width = 0.5) + 
+  # scale_fill_brewer(type = "qual", palette = 1) +
+  # Here comes the gganimate code
+  transition_time(time)
+# +
+#   ease_aes('sine-in-out')
+```
+
+
+## Example 3 revisited
+
+Taxa: Lactobacillus, Gardnerella, and a spike-in.
+First show the error that arises from proportion-based inference. 
+Here use just the two primary taxa to emphasize how the growth in the low-eff Gard messes up the the Lacto estimate.
+
+```{r}
+taxa <- tibble(
+  taxon = c("Lactobacillus", "Gardnerella", "Atopobium", "Spike-in"),
+  initial_density = c(4, 1, 0, 0.5),
+  efficiency = c(4.68, 0.16, 0.285, 1),
+  growth_rate = c(0, 1, 0, 0) / 10
+) %>%
+  mutate(across(efficiency, ~. / min(.))) %>%
+  filter(initial_density > 0)
+```
+
+```{r}
+x <- taxa %>%
+  filter(taxon != "Spike-in") %>%
+  expand(
+    nesting(taxon, initial_density, efficiency, growth_rate), 
+    time = seq(0, 20, by = 1)
+  ) %>%
+  with_groups(time, mutate,
+    actual_density = initial_density * exp(growth_rate * time),
+    total_density = sum(actual_density),
+    actual_proportion = close_elts(actual_density),
+    estimated_proportion = close_elts(efficiency * actual_density),
+    # Assuming perfect measurement of total abundance
+    estimated_density = estimated_proportion * total_density,
+    mean_efficiency = sum(actual_proportion * efficiency)
+  )
+xl <- x %>%
+  pivot_longer(c(starts_with("actual"), starts_with("estimated")), 
+    values_to = "abundance") %>% 
+  separate(name, into = c("type", "abundance_type"))
+```
+
+```{r}
+clrs <- c(
+  "Lactobacillus" = "#7FC97F",
+  "Gardnerella" = "#BEAED4",
+  "Spike-in" = "#FDC086",
+  "Total" = "darkgrey",
+  "Mean" = "black"
+)
+#
+# RColorBrewer::brewer.pal(3, "Accent")
+# #> [1] "#7FC97F" "#BEAED4" "#FDC086"
+# RColorBrewer::display.brewer.all()
+```
+
+
+```{r}
+# Restrict to density, and add the total as if it were another taxon.
+x_dens <- xl  %>%
+  filter(abundance_type == "density")
+ttl <- x_dens %>%
+  transmute(taxon = "Total", abundance = total_density, time, type) %>%
+  distinct
+x_dens <- bind_rows(x_dens, ttl) %>%
+  mutate(
+    label_y = case_when(
+      type == "estimated" & taxon == "Total" ~ abundance * 1.2,
+      type == "estimated" & taxon == "Lactobacillus" ~ abundance / 1.2,
+      TRUE ~ abundance,
+    )
+  )
+
+nudge_time <- 1
+
+p_traj <- x_dens %>%
+  ggplot(aes(time, abundance, color = taxon)) +
+  facet_wrap(~type) +
+  scale_y_log10(breaks = c(0.1, 1, 10), labels = c(0.1, 1, 10)) +
+  scale_x_continuous(breaks = c(0, 10, 20)) +
+  # scale_color_brewer(type = "qual", palette = 1) +
+  scale_color_manual(values = clrs) +
+  labs(y = "cell density") +
+  theme(
+    panel.spacing.x = unit(2.5, "cm"),
+    legend.position = "none",
+    plot.margin = unit(c(0.2, 2.3, 0.2, 0.2), units = "cm")
+  ) +
+  coord_cartesian(clip = "off") +
+  geom_line() +
+  geom_text(data = ~filter(., time == "20"), 
+    aes(label = taxon, y = label_y), hjust = 0, nudge_x = nudge_time)
+p_traj
+```
+
+To explain what is going on, let's consider the sample mean efficiency
+
+```{r}
+x_eff <- x %>%
+  select(taxon, time, efficiency, Mean = mean_efficiency) %>%
+  pivot_wider(names_from = taxon, values_from = efficiency) %>%
+  pivot_longer(-time, names_to = "taxon", values_to = "efficiency")
+```
+
+
+```{r}
+p_sme <- x_eff %>%
+  ggplot(aes(time, efficiency, color = taxon)) +
+  scale_y_log10() +
+  # scale_y_log10(breaks = c(0.1, 1, 10), labels = c(0.1, 1, 10)) +
+  scale_x_continuous(breaks = c(0, 10, 20)) +
+  scale_color_manual(values = clrs) +
+  theme(
+    panel.spacing.x = unit(2.5, "cm"),
+    legend.position = "none",
+    plot.margin = unit(c(0.2, 2.3, 0.2, 0.2), units = "cm")
+  ) +
+  coord_cartesian(clip = "off") +
+  geom_line() +
+  geom_text(data = ~filter(., time == "20"), 
+    aes(label = taxon), hjust = 0, nudge_x = nudge_time)
+p_sme
+```
+
+Next, want to align the mean eff plot with the time axis on the actual plot.
+To acheive, I might need to use distinct plots instead of facets in the first row.
+Then, think of how to use the remaining quadrant - either insert the equation, or show the proportions.
+
+
+Proportions at t=0 and t=20
+```{r}
+x_prop <- xl %>%
+  filter(abundance_type == "proportion", time %in% c(0, 20)) %>%
+  mutate(
+    across(time, factor),
+    across(taxon, as.factor),
+    across(taxon, fct_rev),
+  )
+x_prop %>% pull(taxon) %>% levels
+# x_lbl <- x_prop %>%
+#   filter(type == "estimated") %>%
+#   mutate(abundance = ifelse(taxon == "Lactobacillus", 0, 1))
+p_prop <- x_prop %>%
+  ggplot(aes(type, abundance, fill = taxon)) +
+  facet_wrap(~time, labeller = label_both) +
+  scale_color_manual(values = clrs[1:2]) +
+  scale_fill_manual(values = clrs[1:2]) +
+  scale_y_continuous(breaks = c(0, 0.5, 1)) +
+  labs(y = "proportion") +
+  theme(
+    panel.spacing.x = unit(1, "cm"),
+    legend.position = "bottom",
+    plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), units = "cm"),
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+    axis.title.x = element_blank()
+    # legend.title = element_text(6)
+  ) +
+  coord_cartesian(clip = "off") +
+  geom_col(width = 0.6)
+  # geom_text(data = x_lbl, 
+  #   aes(color = taxon, label = taxon), hjust = 0, nudge_x = 0.4)
+p_prop 
+
+```
+
+
+```{r}
+p_traj / (p_sme + p_prop) +
+  plot_annotation(tag_levels = "A")
+```
+
+- save whole fig, and separate panels; add into lab meeting.
+
+- practice how to explain it
+
+<!--  -->
+
+```{r}
+pth <- "~/research/presentations/lab-meetings/2021-07-16-differential-abundance-manuscript/figures"
+ggsave(fs::path(pth, "aa-example-traj.svg"), p_traj, units = "in", width = 6, height = 3.2)
+ggsave(fs::path(pth, "aa-example-sme.svg"), p_sme, units = "in", width = 3.2, height = 3.0)
+ggsave(fs::path(pth, "aa-example-prop.svg"), p_prop, units = "in", width = 3.6, height = 3.2)
+```
+
