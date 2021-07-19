@@ -7,9 +7,15 @@ history: https://github.com/mikemc/differential-abundance-theory/commits/main/%s
 
 rmd_files: [
   "index.Rmd",
-  "article.Rmd",
-  "equations.Rmd",
-  # "overview.Rmd",
+  ## Main article
+  "introduction.Rmd",
+  "summary.Rmd",
+  "abundance-measurement.Rmd",
+  "differential-abundance.Rmd",
+  "solutions.Rmd",
+  "real-world-implications.Rmd",
+  "equations.Rmd", # Temp. chapter to aid revising
+  ## Appendix
   "models.Rmd",
   "relative-abundance.Rmd",
   "absolute-abundance.Rmd",
