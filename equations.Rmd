@@ -1,0 +1,110 @@
+
+# Key equations
+
+### Proportion of taxon $i$: Ratio of taxon $i$ to total.
+
+Actual
+\begin{align}
+  \text{prop}_{i}(s) &= \frac{\text{density}_{i}(s)}{\text{total density}(s)}
+\end{align}
+
+Estimator definition 
+\begin{align}
+  \hat{\text{prop}}_{i}(s) &= \frac{\text{reads}_{i}(s)}{\text{total reads}(s)}
+\end{align}
+
+Estimator error 
+\begin{align}
+  \hat{\text{prop}}_{i}(s) 
+  &= \text{prop}_{i}(s) \cdot \frac{\text{efficiency}_{i}}{\text{mean efficiency}(s)}
+\end{align}
+
+### Ratio of taxon $i$ to taxon $j$:
+
+actual
+\begin{align}
+  \text{density}_{i/j}(s) = \frac{\text{density}_{i}(s)}{\text{density}_{j}(s)}
+\end{align}
+
+estimate
+\begin{align}
+  \hat{\text{density}}_{i/j}(s) = \frac{\text{reads}_{i}(s)}{\text{reads}_{j}(s)} = \frac{\hat{\text{prop}}_{i}(s)}{\hat{\text{prop}}_{j}(s)}
+\end{align}
+
+error
+\begin{align}
+  \hat{\text{density}}_{i/j}(s) = \frac{\text{density}_{i}(s)}{\text{density}_{j}(s)} \cdot
+  \frac{\text{efficiency}_{i}(s)}{\text{efficiency}_{j}(s)}
+\end{align}
+
+### Proportion-based density estimate
+
+Estimator
+\begin{align}
+  \hat{\text{density}}_{i}(s) 
+  = \hat{\text{prop}}_{i}(s) \cdot \hat{\text{total density}}(s)
+\end{align}
+
+Error in proportion-based density estimate assuming accurate total
+\begin{align}
+  \hat{\text{density}}_{i}(s) 
+  % &= \hat{\text{prop}}_{i}(s) \cdot \text{total density}(s) \\[0.5ex]
+  % &= \text{prop}_{i}(s) \cdot \frac{\text{efficiency}_{i}}{\text{mean efficiency}(s)} \cdot \text{total density}(s) \\[0.5ex]
+  &= \text{density}_{i}(s) \cdot \frac{\text{efficiency}_{i}}{\text{mean efficiency}(s)}
+\end{align}
+
+Error in proportion-based density estimate
+\begin{align}
+  \hat{\text{density}}_{i}(s) 
+  &= \text{density}_{i}(s) \cdot \frac{\text{efficiency}_{i}}{\text{mean efficiency}(s)} \cdot \text{error in }\hat{\text{total density}}(s)
+\end{align}
+
+### Ratio-based density estimate
+
+Estimator
+\begin{align}
+  \hat{\text{density}}_{i}(s) 
+  &= \frac{\text{reads}_{i}(s)}{\text{reads}_{r}(s)} \cdot \hat{\text{density}}_{r}(s)
+\end{align}
+
+Error
+\begin{align}
+  \hat{\text{density}}_{i}(s) 
+  &= \text{density}_{i}(s) \cdot \frac{\text{efficiency}_{i}}{\text{efficiency}_{r}} \cdot \text{error in } \hat{\text{density}}_{r}(s)
+\end{align}
+
+## Table
+
+<table style="width:100%">
+  <tr>
+    <td>Quantity</td>
+    <td>Actual</td>
+    <td>Estimate</td>
+    <td>Error</td>
+  </tr>
+  <tr>
+    <td>Proportion</td>
+    <td>$\text{prop}_{i}(s) \equiv \frac{\text{density}_{i}(s)}{\text{total density}(s)}$</td>
+    <td>$\frac{\text{reads}_{i}(s)}{\text{total reads}(s)}$</td>
+    <td>$\frac{\text{efficiency}_{i}}{\text{mean efficiency}(s)}$</td>
+  </tr>
+  <tr>
+    <td>Ratio</td>
+    <td>$\text{density}_{i/j}(s) \equiv \frac{\text{density}_{i}(s)}{\text{density}_{j}(s)}$</td>
+    <td>$\frac{\text{reads}_{i}(s)}{\text{reads}_{j}(s)} = \frac{\hat{\text{prop}}_{i}(s)}{\hat{\text{prop}}_{j}(s)}$</td>
+    <td>$\frac{\text{efficiency}_{i}(s)}{\text{efficiency}_{j}(s)}$</td>
+  </tr>
+  <tr>
+    <td>Density from proportion</td>
+    <td>$\text{density}_{i}(s)$</td>
+    <td>$\hat{\text{prop}}_{i}(s) \cdot \hat{\text{total density}}(s)$</td>
+    <td>$\frac{\text{efficiency}_{i}}{\text{mean efficiency}(s)} \cdot \text{error in }\hat{\text{total density}}(s)$</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>Density from ratio</td>
+    <td>$\text{density}_{i}(s)$</td>
+    <td>$\frac{\text{reads}_{i}(s)}{\text{reads}_{r}(s)} \cdot \hat{\text{density}}_{r}(s)$</td>
+    <td>$\frac{\text{efficiency}_{i}}{\text{efficiency}_{r}} \cdot \text{error in } \hat{\text{density}}_{r}(s)$</td>
+  </tr>
+</table>
