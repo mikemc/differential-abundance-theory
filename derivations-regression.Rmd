@@ -17,7 +17,7 @@ It follows that
 
 ## Linear least-squares regression
 
-```{theorem, label = "regression-linearity", name = "Linearity of regression coefficients", echo = TRUE}
+::: {.theorem #regression-linearity name="Linearity of regression coefficients"}
 Consider a scalar response variable with $J$ observations, which I represent by the vector $y$, that equals a sum of $K$ component response variables $y^{(k)}$ each scaled by a non-zero factor $c^{(k)}$, 
 \begin{align}
   (\#eq:y-sum)
@@ -37,9 +37,9 @@ The least-squares coefficient estimates for $y$ are given by the sum of those of
 \begin{align}
   \hat \gamma = \sum_{k=1}^K c^{(k)} \hat \gamma^{(k)}.
 \end{align}
-```
+:::
 
-```{proof, echo = TRUE}
+::: {.proof}
 The Moore-Penrose pseudoinverse of $X$ is $X^+ = (X^T X)^{-1} X^T$.
 The least squares estimates are given by multiplying the matrix $X^+$ by the corresponding response vector ([Wikipedia](https://en.wikipedia.org/wiki/Ordinary_least_squares#Matrix/vector_formulation)), so that $\hat \gamma = X^+ y$ and $\hat \gamma^{(k)} = X^+ y^{(k)}$ (for $k = 1, \dots, K$).
 The result then follows from the stipulation \@ref(eq:y-sum) and the linearity of matrix multiplication,
@@ -50,11 +50,11 @@ The result then follows from the stipulation \@ref(eq:y-sum) and the linearity o
   = \sum_{k = 1}^K c^{(k)} X^+ y^{(k)}
   = \sum_{k = 1}^K c^{(k)} \hat \gamma^{(k)}.
 \end{align}
-```
+:::
 
 We can use \@ref(thm:regression-linearity) to describe how measurement error, such as that caused by experimental bias, affects least-squares estimates of regression coefficients.
 
-```{theorem, label = "regression-error", echo = TRUE, name = "Error in regression coefficients"}
+::: {.theorem #regression-error name="Error in regression coefficients"}
 Suppose that $y$ is the response variable we wish to understand, $z$ is our imperfect measurement of $y$, and $d = z - y$ the difference between the two, so that $z = y + d$.
 Let each be a vector of length $J$ describing a set of $J$ observations.
 Let $X$ be a $J$-by-$p$ matrix of covariates for the $J$ observations, with linearly independent columns.
@@ -69,13 +69,13 @@ The relationship between the least-squares estimates mirrors that between the va
   (\#eq:regression-coefficient-error)
   \hat \gamma^{(z)} = \hat \gamma^{(y)} + \hat \gamma^{(d)}.
 \end{align}
-```
+:::
 
-```{proof, echo = TRUE}
+::: {.proof}
 The result follows directly from $z =  y + d$ and \@ref(thm:regression-linearity).
-```
+:::
 
-```{corollary, label = "regression-error-simple", echo = TRUE}
+::: {.corollary #regression-error-simple}
 For the special case of simple linear regression,
 \begin{align}
   y &= \gamma_0^{(y)} + \gamma_1^{(y)} x + \epsilon^{(y)} \\
@@ -87,7 +87,7 @@ the estimates for the intercept and slope coefficients satisfy
   \hat \gamma_0^{(z)} &= \hat \gamma_0^{(y)} + \hat \gamma_0^{(d)} \\
   \hat \gamma_1^{(z)} &= \hat \gamma_1^{(y)} + \hat \gamma_1^{(d)}.
 \end{align}
-```
+:::
 
 Next, aiming to show the forms for the different transformations of interest.
 It might be useful to cover the case where $d$ is split into a constant and a sample-specific part, since probably everything of interest will follow from that.
@@ -109,7 +109,7 @@ In this case, the intercept coefficient is biased upward by $\log B_i$ and the o
 
 TODO: write the general result (for multiple regression, assuming that an intercept term is present.
 
-```{proposition, echo = TRUE}
+::: {.proposition}
 Consider the linear equations
 \begin{align}
   (\#eq:least-squares-formulation)
@@ -124,10 +124,5 @@ The coefficients for $\log m_i$ are related to those for $\log a_i$ and $\log \b
   \hat \gamma_0 &= \hat \alpha_0 + \log B_i - \hat \beta_0 \\
   \hat \gamma_1 &= \hat \alpha_1 - \hat \beta_1.
 \end{align}
-```
-
-```{proof, echo = TRUE}
-```
-
-
+:::
 
