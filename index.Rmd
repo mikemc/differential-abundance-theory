@@ -21,6 +21,8 @@ output:
   bookdown::gitbook:
     css: style.css
     number_sections: true
+    includes:
+      in_header: header.html
     config:
       sharing:
         facebook: no
