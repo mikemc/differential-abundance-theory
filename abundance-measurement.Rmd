@@ -1,5 +1,66 @@
 # How taxonomic bias affects abundance measurements {#abundance}
 
+## Rewrite (in progress)
+
+Behind any quantitative measurement lies a mathematical model, either implicit or explicit, that relates the readings of our instruments and the results of our statistical analyses with the biological reality we are measuring.
+This section develops a model of microbiome measurement, based on that of @mclaren2019cons, to describe how the actual absolute compositions of microbiome samples are related to estimates of relative and absolute abundance obtained by MGS.
+The next section shows how these relationships impact our measurements of differential abundance.
+
+An MGS measurement of a microbiome sample turns a collection of biological source material (cells, viruses, and extracellular DNA) into a collection of taxonomically-assigned reads (or read pairs).
+For concreteness and simplicity, we suppose that all assigned reads come from cells and that the ground-truth biophysical quantity we wish to measure is the density of cells (by volume, or by wet or dry mass) belonging to various taxa, or relative abundances directly derived from these densities. 
+This particular simplification reflects our own and the literature's prokaryotic bias; however, the features of MGS measurement that we explore also apply to situations (such as studies of viruses, fungi, or environmental DNA) where cell-based measurement may be inappropriate.
+We next suppose that there are a set of atomic taxa, which are mutually distinct and within which we assume the properties that determine taxonomic bias are conserved.
+For convenience, we identify these atomic taxa with species under a given taxonomic classification system, while acknowledging that whether taxonomic bias is conserved within commonly-accepted species has yet to be investigated in any detail.
+Since DA analysis is commonly performed at a variety of taxonomic levels, we consider measurement of species and of synthetic taxa (such as a phylum or a clade in a phylogeny) that consist of multiple species.
+We assume that reads assigned to a given taxon and sample really do come from that taxon and sample, but note that taxonomic mislabeling and contamination (from the reagents, lab environment, or other samples) pose further challenges to DA analysis.
+
+- might want to note that we're mostly going to talk as if species-level taxonomic assignment is possible.
+
+Consider the MGS measurement of a particular sample.
+For a given taxon, we define the _absolute efficiency_ as the number of reads assigned to that taxon divided by the number of cells in the original sample.
+The absolute efficiency depends not only on the ability of the chosen protocol to measure this taxon, but further aspects such as how much the sequencing library was diluted and how deeply the library was then sequenced.
+We suppose that the absolute efficiencies of species can be written as a product of a species-specific, sample-independent factor and a species-independent, sample-specific factor.
+The species-specific factors reflects the differential ability of a given protocol to measure different species (i.e. taxonomic bias), whereas the sample-specific factor captures the fact that the reads in an MGS measurement are not directly related to the absolute number or density of cells in a sample regardless of which taxa are being measured.
+When we consider the _relative efficiencies_—or the ratios among absolute efficiencies—the sample-specific, taxon-independent factor cancels.
+Relative efficiencies quantify how much more efficiently different taxa are measured relative to each other.
+When we say efficiency unqualified, we mean efficiency relative to some fixed, arbitrary species in the denominator.
+
+For species, the relative efficiencies are sample-independent.
+In contrast, the relative efficiency of a synthetic taxon varies depending on the relative densities of its constituent species,
+\begin{align}
+  \text{efficiency}_T(a) = \frac{\sum_{t \in T} \text{density}_t(a) \cdot \text{efficiency}_t}{\sum_{t \in T} \text{density}_t(a)}
+\end{align}
+(May need to explain or derive this.)
+For example, @mclaren2019cons found that for a particular shotgun-sequencing protocol, the relative efficiency was X between two Firmicute species X and Y;
+hence the efficiency of Firmicutes could vary by X depending on which of these two species were dominant in a given sample.
+
+From efficiencies, we can determine the error in relative abundances estimated by our MGS measurement.
+
+- atomic taxa
+- synthetic taxa
+
+
+MGS analysis is commonly done on proportions - the density of a taxon relative to some designated taxonomic whole, such as all prokaryotes.
+
+- give equation def of proportion
+- give error in proportion, from efficiency
+
+
+outline
+
+- Relative-abundance measurements
+
+- Absolute-abundance measurements
+
+
+questions, thoughts
+
+- should I define absolute efficiency in terms of cells or density?
+- need to revise the story of the first paragraphs above.
+
+
+## Current working version
+
 <!-- TODO: Add an illustration of the bias model in panel 1B -->
 
 ```{r fig-abundance, out.width = '65%', fig.cap = '(ref:cap-abundance)', cache = TRUE}
@@ -190,3 +251,15 @@ The reference density estimates are subject to error, but we can reasonably expe
 A warning note: The distinction between ratio and proportion-based estimation depends on whether an equation resembling X or Y is used for the final density estimates, and does not cleanly align with which empirical method is used to obtain absolute-abundance information. In particular, some studies that use spike-ins and most that use host or organelle reads to obtain absolute abundances do not follow this approach: Instead, these studies use the ratio of total reads of focal taxa to the reference reads as a proxy for total density to use in forming proportion-based estimates (EQREF). (For studies using host reads, the total density estimate may come from WGS sequencing and the estimated proportions from 16S sequencing.) 
 Alhough there may be other advantages to this approach, the above observations suggest that it may be more susceptible to taxonomic bias in the sequencing measurement than using a ratio-based approach on the same underlying data.
 
+**Update:** Actually, the two methods are equivalent when the total density and proportion are estimated using the same reads.
+Let $B$ be all bacteria and $H$ be the host.
+Consider using WGS reads to estimate the absolute abundance of bacterial taxon $i$,
+\begin{align}
+  \hat{\text{density}}_{i}(s) 
+  &= 
+  \underbrace{\frac{\text{reads}_{B}}{\text{reads}_{H}}}_\text{est'd bact'l density} \cdot 
+  \underbrace{\frac{\text{reads}_{i}}{\text{reads}_{B}}}_\text{est'd prop'n}
+  = \frac{\text{reads}_{i}}{\text{reads}_{H}}
+\end{align}
+So the problem/difference arises when we the proportion is estimated either by a different technology (e.g. when density is estimated via WGS and proportion is estimated by 16S sequencing) or the two estimates going into the above are not just ratios of reads.
+For example, ratios of bacterial to host reads could be used for the density estimate, while the proportion is estimated by Metaphlan.

@@ -9,12 +9,12 @@ rmd_files: [
   "index.Rmd",
   ## Main article
   "introduction.Rmd",
-  "summary.Rmd",
+#   "summary.Rmd",
   "abundance-measurement.Rmd",
   "differential-abundance.Rmd",
   "solutions.Rmd",
   "real-world-implications.Rmd",
-  "equations.Rmd", # Temp. chapter to aid revising
+#  "equations.Rmd", # Temp. chapter to aid revising
   ## Appendix
   "models.Rmd",
   "relative-abundance.Rmd",

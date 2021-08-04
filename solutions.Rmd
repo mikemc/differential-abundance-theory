@@ -1,5 +1,7 @@
 # Potential solutions
 
+_This section needs to be revised to account for the expanded earlier theory, especially relating to targeted measurements and ratio-based methods._
+
 ## Use control communities to correct relative abundances
 
 In principle, control ("mock") communities containing representative taxa from the environment of interest can be used to directly estimate the measurement efficiencies and correct bias in the MGS measurements ("calibration").
@@ -13,56 +15,21 @@ Careful testing is also needed to ensure that the preparation and storage of the
 As it is feasible to characterize a single standard much more extensively than a typical community sample, we may be able to obtain an estimated composition we feel comfortable treating as the ground truth. 
 Yet even when this is not possible, such natural standards can allow us to reconcile results across studies despite not knowing the truth.
 
-_Except in synthetic community experiments, we are always likely to have taxa not in our controls. We can attempt to use phylogenetic prediction or other modeling of efficiencies to predict the efficiencies of other taxa; however there will be signifciant undertainty. Therefore our control measurements may ideally serve to inform a bias-sensitivity analysis of the sort described below._
-
-For revision:
-
-- Discuss the vaginal mb and leopold examples
+- Except in synthetic community experiments, we are always likely to have taxa not in our controls. We can attempt to use phylogenetic prediction or other modeling of efficiencies to predict the efficiencies of other taxa; however there will be signifciant undertainty. Therefore our control measurements may ideally serve to inform a bias-sensitivity analysis of the sort described below.
+- Should mention the two extant cases where mocks of relevant taxa have been created: The vaginal-HMP / MOMS-PI study (@brooks2015thet and @fettweis2019thev) and the @leopold2020host plant-fungal experiment. Note that even in these cases, calibration hasn't been much used, partly because of a lack of workflows or understanding of when and why it is necessary. Ideally we can give an illustration; this section can be a good use of the @leopold2020host change-over-time result, though I'm not sure whether to discuss that here or in the 'real-world' section.
 
 ## Use control measurements to estimate error
 
-targeted measurements of a small number of taxa
-
-Because targeted absolute-abundance measurements are expected to provide (relatively) accurate  estimates of fold changes, they can be used to validate and even correct the DA results derived from a proportion-based absolute DA analysis.
+Because targeted absolute-abundance measurements are expected to provide (relatively) accurate estimates of fold changes, they can be used to validate and even correct the DA results derived from a proportion-based absolute DA analysis.
 We illustrate the basic idea using the @lloyd2020evid experiment described above.
-Absolute abundances in this study were estimated by multiplying MGS proportions by total abundance measured by cell counting; for comparison, qPCR was used to measure specific microbial taxa.^[see note]
+Absolute abundances in this study were estimated by multiplying MGS proportions by total abundance measured by cell counting; for comparison, qPCR was used to measure specific microbial taxa.
 Because the error in fold changes or a regression from the MGS measurements is taxon-independent, the difference between the two methods for these reference taxa informs us about the difference for all taxa.
 @lloyd2020evid found close agreement for the specific taxa also measured by qPCR (Table 1), suggesting that variation in sample mean efficiency did not significantly distort their results.
 In principle, a joint statistical analysis of all measurements would allow inferring variation in the sample mean efficiency across samples and obtaining calibrated fold change and regression estimates for all taxa [APPENDIX].
 
-### Notes for revision
-
 - We need an illustration of this idea. Might drive home the point that multiple measurements can be used both as qualitative checks and quantitative corrections. Could also mention the ability to use host and/or diet reads (or computational AA approaches) as a check against the experimental AA approach.
 - 'specific microbial taxa' - I'm not sure if/how to address the taxonomic levels issue
 - Details: Table 1 indicates that the doubling time estimated for Bathyarchaeota in Core 30 was 10.1 by FRAxC and 10.3 by qPCR, which corresponds to slopes (log abundance / time) of 1/10.1 and 1/10.3. The difference between these slopes, 1/10.3 - 1/10.1, is an estimate of the slope of the mean efficiency and hence is the correction that should be applied to all taxa’s FRAxC estimates.
-
-> Might ratio-based analysis also be used to overcome the effects of bias in differential absolute abundance? In fact, some methods for determining absolute abundance are based on ratios among taxa in the MGS measurement instead of proportions. Rather than using a measurement of total abundance, these methods require determining the abundance of one or more reference taxa.
-
-This needs to be revised to make clear the novelty of using non-spiked taxa as a reference; could help to replace "In fact, some methods" with clearer language.
-Also make clear that some studies using reference taxa are using proportion-based methods.
-Also, cite the appendix that gives an overview of AA methods, and explicitly state distinction between proportion-based and ratio-based methods.
-
-Could help to change to:
-
-- Ratio-based analysis can also be used to overcome the effects of bias in differential absolute abundance.
-- /Make clear that the above ratio equation applies for relative and absolute observed or actual abudances (since totals cancel)/
-- Suppose we knew the true absolute abundance of a reference taxon $r$; then we might estimate the absolute abundance of taxon $i$ from
-  + Give the estimation equation
-  + Explain the effect of taxonomic bias - get correct FCs
-- It remains to determine the AA of one or more reference taxa.
-  + Some existing AA methods involve using spike ins of extraneous taxa
-    - discuss spike-in approach
-    - often stated that bias a problem for spike-ins; however we see that it only affects the baseline and not the fold changes
-      + this first part could be shunted to a discussion
-    - most/all papers on spike-ins suppose the spike-in must be added in a known fixed amount.
-    - however, the above argument indicates that it isn't required that the reference taxon is extraneous or has a fixed abundance; what is important is that we know the correct abundance up to a fixed multiplicative error
-    - hence it can be a native taxon we've measured using a targeted method; this method can be biased as long as it has a fixed multiplicative error (unlike MGS bias.)
-
-Need to consider if this is too detailed for the main text.
-Might want to make this section of the appendix particularly clear if can't put this in the main text.
-
-
-Key equations, to show side-by-side: Proportion-based and ratio-based AA inference.
 
 ## Use ratio-based estimation
 
@@ -70,9 +37,6 @@ A comprehensive approach of estimating the efficiency of all taxa is needed for 
 But what if we only want calibrated DA analysis?
 That is, we are comfortable with not knowing whether *E. coli* is 10% of our sample if we can confidently determine that it doubled or halved between sample conditions?
 This problem is easier to solve, and one solution is to use analysis methods based on the ratios among taxa rather than the proportions of individual taxa.
-
-- from gdoc: this distinction of ratios vs proportions needs to be spelled out more explicitly; could even use my seminar figure (or equations) to help
-- later thoughts: This distinction is so central for how I understand and explain the key ideas, should refer to it early and often
 
 A subset of methods for analyzing differential relative abundance are derived from the field of Compositional Data Analysis (CoDA).
 The defining feature of CoDA methods is that they are based on fold-changes in ratios among elements (here, the taxa) (REF AITCHISON).
@@ -113,9 +77,13 @@ A straightforward and universally available approach is to use computer simulati
 The utility of such simulations can increase the more we learn about the magnitude of bias in different systems and the taxonomic and protocol features that determine it.
 Future work in developing tools and methods for simulating efficiency vectors and performing bias sensitivity analyses could be a valuable way to assay and improve the reliability of microbiome results—for differential abundance as well as other microbiome analyses such as alpha diversity and community similarity analyses.
 
+- Aim to illustrate with a simulated or real example
+
 ## Use bias-aware meta-analysis
 
 When the goal is to perform a meta-analysis that combines studies that have used different protocols, the unknown measurement efficiencies of each protocol can be explicitly included as parameters of the statistical model that is used.
 Unknown efficiencies can be included in "compositional" linear modeling frameworks such as ALDEx2, DivNet, and fido simply by adding a protocol-specific term to the linear model of taxon log ratios.
 [*Add sentence on how this can be used for non-compositional analyses.*]
 Thus such bias-aware meta-analyses are already technically feasible and—if bias is truly consistent within a protocol or study—may provide a more powerful alternative to non-parametric or other meta-analysis methods that do not model bias explicitly.
+
+- Aim to  illustrate with a simulated or real example

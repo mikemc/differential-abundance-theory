@@ -1,5 +1,7 @@
 # How taxonomic bias affects differential-abundance analysis
 
+_The current text generally assumes that taxa are atomic._
+
 The current practice of ignoring bias in DA and other analyses of the differences betwen samples is sometimes justified by the idea that the error in measurements of in individual samples should not affect the measured differences between samples, so long as they have been subjected to the same taxonomic bias.
 This argument is predicated on an assumption that consistent taxonomic bias creates consistent errors in the quanity of interest.
 The previous section showed that while this may be true for ratio-based abundance measurements, it is not true for proportion-based measurements.
@@ -49,7 +51,7 @@ NOTE: Having a figure and example specifically for density is not necessary for 
 
 
 <!-- P: error in FC ratios and ratio-based AAs -->
-(In contrast to proportion-based estimates) Becuase consistent taxonomic bias creates a consistent error in ratio-based estimates, the error completely cancels, leaving accurate fold changes.
+(In contrast to proportion-based estimates) Because consistent taxonomic bias creates a consistent error in ratio-based estimates, the error completely cancels, leaving accurate fold changes.
 From \@ref(eq:ratio-err), the estimated fold change in the ratio of taxon $i$ to taxon $j$ from sample $s$ to sample $t$ is
 \begin{align}
   (\#eq:ratio-fc-err)
@@ -57,12 +59,46 @@ From \@ref(eq:ratio-err), the estimated fold change in the ratio of taxon $i$ to
   &= 
   \frac{{\text{density}_{i}(t)}/{\text{density}_{j}(t)}} {{\text{density}_{i}(s)}/{\text{density}_{j}(s)}}
   \cdot
-  \frac{\cancel{\text{efficiency}_{i}(t)}/\cancel{\text{efficiency}_{j}(t)}} {\cancel{\text{efficiency}_{i}(s)}/\cancel{\text{efficiency}_{j}(s)}}
+  \frac{\cancel{\text{efficiency}_{i}}/\cancel{\text{efficiency}_{j}}} {\cancel{\text{efficiency}_{i}}/\cancel{\text{efficiency}_{j}}}
   \\[0.5ex]&= 
   \underbrace{ \frac{{\text{density}_{i}(t)}/{\text{density}_{j}(t)}} {{\text{density}_{i}(s)}/{\text{density}_{j}(s)}} }_\text{actual}
   .
 \end{align}
 (Describe FCs in Figure 2 and Figure 3 density e.g., seeing the correct FCs.)
+(_Need to make plain in the equation that this is the estimated fold change in the density of taxon i; perhaps have notation for this._)
+
+### Synthetic or higher-level taxa
+
+_Some of these concepts would best be introduced in the previous secton on abundances.
+Alternatively, we might want to separate them into a box or appendix on multiplicative aggregation._
+
+<!-- P: Synthetic taxa intro -->
+
+Frequently, relative- and absolute-abundance estimation are used to infer fold changes in higher-level taxa.
+
+- Visual or statistical estimation of changes in phylum abundance is a ubiquitous form of analysis in bacterial microbiome studies.
+- @chng2020meta - use fold changes in the ratio of bacterial to host reads to estimate the change in bacterial biomass during mouse antibiotics experiment
+- @rao2021mult - use a spike-in to infer changes in total domain abundance for each of archaea, bacteria, and fungi.
+- @karasov2020ther - ratio of microbial to host reads to infer changes in microbial biomass 
+
+We know that efficiencies vary widely within domains and also has been observed to vary within phyla and even within species.
+What are the implications of this within-taxon variation for infered fold changes?
+
+<!-- P: Synthetic taxa results -->
+
+Unfortunately, the bias invariance of ratio-based inference of species need not apply to ratios involving higher-level taxa.
+The estimated fold change in the proportion, ratio, or density of a synthetic taxon $T$ has additional multiplicative error equal to its fold change in efficiency.
+This error can be substantial when there is a substantial turnover from dominance by high- to low-efficiency species (or vice versa).
+(todo: ref relevant equation from previous section)
+
+An alternative approach to creating synthetic quantitative features was develoepd in the Compositional Data Analysis field that retains the so-called perturbation invariance property of atomic features.
+These "balances" are constructed by multiplying, rather than adding, the abundances of the atomic elements (equivalent to adding the abundances after log transformation instead of before) (@vandenboogaart2013anal).
+The changes in balances retain bias invariance (@mclaren2019cons Appendix 1, and REF Appendix).
+Balances have been used to construct candidate disease biomarkers (@riverapinto2018bala, @quinn2020inte), develop phylogenetic community distance measures (@silverman2017aphy), and look for clades associated with traits (@washburne2017phyl). 
+But they face from conceptual and practice issues relating to the sparsity of microbiome data. 
+Perhaps more important, products of species abundances do not obviously map onto the ecological notion of abundance and hence do not seem to fully substitute for attempting to infer the changes in taxon abundance as conceived in the usual sense of additive aggregation.
+A benefit of products, however, is that they are also robust to the fact that we may not know the appropriate ecological conversion rate for different species; for example, cells of one clade might be twice as impactful per cell on a host or  ecosystem as cells from another clade.
+Grappling with these issues remains an important goal for future theoretical and empirical research.
 
 ## Regression over many samples
 
@@ -177,23 +213,8 @@ Old text to use:
 Interestingly, taxonomic bias may actually make qPCR a better method for absolute quantification than cell counting for 16S rRNA gene sequencing experiments.
 16S rRNA gene qPCR measures the concentration of 16S rRNA gene copies in the extracted DNA and is therefore necessarily affected by three large sources of bias in 16S rRNA gene experiments: extraction, amplification, and copy-number variation.
 Yet these biases are shared by the sequencing measurement.
-Though they make qPCR measurements a bad proxy for total cell density^[See note from KL below], when used for absolute differential abundance inference the shared bias in the qPCR and sequencing measurements can offset each other, leading to estimated fold changes that are relatively unaffected by taxonomic bias.
+Though they make qPCR measurements a bad proxy for total cell density, when used for absolute differential abundance inference the shared bias in the qPCR and sequencing measurements can offset each other, leading to estimated fold changes that are relatively unaffected by taxonomic bias.
 (Jian, Salonen, and Korpela 2021 suggests some of these ideas and APPENDIX gives a mathematical justification.)
-If common primers are used by qPCR and 16S rRNA gene sequencing, the bias due to primer mismatches and other sources of variation in amplification could even be accounted for in this manner.^[See discussion below]
+If common primers are used by qPCR and 16S rRNA gene sequencing, the bias due to primer mismatches and other sources of variation in amplification could even be accounted for in this manner.
 Yet ideally we would still be able to estimate and correct remaining error due to unshared bias or to mechanisms, such as saturation during DNA extraction, that could break the assumed proportionality between qPCR measurements and total abundance.
 In this case, ...
-
-
-## Notes
-
-<details><summary style="font-weight:bold;font-size:120%">Details: Taxonomic bias and differential-abundance estimates</summary>
-::: {#details:differential .rmdnote}
-
-#### Proportion-based inference {-}
-
-#### Ratio-based inference {-}
-
-:::
-</details>
-
-
