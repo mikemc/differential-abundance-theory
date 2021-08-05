@@ -1,2 +1,2 @@
 [build]
-  publish = "_book/"
+  publish = "_netlify_site/"
