@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>2 Bias can cause spurious results in proportion-based DA analysis | Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for</title>
+  <meta name="description" content="2 Bias can cause spurious results in proportion-based DA analysis | Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for" />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="2 Bias can cause spurious results in proportion-based DA analysis | Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="2 Bias can cause spurious results in proportion-based DA analysis | Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for" />
+  
+  
+  
+
+<meta name="author" content="Michael R. McLaren" />
+<meta name="author" content="Karen G. Lloyd" />
+<meta name="author" content="Benjamin J. Callahan" />
+
+
+<meta name="date" content="2021-08-04" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="introduction.html"/>
+<link rel="next" href="implications-for-real-world-inference.html"/>
+<script src="libs/header-attrs-2.9/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
+<li class="chapter" data-level="1" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>1</b> Introduction</a></li>
+<li class="chapter" data-level="2" data-path="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html"><a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html"><i class="fa fa-check"></i><b>2</b> Bias can cause spurious results in proportion-based DA analysis</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html"><a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html#effect-on-regression-of-multiple-samples"><i class="fa fa-check"></i><b>2.1</b> Effect on regression of multiple samples</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="implications-for-real-world-inference.html"><a href="implications-for-real-world-inference.html"><i class="fa fa-check"></i><b>3</b> Implications for real-world inference </a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="implications-for-real-world-inference.html"><a href="implications-for-real-world-inference.html#scenarios-in-which-bias-may-cause-spurious-results"><i class="fa fa-check"></i><b>3.1</b> Scenarios in which bias may cause spurious results</a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="implications-for-real-world-inference.html"><a href="implications-for-real-world-inference.html#error-in-absolute-abundance-measurements"><i class="fa fa-check"></i><b>3.1.1</b> Error in absolute abundance measurements</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="implications-for-real-world-inference.html"><a href="implications-for-real-world-inference.html#we-cannot-simply-ignore-taxonomic-bias"><i class="fa fa-check"></i><b>3.2</b> We cannot simply ignore taxonomic bias</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="potential-solutions.html"><a href="potential-solutions.html"><i class="fa fa-check"></i><b>4</b> Potential solutions</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="potential-solutions.html"><a href="potential-solutions.html#using-control-samples-to-calibrate-relative-abundances"><i class="fa fa-check"></i><b>4.1</b> Using control samples to calibrate relative abundances</a></li>
+<li class="chapter" data-level="4.2" data-path="potential-solutions.html"><a href="potential-solutions.html#ratio-based-relative-and-absolute-abundance-inference"><i class="fa fa-check"></i><b>4.2</b> Ratio-based relative and absolute abundance inference</a></li>
+<li class="chapter" data-level="4.3" data-path="potential-solutions.html"><a href="potential-solutions.html#estimating-error-with-targeted-measurements-of-a-small-number-of-taxa"><i class="fa fa-check"></i><b>4.3</b> Estimating error with targeted measurements of a small number of taxa</a></li>
+<li class="chapter" data-level="4.4" data-path="potential-solutions.html"><a href="potential-solutions.html#computational-approaches"><i class="fa fa-check"></i><b>4.4</b> Computational approaches</a></li>
+</ul></li>
+<li class="appendix"><span><b>Appendix</b></span></li>
+<li class="chapter" data-level="A" data-path="models.html"><a href="models.html"><i class="fa fa-check"></i><b>A</b> Measurement models</a>
+<ul>
+<li class="chapter" data-level="A.1" data-path="models.html"><a href="models.html#actual-abundances-and-general-notation"><i class="fa fa-check"></i><b>A.1</b> Actual abundances and general notation</a></li>
+<li class="chapter" data-level="A.2" data-path="models.html"><a href="models.html#metagenomics-measurement"><i class="fa fa-check"></i><b>A.2</b> Metagenomics measurement</a></li>
+<li class="chapter" data-level="A.3" data-path="models.html"><a href="models.html#bulk-absolute-abundance-measurement"><i class="fa fa-check"></i><b>A.3</b> Bulk absolute abundance measurement</a></li>
+<li class="chapter" data-level="A.4" data-path="models.html"><a href="models.html#targeted-absolute-abundance-measurement"><i class="fa fa-check"></i><b>A.4</b> Targeted absolute abundance measurement</a></li>
+<li class="chapter" data-level="A.5" data-path="models.html"><a href="models.html#spike-ins"><i class="fa fa-check"></i><b>A.5</b> Spike-ins</a></li>
+<li class="chapter" data-level="A.6" data-path="models.html"><a href="models.html#complications"><i class="fa fa-check"></i><b>A.6</b> Complications</a>
+<ul>
+<li class="chapter" data-level="A.6.1" data-path="models.html"><a href="models.html#abundances-units-and-protocol-stages"><i class="fa fa-check"></i><b>A.6.1</b> Abundances units and protocol stages</a></li>
+<li class="chapter" data-level="A.6.2" data-path="models.html"><a href="models.html#saturation-in-dna-extraction-yields"><i class="fa fa-check"></i><b>A.6.2</b> Saturation in DNA extraction yields</a></li>
+<li class="chapter" data-level="A.6.3" data-path="models.html"><a href="models.html#taxonomic-resolution-of-measurements"><i class="fa fa-check"></i><b>A.6.3</b> Taxonomic resolution of measurements</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="B" data-path="relative.html"><a href="relative.html"><i class="fa fa-check"></i><b>B</b> Differential relative abundance</a>
+<ul>
+<li class="chapter" data-level="B.1" data-path="relative.html"><a href="relative.html#proportion-based-analyses"><i class="fa fa-check"></i><b>B.1</b> Proportion-based analyses</a>
+<ul>
+<li class="chapter" data-level="B.1.1" data-path="relative.html"><a href="relative.html#log-proportion"><i class="fa fa-check"></i><b>B.1.1</b> Log proportion</a></li>
+<li class="chapter" data-level="B.1.2" data-path="relative.html"><a href="relative.html#log-odds-logit"><i class="fa fa-check"></i><b>B.1.2</b> Log odds (logit)</a></li>
+</ul></li>
+<li class="chapter" data-level="B.2" data-path="relative.html"><a href="relative.html#ratio-based-analyses"><i class="fa fa-check"></i><b>B.2</b> Ratio-based analyses</a></li>
+<li class="chapter" data-level="B.3" data-path="relative.html"><a href="relative.html#higher-order-taxa-formed-by-additive-aggregation"><i class="fa fa-check"></i><b>B.3</b> Higher-order taxa formed by additive aggregation</a></li>
+</ul></li>
+<li class="chapter" data-level="C" data-path="absolute.html"><a href="absolute.html"><i class="fa fa-check"></i><b>C</b> Differential absolute abundance</a>
+<ul>
+<li class="chapter" data-level="C.1" data-path="absolute.html"><a href="absolute.html#using-bulk-abundance-measurements"><i class="fa fa-check"></i><b>C.1</b> Using bulk abundance measurements</a>
+<ul>
+<li class="chapter" data-level="C.1.1" data-path="absolute.html"><a href="absolute.html#shared-bias-components"><i class="fa fa-check"></i><b>C.1.1</b> Shared bias components</a></li>
+</ul></li>
+<li class="chapter" data-level="C.2" data-path="absolute.html"><a href="absolute.html#using-reference-taxa"><i class="fa fa-check"></i><b>C.2</b> Using reference taxa</a>
+<ul>
+<li class="chapter" data-level="C.2.1" data-path="absolute.html"><a href="absolute.html#taxa-with-targeted-abundance-measurements"><i class="fa fa-check"></i><b>C.2.1</b> Taxa with targeted abundance measurements</a></li>
+<li class="chapter" data-level="C.2.2" data-path="absolute.html"><a href="absolute.html#cellular-spike-ins"><i class="fa fa-check"></i><b>C.2.2</b> Cellular spike-ins</a></li>
+<li class="chapter" data-level="C.2.3" data-path="absolute.html"><a href="absolute.html#dna-spike-ins"><i class="fa fa-check"></i><b>C.2.3</b> DNA spike-ins</a></li>
+<li class="chapter" data-level="C.2.4" data-path="absolute.html"><a href="absolute.html#taxa-assumed-to-have-a-constant-abundance"><i class="fa fa-check"></i><b>C.2.4</b> Taxa assumed to have a constant abundance</a></li>
+<li class="chapter" data-level="C.2.5" data-path="absolute.html"><a href="absolute.html#multiple-reference-taxa"><i class="fa fa-check"></i><b>C.2.5</b> Multiple reference taxa</a></li>
+</ul></li>
+<li class="chapter" data-level="C.3" data-path="absolute.html"><a href="absolute.html#using-an-equivolumetric-protocol"><i class="fa fa-check"></i><b>C.3</b> Using an equivolumetric protocol</a></li>
+<li class="chapter" data-level="C.4" data-path="absolute.html"><a href="absolute.html#computational-methods"><i class="fa fa-check"></i><b>C.4</b> Computational methods</a></li>
+</ul></li>
+<li class="chapter" data-level="D" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html"><i class="fa fa-check"></i><b>D</b> Proofs of regression results</a>
+<ul>
+<li class="chapter" data-level="D.1" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#general-regression"><i class="fa fa-check"></i><b>D.1</b> General regression</a></li>
+<li class="chapter" data-level="D.2" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#linear-least-squares-regression"><i class="fa fa-check"></i><b>D.2</b> Linear least-squares regression</a>
+<ul>
+<li class="chapter" data-level="D.2.1" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#linear-regression-of-microbiome-abundances"><i class="fa fa-check"></i><b>D.2.1</b> Linear regression of microbiome abundances</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="E" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html"><i class="fa fa-check"></i><b>E</b> DNA measurement and spike-ins</a>
+<ul>
+<li class="chapter" data-level="E.1" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#expanded-model-and-notation"><i class="fa fa-check"></i><b>E.1</b> Expanded model and notation</a></li>
+<li class="chapter" data-level="E.2" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#targeted-dna-measurement"><i class="fa fa-check"></i><b>E.2</b> Targeted DNA measurement</a></li>
+<li class="chapter" data-level="E.3" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#dna-spike-ins-1"><i class="fa fa-check"></i><b>E.3</b> DNA spike-ins</a></li>
+<li class="chapter" data-level="E.4" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#implications"><i class="fa fa-check"></i><b>E.4</b> Implications</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="bias-can-cause-spurious-results-in-proportion-based-da-analysis" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Bias can cause spurious results in proportion-based DA analysis</h1>
+<pre><code>#&gt; Warning: It is deprecated to specify `guide = FALSE` to remove a guide. Please
+#&gt; use `guide = &quot;none&quot;` instead.
+
+#&gt; Warning: It is deprecated to specify `guide = FALSE` to remove a guide. Please
+#&gt; use `guide = &quot;none&quot;` instead.</code></pre>
+<div class="figure"><span id="fig:vaginal-example"></span>
+<img src="_main_files/figure-html/vaginal-example-1.png" alt="Taxonomic bias can distort differential abundance results even when it is consistent for each taxon across samples. Panel A shows the actual and observed proportions for hypothetical community samples from two time points, which differ in their relative abundance of three taxa. Panel B shows taxonomic bias in terms of the relative efficiencies of the three taxa against the mean efficiency of each sample; the difference between the taxon’s efficiency and the sample’s mean (vertical arrows) determines the fold error seen in Panel A. Panel C rearranges the plot from Panel A to show the actual and observed fold changes between time points. The efficiencies of individual taxa were estimated by McLaren, Willis, and Callahan (2019) from mock community data from Brooks et al. (2015). The abundances are hypothetical but inspired by observations from the human vaginal microbiome; see main text." width="1152" />
+<p class="caption">
+Figure 2.1: <strong>Taxonomic bias can distort differential abundance results even when it is consistent for each taxon across samples.</strong> Panel A shows the actual and observed proportions for hypothetical community samples from two time points, which differ in their relative abundance of three taxa. Panel B shows taxonomic bias in terms of the relative efficiencies of the three taxa against the mean efficiency of each sample; the difference between the taxon’s efficiency and the sample’s mean (vertical arrows) determines the fold error seen in Panel A. Panel C rearranges the plot from Panel A to show the actual and observed fold changes between time points. The efficiencies of individual taxa were estimated by <span class="citation"><a href="#ref-mclaren2019cons" role="doc-biblioref">McLaren, Willis, and Callahan</a> (<a href="#ref-mclaren2019cons" role="doc-biblioref">2019</a>)</span> from mock community data from <span class="citation"><a href="#ref-brooks2015thet" role="doc-biblioref">Brooks et al.</a> (<a href="#ref-brooks2015thet" role="doc-biblioref">2015</a>)</span>. The abundances are hypothetical but inspired by observations from the human vaginal microbiome; see main text.
+</p>
+</div>
+
+<p>We illustrate the problems posed by taxonomic bias for differential abundance using an example where the bias of an MGS protocol was explicitly measured using mock communities.
+To analyze the effects of taxonomic bias on measurements of the human vaginal microbiome, <span class="citation"><a href="#ref-brooks2015thet" role="doc-biblioref">Brooks et al.</a> (<a href="#ref-brooks2015thet" role="doc-biblioref">2015</a>)</span> performed 16S rRNA gene sequencing of mock communities of seven key vaginal species using a similar protocol to that of the Vaginal Human Microbiome Project (VaHMP).
+<span class="citation"><a href="#ref-mclaren2019cons" role="doc-biblioref">McLaren, Willis, and Callahan</a> (<a href="#ref-mclaren2019cons" role="doc-biblioref">2019</a>)</span> used this data to estimate the relative measurement efficiency of the seven species.
+They found that the most efficiently measured species, <em>Lactobacillus iners</em>, had an efficiency that was 29X that of the least efficiently measured species, <em>Gardnerella vaginalis</em>, primarily due to a greater DNA extraction efficiency and 16S copy number.
+A third species, <em>Atopobium vaginae</em>, had an efficiency 1.8X that of <em>G. vaginalis</em>.
+A common aim of human vaginal microbiome studies, including the VaHMP, is to understand the causes and consequences of shifts in communities from being dominated by a particular <em>Lactobacillus</em> species to dominance by a non-<em>Lactobacillus</em> species such as <em>G. vaginalis</em>, which have been associated with deleterious health outcomes including an increased risk of preterm births in pregnant women.
+It is therefore important to know whether the efficiency variation found by <span class="citation"><a href="#ref-mclaren2019cons" role="doc-biblioref">McLaren, Willis, and Callahan</a> (<a href="#ref-mclaren2019cons" role="doc-biblioref">2019</a>)</span> affects the observed differential abundances between <em>Lactobacillus</em>-dominated and <em>Gardnerella</em>-dominated communities.</p>
+<p>Figure <a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html#fig:vaginal-example">2.1</a> illustrates the effects of taxonomic bias on the measured proportions for hypothetical vaginal samples from a single woman at two points in time, during which the community shifts from being dominated by <em>Lactobacillus</em> to being dominated by <em>Gardnerella</em>.
+In each case, we observe a greater proportion of <em>Lactobacillus</em> than is truly present, and less of the other two species (Figure <a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html#fig:vaginal-example">2.1</a>A).
+This positive multiplicative error arises because <em>Lactobacillus</em> is more efficiently measured than the average species in each sample.
+<span class="citation"><a href="#ref-mclaren2019cons" role="doc-biblioref">McLaren, Willis, and Callahan</a> (<a href="#ref-mclaren2019cons" role="doc-biblioref">2019</a>)</span> showed that the observed and actual proportions of a taxon <span class="math inline">\(i\)</span> in a sample <span class="math inline">\(s\)</span> are related by the equation
+<span class="math display" id="eq:error">\[\begin{align}
+  \tag{2.1}
+  \text{observed}_{i}(s) = \text{actual}_{i}(s) \cdot \frac{\text{efficiency}_{i}}{\text{mean efficiency}(s)}
+\end{align}\]</span>
+where <span class="math inline">\(\text{mean efficiency}(s)=\text{actual}_j(s)*\text{efficiency}_j\)</span> in the denominator is the average efficiency of all taxa in that sample.
+Intuitively, Equation <a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html#eq:error">(2.1)</a> says that the taxon will be overrepresented by the extent to which its measurement efficiency is greater than the average efficiency of cells in the sample.
+Figure <a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html#fig:vaginal-example">2.1</a>B shows the efficiencies of the three taxa and the mean efficiency in each sample.
+The (multiplicative) difference between the taxon efficiencies and the mean efficiency determines the (multiplicative) error in each sample; for example, the mean efficiency in the second sample is 2.5, leading to a 29/2.5=11.6X error in the proportion of <em>Lactobacillus</em>.
+The error in the second sample is larger—specifically, by 6X—than the first sample because the high proportion of <em>Gardnerella</em> has reduced the sample mean efficiency (and thus increased the efficiency of <em>Lactobacillus</em> relative to the mean) by 6X.</p>
+<p>The enrichment depends on the taxon’s efficiency relative to the sample average, rather than the efficiency itself, because the requirement that the proportions of all taxa sum to one locks the taxa in a zero-sum competition.
+Notably, competition occurs (though in a less absolute form) even at the level of the raw sequencing reads: DNA extractions and PCR reactions have limited output capacity; high-concentration samples are typically subsampled to fixed, lower concentrations; and sequencing libraries are given limited sequencing effort; so that the experimental process itself typically imposes competition to be sequenced.
+And it is competition that prevents the effects of taxonomic bias from canceling when we analyze how the proportions of individual taxa change across samples.</p>
+<p>Figure <a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html#fig:vaginal-example">2.1</a>C shows the consequences of measurement error on an analysis of the fold change in proportions between the two samples.
+In reality, <em>Gardnerella</em> changes by 4X, <em>Lactobacillus</em> by 0.1X, and <em>Atopobium</em> by 0.5X.
+Yet what is observed is that <em>Gardnerella</em> changes by 32X, <em>Lactobacillus</em> by 0.6X, and <em>Atopobium</em> by 3X.
+In other words, the change in each case is multiplied by 6X, causing a much larger increase in <em>Gardnerella</em> and a smaller decrease <em>Lactobacillus</em> than actual, and the appearance that <em>Atopobium</em> increased when it in fact decreased.
+Why do such errors occur?
+The multiplicative error in Equation <a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html#eq:error">(2.1)</a> has two parts: a taxon-specific term in the numerator that is the same in each sample, and a taxon-independent term in the denominator that depends on the composition of the sample through the mean efficiency.
+When we compute the fold change in a taxon i between samples s and t,
+<span class="math display">\[\begin{align}
+  \frac{\text{observed}_{i}(t)}{\text{observed}_{i}(s)}=\frac{\text{actual}_{i}(t)}{\text{actual}_{i}(s)}*\frac{\text{efficiency}_{i}}{\text{efficiency}_{i}}*\frac{\text{mean efficiency}(s)}{\text{mean efficiency}(t)}
+\end{align}\]</span>
+the constant efficiency in the numerator of Equation <a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html#eq:error">(2.1)</a> cancels, but the varying mean efficiency does not, leaving an error that is equal to the inverse change in mean efficiency.
+As a result, we are here left inferring that the fold-changes in proportions have all increased less (or decreased more) than they truly have.
+In our example, the mean efficiency decreased by 6X (from 15 to 2.5) due to the shift in dominant taxon from the high-efficiency <em>Lactobacillus</em> to the low-efficiency <em>Gardnerella</em>, causing the observed fold changes to increase by 6X above the actual.
+This increase distorted the magnitudes of the changes in <em>Lactobacillus</em> and <em>Gardnerella</em> (decreasing the first and increasing the second) and changed the sign of <em>Atopobium</em> from negative to positive.
+Thus partial cancelling in the effect of a constant multiplicative bias may not be sufficient to protect against spurious results.</p>
+<p>Spurious results can occur for the same basic reason in proportion-based absolute-abundance inference.
+Suppose that the true total abundance in each sample can be determined experimentally.
+Because the absolute abundance estimate simply multiplies the erroneous observed proportions by this total, the estimated change in absolute abundance is wrong by the same factor as the fold change in proportions.
+In our Figure <a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html#fig:vaginal-example">2.1</a> example, if the change in total abundance between samples were 2X, then we would observed both <em>Lactobacillus</em> and <em>Atopobium</em> to have increased in absolute abundance (by 1.2X and 6X), when in fact <em>Lactobacillus</em> decreased (by 5X) and <em>Atopobium</em> remained the same.</p>
+<div id="effect-on-regression-of-multiple-samples" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> Effect on regression of multiple samples</h2>
+<p>We showed how fold changes of individual samples may be unreliable.
+But microbiome analyses often do not interpret such individual differences, and instead look for average patterns across many samples, such as how the abundance of a taxon varies with some covariate of interest.
+The covariate may be discrete, such as whether the sample is from a healthy or sick person, or it may be continuous, such as a measure of space, time, or temperature.
+Often these analyses can be framed as a regression problem.
+For example, we might hypothesize that the log absolute abundance of taxon <span class="math inline">\(i\)</span> changes with a variable <span class="math inline">\(x\)</span> according to the simple linear regression,
+<span class="math display">\[\begin{align}
+  E[\text{log abundance}_{i} \mid x] = a_{0} + a_{1}x
+\end{align}\]</span>
+where <span class="math inline">\(x\)</span> is either continuous (e.g., sediment depth) or binary (e.g., <span class="math inline">\(x=1\)</span> for treated patients and <span class="math inline">\(x=0\)</span> for controls).
+Much of the effect of bias will be absorbed by the model intercept, which is typically not of interest to the researcher.
+However, variation in the mean efficiency creates additional variation (reducing statistical power to detect variation in the slope) and can also create a statistical bias in our slope estimate equal to the inverse slope of <span class="math inline">\(E[\text{log mean efficiency}\mid x]\)</span> as a function of <span class="math inline">\(x\)</span>.
+Therefore if the mean efficiency varies across samples, but is not associated with the covariate <span class="math inline">\(x\)</span>, its effect may simply be to create larger standard errors in our slope estimate.
+But the larger worry may be the systematically distorted slope (<span class="math inline">\(a_1\)</span>) estimates that arise in situations where the mean efficiency changes with <span class="math inline">\(x\)</span>.
+Notably, the error in an absolute sense is the same for all taxa—the slope is always reduced by the same amount—but the implications differ for various taxa depending on their slopes, causing magnitude or sign errors depending how the coefficient derived from the (unknown) true abundances compares to that of the mean efficiency (Figure <a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html#fig:regression-example">2.2</a>).</p>
+<div class="figure"><span id="fig:regression-example"></span>
+<img src="figures/leopold2020host-example.svg" alt="Taxonomic bias distorts multi-sample differential abundance inference when the mean efficiency of samples is associated with the covariate of interest. Details to synthesize into a caption: Regression of log2(Proportion) of the commensal fungus Penicillium versus timepoint; timepoints 1 and 2 are pre- and post-challenge with the pathogen Melampsora. Data is split by the region the host plants are derived from (Eastern and Western US). Calibrated proportions = Observed proportions in the real, experimental samples after adjustment for the bias measured in mock communities. Mean efficiency of each community is inferred by treating the calibrated proportions as the truth, and multiplying by efficiencies estimated from the mocks. The pathogen Melampsora has a high measurement efficiency; thus once it infects the plants, the mean efficiency of the sample increases (purple points). Efficiency is here taken as relative to the focal taxon Penicillium. West plants tend to be more resistant to the pathogen, which likely explains why the mean efficiency doesn’t increase as much in the West plants. Penicillium is observed to decrease in log proportion, in both the East and West plants. But the calibrated measurements show that it actually slightly increases in the East plants, and has a lesser decrease in the West plants than what was observed before bias correction. The difference between the Calibrated and Observed data points and regression lines equals the regression line of the mean efficiency: Orange = Green + Purple; Green = Orange - Purple. The absolute error in regression coefficients is the same for all taxa. I picked Penicillium for illustration since it has the smallest observed decrease, which makes the error due to bias have a particularly significant impact."  />
+<p class="caption">
+Figure 2.2: <strong>Taxonomic bias distorts multi-sample differential abundance inference when the mean efficiency of samples is associated with the covariate of interest.</strong> Details to synthesize into a caption: Regression of log2(Proportion) of the commensal fungus Penicillium versus timepoint; timepoints 1 and 2 are pre- and post-challenge with the pathogen Melampsora. Data is split by the region the host plants are derived from (Eastern and Western US). Calibrated proportions = Observed proportions in the real, experimental samples after adjustment for the bias measured in mock communities. Mean efficiency of each community is inferred by treating the calibrated proportions as the truth, and multiplying by efficiencies estimated from the mocks. The pathogen Melampsora has a high measurement efficiency; thus once it infects the plants, the mean efficiency of the sample increases (purple points). Efficiency is here taken as relative to the focal taxon Penicillium. West plants tend to be more resistant to the pathogen, which likely explains why the mean efficiency doesn’t increase as much in the West plants. Penicillium is observed to decrease in log proportion, in both the East and West plants. But the calibrated measurements show that it actually slightly increases in the East plants, and has a lesser decrease in the West plants than what was observed before bias correction. The difference between the Calibrated and Observed data points and regression lines equals the regression line of the mean efficiency: Orange = Green + Purple; Green = Orange - Purple. The absolute error in regression coefficients is the same for all taxa. I picked Penicillium for illustration since it has the smallest observed decrease, which makes the error due to bias have a particularly significant impact.
+</p>
+</div>
+
+</div>
+</div>
+<h3>References</h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-brooks2015thet" class="csl-entry">
+Brooks, J Paul, David J Edwards, Michael D Harwich, Maria C Rivera, Jennifer M Fettweis, Myrna G Serrano, Robert A Reris, et al. 2015. <span>“<span class="nocase">The truth about metagenomics: quantifying and counteracting bias in 16S rRNA studies</span>.”</span> <em>BMC Microbiol.</em> 15 (1): 66. <a href="https://doi.org/10.1186/s12866-015-0351-6">https://doi.org/10.1186/s12866-015-0351-6</a>.
+</div>
+<div id="ref-mclaren2019cons" class="csl-entry">
+McLaren, Michael R, Amy D Willis, and Benjamin J Callahan. 2019. <span>“<span class="nocase">Consistent and correctable bias in metagenomic sequencing experiments</span>.”</span> <em>Elife</em> 8 (September): 46923. <a href="https://doi.org/10.7554/eLife.46923">https://doi.org/10.7554/eLife.46923</a>.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="introduction.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="implications-for-real-world-inference.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": true,
+"facebook": false,
+"twitter": false,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/mikemc/differential-abundance-theory/edit/main/article.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": "https://github.com/mikemc/differential-abundance-theory/commits/main/article.Rmd",
+"text": null
+},
+"view": {
+"link": "https://github.com/mikemc/differential-abundance-theory/blob/main/article.Rmd",
+"text": null
+},
+"download": ["_main.pdf"],
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

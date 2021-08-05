@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>D Proofs of regression results | Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for</title>
+  <meta name="description" content="D Proofs of regression results | Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for" />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="D Proofs of regression results | Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="D Proofs of regression results | Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for" />
+  
+  
+  
+
+<meta name="author" content="Michael R. McLaren" />
+<meta name="author" content="Karen G. Lloyd" />
+<meta name="author" content="Benjamin J. Callahan" />
+
+
+<meta name="date" content="2021-08-04" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="absolute.html"/>
+<link rel="next" href="dna-measurement-and-spike-ins.html"/>
+<script src="libs/header-attrs-2.9/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
+<li class="chapter" data-level="1" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>1</b> Introduction</a></li>
+<li class="chapter" data-level="2" data-path="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html"><a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html"><i class="fa fa-check"></i><b>2</b> Bias can cause spurious results in proportion-based DA analysis</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html"><a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html#effect-on-regression-of-multiple-samples"><i class="fa fa-check"></i><b>2.1</b> Effect on regression of multiple samples</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="implications-for-real-world-inference.html"><a href="implications-for-real-world-inference.html"><i class="fa fa-check"></i><b>3</b> Implications for real-world inference </a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="implications-for-real-world-inference.html"><a href="implications-for-real-world-inference.html#scenarios-in-which-bias-may-cause-spurious-results"><i class="fa fa-check"></i><b>3.1</b> Scenarios in which bias may cause spurious results</a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="implications-for-real-world-inference.html"><a href="implications-for-real-world-inference.html#error-in-absolute-abundance-measurements"><i class="fa fa-check"></i><b>3.1.1</b> Error in absolute abundance measurements</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="implications-for-real-world-inference.html"><a href="implications-for-real-world-inference.html#we-cannot-simply-ignore-taxonomic-bias"><i class="fa fa-check"></i><b>3.2</b> We cannot simply ignore taxonomic bias</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="potential-solutions.html"><a href="potential-solutions.html"><i class="fa fa-check"></i><b>4</b> Potential solutions</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="potential-solutions.html"><a href="potential-solutions.html#using-control-samples-to-calibrate-relative-abundances"><i class="fa fa-check"></i><b>4.1</b> Using control samples to calibrate relative abundances</a></li>
+<li class="chapter" data-level="4.2" data-path="potential-solutions.html"><a href="potential-solutions.html#ratio-based-relative-and-absolute-abundance-inference"><i class="fa fa-check"></i><b>4.2</b> Ratio-based relative and absolute abundance inference</a></li>
+<li class="chapter" data-level="4.3" data-path="potential-solutions.html"><a href="potential-solutions.html#estimating-error-with-targeted-measurements-of-a-small-number-of-taxa"><i class="fa fa-check"></i><b>4.3</b> Estimating error with targeted measurements of a small number of taxa</a></li>
+<li class="chapter" data-level="4.4" data-path="potential-solutions.html"><a href="potential-solutions.html#computational-approaches"><i class="fa fa-check"></i><b>4.4</b> Computational approaches</a></li>
+</ul></li>
+<li class="appendix"><span><b>Appendix</b></span></li>
+<li class="chapter" data-level="A" data-path="models.html"><a href="models.html"><i class="fa fa-check"></i><b>A</b> Measurement models</a>
+<ul>
+<li class="chapter" data-level="A.1" data-path="models.html"><a href="models.html#actual-abundances-and-general-notation"><i class="fa fa-check"></i><b>A.1</b> Actual abundances and general notation</a></li>
+<li class="chapter" data-level="A.2" data-path="models.html"><a href="models.html#metagenomics-measurement"><i class="fa fa-check"></i><b>A.2</b> Metagenomics measurement</a></li>
+<li class="chapter" data-level="A.3" data-path="models.html"><a href="models.html#bulk-absolute-abundance-measurement"><i class="fa fa-check"></i><b>A.3</b> Bulk absolute abundance measurement</a></li>
+<li class="chapter" data-level="A.4" data-path="models.html"><a href="models.html#targeted-absolute-abundance-measurement"><i class="fa fa-check"></i><b>A.4</b> Targeted absolute abundance measurement</a></li>
+<li class="chapter" data-level="A.5" data-path="models.html"><a href="models.html#spike-ins"><i class="fa fa-check"></i><b>A.5</b> Spike-ins</a></li>
+<li class="chapter" data-level="A.6" data-path="models.html"><a href="models.html#complications"><i class="fa fa-check"></i><b>A.6</b> Complications</a>
+<ul>
+<li class="chapter" data-level="A.6.1" data-path="models.html"><a href="models.html#abundances-units-and-protocol-stages"><i class="fa fa-check"></i><b>A.6.1</b> Abundances units and protocol stages</a></li>
+<li class="chapter" data-level="A.6.2" data-path="models.html"><a href="models.html#saturation-in-dna-extraction-yields"><i class="fa fa-check"></i><b>A.6.2</b> Saturation in DNA extraction yields</a></li>
+<li class="chapter" data-level="A.6.3" data-path="models.html"><a href="models.html#taxonomic-resolution-of-measurements"><i class="fa fa-check"></i><b>A.6.3</b> Taxonomic resolution of measurements</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="B" data-path="relative.html"><a href="relative.html"><i class="fa fa-check"></i><b>B</b> Differential relative abundance</a>
+<ul>
+<li class="chapter" data-level="B.1" data-path="relative.html"><a href="relative.html#proportion-based-analyses"><i class="fa fa-check"></i><b>B.1</b> Proportion-based analyses</a>
+<ul>
+<li class="chapter" data-level="B.1.1" data-path="relative.html"><a href="relative.html#log-proportion"><i class="fa fa-check"></i><b>B.1.1</b> Log proportion</a></li>
+<li class="chapter" data-level="B.1.2" data-path="relative.html"><a href="relative.html#log-odds-logit"><i class="fa fa-check"></i><b>B.1.2</b> Log odds (logit)</a></li>
+</ul></li>
+<li class="chapter" data-level="B.2" data-path="relative.html"><a href="relative.html#ratio-based-analyses"><i class="fa fa-check"></i><b>B.2</b> Ratio-based analyses</a></li>
+<li class="chapter" data-level="B.3" data-path="relative.html"><a href="relative.html#higher-order-taxa-formed-by-additive-aggregation"><i class="fa fa-check"></i><b>B.3</b> Higher-order taxa formed by additive aggregation</a></li>
+</ul></li>
+<li class="chapter" data-level="C" data-path="absolute.html"><a href="absolute.html"><i class="fa fa-check"></i><b>C</b> Differential absolute abundance</a>
+<ul>
+<li class="chapter" data-level="C.1" data-path="absolute.html"><a href="absolute.html#using-bulk-abundance-measurements"><i class="fa fa-check"></i><b>C.1</b> Using bulk abundance measurements</a>
+<ul>
+<li class="chapter" data-level="C.1.1" data-path="absolute.html"><a href="absolute.html#shared-bias-components"><i class="fa fa-check"></i><b>C.1.1</b> Shared bias components</a></li>
+</ul></li>
+<li class="chapter" data-level="C.2" data-path="absolute.html"><a href="absolute.html#using-reference-taxa"><i class="fa fa-check"></i><b>C.2</b> Using reference taxa</a>
+<ul>
+<li class="chapter" data-level="C.2.1" data-path="absolute.html"><a href="absolute.html#taxa-with-targeted-abundance-measurements"><i class="fa fa-check"></i><b>C.2.1</b> Taxa with targeted abundance measurements</a></li>
+<li class="chapter" data-level="C.2.2" data-path="absolute.html"><a href="absolute.html#cellular-spike-ins"><i class="fa fa-check"></i><b>C.2.2</b> Cellular spike-ins</a></li>
+<li class="chapter" data-level="C.2.3" data-path="absolute.html"><a href="absolute.html#dna-spike-ins"><i class="fa fa-check"></i><b>C.2.3</b> DNA spike-ins</a></li>
+<li class="chapter" data-level="C.2.4" data-path="absolute.html"><a href="absolute.html#taxa-assumed-to-have-a-constant-abundance"><i class="fa fa-check"></i><b>C.2.4</b> Taxa assumed to have a constant abundance</a></li>
+<li class="chapter" data-level="C.2.5" data-path="absolute.html"><a href="absolute.html#multiple-reference-taxa"><i class="fa fa-check"></i><b>C.2.5</b> Multiple reference taxa</a></li>
+</ul></li>
+<li class="chapter" data-level="C.3" data-path="absolute.html"><a href="absolute.html#using-an-equivolumetric-protocol"><i class="fa fa-check"></i><b>C.3</b> Using an equivolumetric protocol</a></li>
+<li class="chapter" data-level="C.4" data-path="absolute.html"><a href="absolute.html#computational-methods"><i class="fa fa-check"></i><b>C.4</b> Computational methods</a></li>
+</ul></li>
+<li class="chapter" data-level="D" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html"><i class="fa fa-check"></i><b>D</b> Proofs of regression results</a>
+<ul>
+<li class="chapter" data-level="D.1" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#general-regression"><i class="fa fa-check"></i><b>D.1</b> General regression</a></li>
+<li class="chapter" data-level="D.2" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#linear-least-squares-regression"><i class="fa fa-check"></i><b>D.2</b> Linear least-squares regression</a>
+<ul>
+<li class="chapter" data-level="D.2.1" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#linear-regression-of-microbiome-abundances"><i class="fa fa-check"></i><b>D.2.1</b> Linear regression of microbiome abundances</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="E" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html"><i class="fa fa-check"></i><b>E</b> DNA measurement and spike-ins</a>
+<ul>
+<li class="chapter" data-level="E.1" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#expanded-model-and-notation"><i class="fa fa-check"></i><b>E.1</b> Expanded model and notation</a></li>
+<li class="chapter" data-level="E.2" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#targeted-dna-measurement"><i class="fa fa-check"></i><b>E.2</b> Targeted DNA measurement</a></li>
+<li class="chapter" data-level="E.3" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#dna-spike-ins-1"><i class="fa fa-check"></i><b>E.3</b> DNA spike-ins</a></li>
+<li class="chapter" data-level="E.4" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#implications"><i class="fa fa-check"></i><b>E.4</b> Implications</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="proofs-of-regression-results" class="section level1" number="8">
+<h1><span class="header-section-number">D</span> Proofs of regression results</h1>
+<div id="general-regression" class="section level2" number="8.1">
+<h2><span class="header-section-number">D.1</span> General regression</h2>
+<p>Regression analysis can often be framed as seeking the regression function <span class="math inline">\(r(x)\)</span> that describes how the expected value of some response variable <span class="math inline">\(Y\)</span> varies with the a vector of covariates <span class="math inline">\(X\)</span> (<span class="citation"><a href="#ref-wasserman2004allo" role="doc-biblioref">Wasserman</a> (<a href="#ref-wasserman2004allo" role="doc-biblioref">2004</a>)</span>),
+<span class="math display">\[\begin{align}
+  r(x) = E [Y \mid X = x].
+\end{align}\]</span>
+For example, the response might be log absolute abundance of a particular taxon.
+In our case, however, we don’t know <span class="math inline">\(Y\)</span>, but rather a measure that is subject to random and systematic error, which I call <span class="math inline">\(Z\)</span>.
+Let <span class="math inline">\(D = Z - Y\)</span> be the difference between the true response <span class="math inline">\(Y\)</span> and its measurement <span class="math inline">\(Z\)</span>, so that <span class="math inline">\(Z = Y + D\)</span>.
+It follows that
+<span class="math display" id="eq:regression-error">\[\begin{align}
+  \tag{D.1}
+  E [Z \mid X] = E [Y \mid X] + E [D \mid X].
+\end{align}\]</span></p>
+</div>
+<div id="linear-least-squares-regression" class="section level2" number="8.2">
+<h2><span class="header-section-number">D.2</span> Linear least-squares regression</h2>
+<div class="theorem">
+<p><span id="thm:regression-linearity" class="theorem"><strong>Theorem D.1  (Linearity of regression coefficients) </strong></span>Consider a scalar response variable with <span class="math inline">\(J\)</span> observations, which I represent by the vector <span class="math inline">\(y\)</span>, that equals a sum of <span class="math inline">\(K\)</span> component response variables <span class="math inline">\(y^{(k)}\)</span> each scaled by a non-zero factor <span class="math inline">\(c^{(k)}\)</span>,
+<span class="math display" id="eq:y-sum">\[\begin{align}
+  \tag{D.2}
+  y = \sum_{k = 1}^K c^{(k)} y^{(k)}.
+\end{align}\]</span>
+(We may need to assume that the <span class="math inline">\(y^{(k)}\)</span> are linearly independent.)
+Let <span class="math inline">\(X\)</span> be a <span class="math inline">\(J\)</span>-by-<span class="math inline">\(p\)</span> matrix of covariates for the <span class="math inline">\(J\)</span> observations, with linearly independent columns.
+Let <span class="math inline">\(\hat \gamma\)</span> denote the least-squares estimate of the coefficient matrix <span class="math inline">\(\gamma\)</span> in the linear regression
+<span class="math display">\[\begin{align}
+  y = X \gamma + \epsilon.
+\end{align}\]</span>
+Similarly, let <span class="math inline">\(\hat \gamma^{(k)}\)</span> denote the least-squares estimates for the <span class="math inline">\(K\)</span> linear regressions
+<span class="math display">\[\begin{align}
+  y^{(k)} = X \gamma^{(k)} + \epsilon^{(k)}.
+\end{align}\]</span>
+The least-squares coefficient estimates for <span class="math inline">\(y\)</span> are given by the sum of those of the <span class="math inline">\(y^{(k)}\)</span>,
+<span class="math display">\[\begin{align}
+  \hat \gamma = \sum_{k=1}^K c^{(k)} \hat \gamma^{(k)}.
+\end{align}\]</span></p>
+</div>
+<div class="proof">
+<p><span id="unlabeled-div-1" class="proof"><em>Proof</em>. </span>The Moore-Penrose pseudoinverse of <span class="math inline">\(X\)</span> is <span class="math inline">\(X^+ = (X^T X)^{-1} X^T\)</span>.
+The least squares estimates are given by multiplying the matrix <span class="math inline">\(X^+\)</span> by the corresponding response vector (<a href="https://en.wikipedia.org/wiki/Ordinary_least_squares#Matrix/vector_formulation">Wikipedia</a>), so that <span class="math inline">\(\hat \gamma = X^+ y\)</span> and <span class="math inline">\(\hat \gamma^{(k)} = X^+ y^{(k)}\)</span> (for <span class="math inline">\(k = 1, \dots, K\)</span>).
+The result then follows from the stipulation <a href="proofs-of-regression-results.html#eq:y-sum">(D.2)</a> and the linearity of matrix multiplication,
+<span class="math display">\[\begin{align}
+  \hat \gamma 
+  = X^+ y 
+  = X^+ \sum_{k = 1}^K c^{(k)} y^{(k)}
+  = \sum_{k = 1}^K c^{(k)} X^+ y^{(k)}
+  = \sum_{k = 1}^K c^{(k)} \hat \gamma^{(k)}.
+\end{align}\]</span></p>
+</div>
+<p>We can use <a href="proofs-of-regression-results.html#thm:regression-linearity">D.1</a> to describe how measurement error, such as that caused by experimental bias, affects least-squares estimates of regression coefficients.</p>
+<div class="theorem">
+<p><span id="thm:regression-error" class="theorem"><strong>Theorem D.2  (Error in regression coefficients) </strong></span>Suppose that <span class="math inline">\(y\)</span> is the response variable we wish to understand, <span class="math inline">\(z\)</span> is our imperfect measurement of <span class="math inline">\(y\)</span>, and <span class="math inline">\(d = z - y\)</span> the difference between the two, so that <span class="math inline">\(z = y + d\)</span>.
+Let each be a vector of length <span class="math inline">\(J\)</span> describing a set of <span class="math inline">\(J\)</span> observations.
+Let <span class="math inline">\(X\)</span> be a <span class="math inline">\(J\)</span>-by-<span class="math inline">\(p\)</span> matrix of covariates for the <span class="math inline">\(J\)</span> observations, with linearly independent columns.
+Consider the linear regression equations for <span class="math inline">\(y\)</span>, <span class="math inline">\(d\)</span>, and <span class="math inline">\(z\)</span>,
+<span class="math display">\[\begin{align}
+  y &amp;= X \gamma^{(y)} + \epsilon^{(y)} \\
+  z &amp;= X \gamma^{(z)} + \epsilon^{(z)} \\
+  d &amp;= X \gamma^{(d)} + \epsilon^{(d)}.
+\end{align}\]</span>
+The relationship between the least-squares estimates mirrors that between the variables themselves,
+<span class="math display" id="eq:regression-coefficient-error">\[\begin{align}
+  \tag{D.3}
+  \hat \gamma^{(z)} = \hat \gamma^{(y)} + \hat \gamma^{(d)}.
+\end{align}\]</span></p>
+</div>
+<div class="proof">
+<p><span id="unlabeled-div-2" class="proof"><em>Proof</em>. </span>The result follows directly from <span class="math inline">\(z = y + d\)</span> and <a href="proofs-of-regression-results.html#thm:regression-linearity">D.1</a>.</p>
+</div>
+<div class="corollary">
+<p><span id="cor:regression-error-simple" class="corollary"><strong>Corollary D.1  </strong></span>For the special case of simple linear regression,
+<span class="math display">\[\begin{align}
+  y &amp;= \gamma_0^{(y)} + \gamma_1^{(y)} x + \epsilon^{(y)} \\
+  z &amp;= \gamma_0^{(z)} + \gamma_1^{(z)} x + \epsilon^{(z)} \\
+  d &amp;= \gamma_0^{(d)} + \gamma_1^{(d)} x + \epsilon^{(d)},
+\end{align}\]</span>
+the estimates for the intercept and slope coefficients satisfy
+<span class="math display">\[\begin{align}
+  \hat \gamma_0^{(z)} &amp;= \hat \gamma_0^{(y)} + \hat \gamma_0^{(d)} \\
+  \hat \gamma_1^{(z)} &amp;= \hat \gamma_1^{(y)} + \hat \gamma_1^{(d)}.
+\end{align}\]</span></p>
+</div>
+<p>Next, aiming to show the forms for the different transformations of interest.
+It might be useful to cover the case where <span class="math inline">\(d\)</span> is split into a constant and a sample-specific part, since probably everything of interest will follow from that.</p>
+<p>What, if any general results should go in the main text?</p>
+<p>Also relate the expected values of <span class="math inline">\(y\)</span> and <span class="math inline">\(z\)</span> conditional on <span class="math inline">\(X\)</span>?.</p>
+<p>To figure out what I need:</p>
+<ol style="list-style-type: decimal">
+<li>extend the below result for log proportions to multiple regression</li>
+<li>work out the derivation in terms of <a href="proofs-of-regression-results.html#thm:regression-error">D.2</a></li>
+<li>Write a corollary if it seems to be useful for doing all the cases (e.g. logit etc)</li>
+</ol>
+<div id="linear-regression-of-microbiome-abundances" class="section level3" number="8.2.1">
+<h3><span class="header-section-number">D.2.1</span> Linear regression of microbiome abundances</h3>
+<p>First, consider log proportions.
+In this case, the intercept coefficient is biased upward by <span class="math inline">\(\log B_i\)</span> and the other coefficients are biased downward by the corresponding coefficient of <span class="math inline">\(\log \bar B\)</span>, based on the error formulas for individual samples.</p>
+<p>TODO: write the general result (for multiple regression, assuming that an intercept term is present.</p>
+<div class="proposition">
+<p><span id="prp:unlabeled-div-3" class="proposition"><strong>Proposition D.1  </strong></span>Consider the linear equations
+<span class="math display" id="eq:least-squares-formulation">\[\begin{align}
+  \tag{D.4}
+  \log a_i    &amp;= \alpha_0 + \alpha_1 x \\
+  \log \bar B &amp;= \beta_0 + \beta_1 x   \\
+  \log m_i    &amp;= \gamma_0 + \gamma_1 x,
+\end{align}\]</span>
+and let <span class="math inline">\(\hat \alpha_0\)</span>, etc. denote the least-squares estimates for the regression coefficients supposing perfect information (i.e., that the <span class="math inline">\(a_i\)</span> and <span class="math inline">\(B_i\)</span> are known).
+The coefficients for <span class="math inline">\(\log m_i\)</span> are related to those for <span class="math inline">\(\log a_i\)</span> and <span class="math inline">\(\log \bar B\)</span> through the equations
+<span class="math display" id="eq:least-squares-estimates">\[\begin{align}
+  \tag{D.5}
+  \hat \gamma_0 &amp;= \hat \alpha_0 + \log B_i - \hat \beta_0 \\
+  \hat \gamma_1 &amp;= \hat \alpha_1 - \hat \beta_1.
+\end{align}\]</span></p>
+</div>
+
+</div>
+</div>
+</div>
+<h3>References</h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-wasserman2004allo" class="csl-entry">
+Wasserman, Larry. 2004. <em><span class="nocase">All of Statistics</span></em>. Springer Texts in Statistics. New York, NY: Springer New York. <a href="https://doi.org/10.1007/978-0-387-21736-9">https://doi.org/10.1007/978-0-387-21736-9</a>.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="absolute.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="dna-measurement-and-spike-ins.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": true,
+"facebook": false,
+"twitter": false,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/mikemc/differential-abundance-theory/edit/main/derivations-regression.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": "https://github.com/mikemc/differential-abundance-theory/commits/main/derivations-regression.Rmd",
+"text": null
+},
+"view": {
+"link": "https://github.com/mikemc/differential-abundance-theory/blob/main/derivations-regression.Rmd",
+"text": null
+},
+"download": ["_main.pdf"],
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

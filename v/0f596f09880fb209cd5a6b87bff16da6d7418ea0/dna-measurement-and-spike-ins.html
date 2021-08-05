@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>E DNA measurement and spike-ins | Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for</title>
+  <meta name="description" content="E DNA measurement and spike-ins | Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for" />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="E DNA measurement and spike-ins | Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="E DNA measurement and spike-ins | Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for" />
+  
+  
+  
+
+<meta name="author" content="Michael R. McLaren" />
+<meta name="author" content="Karen G. Lloyd" />
+<meta name="author" content="Benjamin J. Callahan" />
+
+
+<meta name="date" content="2021-08-04" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="proofs-of-regression-results.html"/>
+<link rel="next" href="references.html"/>
+<script src="libs/header-attrs-2.9/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
+<li class="chapter" data-level="1" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>1</b> Introduction</a></li>
+<li class="chapter" data-level="2" data-path="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html"><a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html"><i class="fa fa-check"></i><b>2</b> Bias can cause spurious results in proportion-based DA analysis</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html"><a href="bias-can-cause-spurious-results-in-proportion-based-da-analysis.html#effect-on-regression-of-multiple-samples"><i class="fa fa-check"></i><b>2.1</b> Effect on regression of multiple samples</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="implications-for-real-world-inference.html"><a href="implications-for-real-world-inference.html"><i class="fa fa-check"></i><b>3</b> Implications for real-world inference </a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="implications-for-real-world-inference.html"><a href="implications-for-real-world-inference.html#scenarios-in-which-bias-may-cause-spurious-results"><i class="fa fa-check"></i><b>3.1</b> Scenarios in which bias may cause spurious results</a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="implications-for-real-world-inference.html"><a href="implications-for-real-world-inference.html#error-in-absolute-abundance-measurements"><i class="fa fa-check"></i><b>3.1.1</b> Error in absolute abundance measurements</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="implications-for-real-world-inference.html"><a href="implications-for-real-world-inference.html#we-cannot-simply-ignore-taxonomic-bias"><i class="fa fa-check"></i><b>3.2</b> We cannot simply ignore taxonomic bias</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="potential-solutions.html"><a href="potential-solutions.html"><i class="fa fa-check"></i><b>4</b> Potential solutions</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="potential-solutions.html"><a href="potential-solutions.html#using-control-samples-to-calibrate-relative-abundances"><i class="fa fa-check"></i><b>4.1</b> Using control samples to calibrate relative abundances</a></li>
+<li class="chapter" data-level="4.2" data-path="potential-solutions.html"><a href="potential-solutions.html#ratio-based-relative-and-absolute-abundance-inference"><i class="fa fa-check"></i><b>4.2</b> Ratio-based relative and absolute abundance inference</a></li>
+<li class="chapter" data-level="4.3" data-path="potential-solutions.html"><a href="potential-solutions.html#estimating-error-with-targeted-measurements-of-a-small-number-of-taxa"><i class="fa fa-check"></i><b>4.3</b> Estimating error with targeted measurements of a small number of taxa</a></li>
+<li class="chapter" data-level="4.4" data-path="potential-solutions.html"><a href="potential-solutions.html#computational-approaches"><i class="fa fa-check"></i><b>4.4</b> Computational approaches</a></li>
+</ul></li>
+<li class="appendix"><span><b>Appendix</b></span></li>
+<li class="chapter" data-level="A" data-path="models.html"><a href="models.html"><i class="fa fa-check"></i><b>A</b> Measurement models</a>
+<ul>
+<li class="chapter" data-level="A.1" data-path="models.html"><a href="models.html#actual-abundances-and-general-notation"><i class="fa fa-check"></i><b>A.1</b> Actual abundances and general notation</a></li>
+<li class="chapter" data-level="A.2" data-path="models.html"><a href="models.html#metagenomics-measurement"><i class="fa fa-check"></i><b>A.2</b> Metagenomics measurement</a></li>
+<li class="chapter" data-level="A.3" data-path="models.html"><a href="models.html#bulk-absolute-abundance-measurement"><i class="fa fa-check"></i><b>A.3</b> Bulk absolute abundance measurement</a></li>
+<li class="chapter" data-level="A.4" data-path="models.html"><a href="models.html#targeted-absolute-abundance-measurement"><i class="fa fa-check"></i><b>A.4</b> Targeted absolute abundance measurement</a></li>
+<li class="chapter" data-level="A.5" data-path="models.html"><a href="models.html#spike-ins"><i class="fa fa-check"></i><b>A.5</b> Spike-ins</a></li>
+<li class="chapter" data-level="A.6" data-path="models.html"><a href="models.html#complications"><i class="fa fa-check"></i><b>A.6</b> Complications</a>
+<ul>
+<li class="chapter" data-level="A.6.1" data-path="models.html"><a href="models.html#abundances-units-and-protocol-stages"><i class="fa fa-check"></i><b>A.6.1</b> Abundances units and protocol stages</a></li>
+<li class="chapter" data-level="A.6.2" data-path="models.html"><a href="models.html#saturation-in-dna-extraction-yields"><i class="fa fa-check"></i><b>A.6.2</b> Saturation in DNA extraction yields</a></li>
+<li class="chapter" data-level="A.6.3" data-path="models.html"><a href="models.html#taxonomic-resolution-of-measurements"><i class="fa fa-check"></i><b>A.6.3</b> Taxonomic resolution of measurements</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="B" data-path="relative.html"><a href="relative.html"><i class="fa fa-check"></i><b>B</b> Differential relative abundance</a>
+<ul>
+<li class="chapter" data-level="B.1" data-path="relative.html"><a href="relative.html#proportion-based-analyses"><i class="fa fa-check"></i><b>B.1</b> Proportion-based analyses</a>
+<ul>
+<li class="chapter" data-level="B.1.1" data-path="relative.html"><a href="relative.html#log-proportion"><i class="fa fa-check"></i><b>B.1.1</b> Log proportion</a></li>
+<li class="chapter" data-level="B.1.2" data-path="relative.html"><a href="relative.html#log-odds-logit"><i class="fa fa-check"></i><b>B.1.2</b> Log odds (logit)</a></li>
+</ul></li>
+<li class="chapter" data-level="B.2" data-path="relative.html"><a href="relative.html#ratio-based-analyses"><i class="fa fa-check"></i><b>B.2</b> Ratio-based analyses</a></li>
+<li class="chapter" data-level="B.3" data-path="relative.html"><a href="relative.html#higher-order-taxa-formed-by-additive-aggregation"><i class="fa fa-check"></i><b>B.3</b> Higher-order taxa formed by additive aggregation</a></li>
+</ul></li>
+<li class="chapter" data-level="C" data-path="absolute.html"><a href="absolute.html"><i class="fa fa-check"></i><b>C</b> Differential absolute abundance</a>
+<ul>
+<li class="chapter" data-level="C.1" data-path="absolute.html"><a href="absolute.html#using-bulk-abundance-measurements"><i class="fa fa-check"></i><b>C.1</b> Using bulk abundance measurements</a>
+<ul>
+<li class="chapter" data-level="C.1.1" data-path="absolute.html"><a href="absolute.html#shared-bias-components"><i class="fa fa-check"></i><b>C.1.1</b> Shared bias components</a></li>
+</ul></li>
+<li class="chapter" data-level="C.2" data-path="absolute.html"><a href="absolute.html#using-reference-taxa"><i class="fa fa-check"></i><b>C.2</b> Using reference taxa</a>
+<ul>
+<li class="chapter" data-level="C.2.1" data-path="absolute.html"><a href="absolute.html#taxa-with-targeted-abundance-measurements"><i class="fa fa-check"></i><b>C.2.1</b> Taxa with targeted abundance measurements</a></li>
+<li class="chapter" data-level="C.2.2" data-path="absolute.html"><a href="absolute.html#cellular-spike-ins"><i class="fa fa-check"></i><b>C.2.2</b> Cellular spike-ins</a></li>
+<li class="chapter" data-level="C.2.3" data-path="absolute.html"><a href="absolute.html#dna-spike-ins"><i class="fa fa-check"></i><b>C.2.3</b> DNA spike-ins</a></li>
+<li class="chapter" data-level="C.2.4" data-path="absolute.html"><a href="absolute.html#taxa-assumed-to-have-a-constant-abundance"><i class="fa fa-check"></i><b>C.2.4</b> Taxa assumed to have a constant abundance</a></li>
+<li class="chapter" data-level="C.2.5" data-path="absolute.html"><a href="absolute.html#multiple-reference-taxa"><i class="fa fa-check"></i><b>C.2.5</b> Multiple reference taxa</a></li>
+</ul></li>
+<li class="chapter" data-level="C.3" data-path="absolute.html"><a href="absolute.html#using-an-equivolumetric-protocol"><i class="fa fa-check"></i><b>C.3</b> Using an equivolumetric protocol</a></li>
+<li class="chapter" data-level="C.4" data-path="absolute.html"><a href="absolute.html#computational-methods"><i class="fa fa-check"></i><b>C.4</b> Computational methods</a></li>
+</ul></li>
+<li class="chapter" data-level="D" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html"><i class="fa fa-check"></i><b>D</b> Proofs of regression results</a>
+<ul>
+<li class="chapter" data-level="D.1" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#general-regression"><i class="fa fa-check"></i><b>D.1</b> General regression</a></li>
+<li class="chapter" data-level="D.2" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#linear-least-squares-regression"><i class="fa fa-check"></i><b>D.2</b> Linear least-squares regression</a>
+<ul>
+<li class="chapter" data-level="D.2.1" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#linear-regression-of-microbiome-abundances"><i class="fa fa-check"></i><b>D.2.1</b> Linear regression of microbiome abundances</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="E" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html"><i class="fa fa-check"></i><b>E</b> DNA measurement and spike-ins</a>
+<ul>
+<li class="chapter" data-level="E.1" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#expanded-model-and-notation"><i class="fa fa-check"></i><b>E.1</b> Expanded model and notation</a></li>
+<li class="chapter" data-level="E.2" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#targeted-dna-measurement"><i class="fa fa-check"></i><b>E.2</b> Targeted DNA measurement</a></li>
+<li class="chapter" data-level="E.3" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#dna-spike-ins-1"><i class="fa fa-check"></i><b>E.3</b> DNA spike-ins</a></li>
+<li class="chapter" data-level="E.4" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#implications"><i class="fa fa-check"></i><b>E.4</b> Implications</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="dna-measurement-and-spike-ins" class="section level1" number="9">
+<h1><span class="header-section-number">E</span> DNA measurement and spike-ins</h1>
+<p>This appendix aims to derive expressions for the error in individual samples and figure out whether the error is constant across samples (so that it cancels out LFC analysis).
+Why difference? Extraction has occured prior to the targeted measurement.</p>
+<p>Punchline: Bias will cancel like before if and only if DNA extraction yield is perfectly proportional to input, in a particular sense I should perhaps create a name for.
+It needs to be proportional to input for a fixed composition; it doesn’t have to be proportional across compositions.</p>
+<div id="expanded-model-and-notation" class="section level2" number="9.1">
+<h2><span class="header-section-number">E.1</span> Expanded model and notation</h2>
+<p>I partition the experiment into extraction and sequencing steps,
+<span class="math display">\[\begin{align}
+  A_{ij} 
+  \overset{\text{extraction}}{\underset{F_{ij}&#39;}\longrightarrow}
+  A_{ij}&#39;
+  \overset{\text{sequencing}}{\underset{F_{ij}&#39;&#39;}\longrightarrow}
+  \to A_{ij}&#39;&#39; = M_{ij}.
+\end{align}\]</span>
+where <span class="math inline">\(A&#39;_{ij}\)</span> denotes the absolute abundances after extraction.
+The abundances <span class="math inline">\(A&#39;&#39;_{ij}\)</span> after sequencing are just the counts <span class="math inline">\(M_{ij}\)</span>.
+I define a matrix <span class="math inline">\(F_{ij}&#39;\)</span> of factors equalling the fold change in abundance during the extraction step, <span class="math inline">\(F_{ij}&#39; = A_{ij}&#39; / A_{ij}\)</span>, and similarly let <span class="math inline">\(F_{ij}&#39;&#39;\)</span> be the fold changes during the sequencing step,
+The total fold change is just the product: <span class="math inline">\(F_{ij} = F&#39;_{ij} F&#39;&#39;_{ij} = M_{ij} / A_{ij}\)</span>.</p>
+<p>The MWC model implies that the relative values of <span class="math inline">\(F_{ij}\)</span> to <span class="math inline">\(F_{i&#39;j}\)</span> are independent of <span class="math inline">\(j\)</span>, for both the protocol as a whole and the individual steps.
+Therefore we can write the factors as product of the taxon-specific bias <span class="math inline">\(B_i\)</span> and a sample-specific scaling factor <span class="math inline">\(C_j\)</span>, as in Section <a href="models.html#models">A</a>.
+I use <span class="math inline">\(&#39;\)</span>s to do this for the different steps, for example <span class="math inline">\(F_{ij}&#39; = B_i&#39; C_j&#39;\)</span>.
+The total metagenomics bias and scaling factors thus split into steps as <span class="math inline">\(B_i = B_i&#39; B_i&#39;&#39;\)</span> and <span class="math inline">\(C_j = C_j&#39; C_j&#39;&#39;\)</span>.</p>
+<p><strong>TODO:</strong> Add Note about units. We could be using bp, ng, genome copies, or marker-gene copies. It shouldn’t affect the conclusions, but affects the units and values of the multipliers. Though perhaps it will help to pick ng DNA or genome copies</p>
+<p>What is <span class="math inline">\(C&#39;_j\)</span>?
+<span class="math display">\[\begin{align}
+  C&#39;_j = \frac{A&#39;_{Tj}}{A_{Tj} \bar{B}&#39;_j}.
+\end{align}\]</span>
+Note that we have so far been defining the metagenomics efficiencies <span class="math inline">\(B\)</span> as being (arbitrarily) the efficiency relative to the first taxon, which affects the scale of <span class="math inline">\(C&#39;\)</span>.</p>
+</div>
+<div id="targeted-dna-measurement" class="section level2" number="9.2">
+<h2><span class="header-section-number">E.2</span> Targeted DNA measurement</h2>
+<p><strong>TODO:</strong> explain the big picture of what I’m doing here</p>
+<p>Let <span class="math inline">\(B^{(T)}_r\)</span> be the conversion factor associated with the targeted measurement of reference taxon <span class="math inline">\(r\)</span> from the extracted DNA, which I assume is sample-independent but can vary by taxon.
+NOTE: I’m using <span class="math inline">\(B\)</span> for “bias” here but we need to keep in mind that I’m talking about the bias relative to the DNA and not the cellular abundance.
+In other words, the result of the targeted DNA measurement is
+<span class="math display" id="eq:T-dna">\[\begin{align}
+  \tag{E.1}
+  T_{rj} 
+  &amp;= A_{rj}&#39; B^{(T)}_r \\
+  &amp;= A_{rj} B&#39;_r C&#39;_j B^{(T)}_r.
+\end{align}\]</span>
+Substituting the second expression for <span class="math inline">\(T_{rj}\)</span> in <a href="absolute.html#eq:A-hat-targeted">(C.4)</a> gives an expression for the estimate of the abundance of taxon <span class="math inline">\(i\)</span> from the targeted measurement,
+<span class="math display" id="eq:A-hat-targeted-dna">\[\begin{align}
+  \tag{E.2}
+  \hat A_{ij} 
+  &amp;= \frac{M_{ij}}{M_{rj}} \cdot T_{rj} \\
+  &amp;= \frac{A_{ij} B_i C_j}{A_{rj} B_r C_j} \cdot A_{rj} B&#39;_r C&#39;_j B^{(T)}_r \\
+  &amp;= A_{ij} \cdot \frac{B_i B^{(T)}_r}{B&#39;&#39;_r} \cdot C&#39;_j,
+\end{align}\]</span>
+where I have replaced <span class="math inline">\(B_r / B&#39;_r\)</span> by <span class="math inline">\(B&#39;&#39;_r\)</span> in the denominator.
+Compared to the case of cellular measurement, the efficiency ratio for the reference taxon is just of the post-extraction steps, and we also have an additional term <span class="math inline">\(C_j&#39;\)</span> that could vary across samples.</p>
+<p>Question: Is that the same as the mean DNA extraction efficiency varies across samples?</p>
+</div>
+<div id="dna-spike-ins-1" class="section level2" number="9.3">
+<h2><span class="header-section-number">E.3</span> DNA spike-ins</h2>
+<p>HERE: Do same thing as above, and get result that</p>
+<p>Suppose we add the spike-in taxon <span class="math inline">\(r\)</span> to sample <span class="math inline">\(j\)</span> in amount <span class="math inline">\(A&#39;_{rj}\)</span> with error
+<span class="math inline">\(B^{(T)}_r\)</span>, such that we believe the spike-in’s abundance to be <span class="math inline">\(T_{rj}\)</span> in <a href="dna-measurement-and-spike-ins.html#eq:T-dna">(E.1)</a>.
+As with the cellular spike-in, the abundance of taxon <span class="math inline">\(i\)</span> can be estimated by <a href="absolute.html#eq:A-hat-targeted">(C.4)</a> (for the targeted cellular method);
+and as with the case of a targted DNA measurement above, the resulting estimate is given by <a href="dna-measurement-and-spike-ins.html#eq:A-hat-targeted-dna">(E.2)</a>.</p>
+</div>
+<div id="implications" class="section level2" number="9.4">
+<h2><span class="header-section-number">E.4</span> Implications</h2>
+<p>These results show that, for both methods, the fold variation in the error across samples equals that in the scaling factor <span class="math inline">\(C_j&#39;\)</span>.
+Ideally, <span class="math inline">\(C_j&#39;\)</span> would be constant, corresponding to the situation where doubling the cell concentration in a sample (while leaving the taxonomic composition unchanged) results in double the DNA yield.
+In this case, these DNA-based methods would work just as well with respect to bias not affecting fold-change estimates as their cell-based counterparts.</p>
+<p>Perhaps even easier to see why this is the “ideal” situation (and perhaps also a common default assumption when thinking about microbiome experiments), is to think in terms of the factors <span class="math inline">\(F&#39;_{ij} = B_i&#39; C_j&#39;\)</span>.
+Intuitively, we would like the factor increase for a taxon to be the same across samples; this situation corresponds to <span class="math inline">\(C_j = c\)</span> being constant across samples.
+(The value of <span class="math inline">\(c\)</span> depends on the experimental details but also how we’ve set <span class="math inline">\(B_j&#39; = 1\)</span>.)</p>
+<p>NOTE: Also need to consider whether it is true that the relative abundances are biased by a constant amount; and remember this is am important assumption I’m making as well, and we have some evidence that it can break down.
+But the motivation for how I’ve done it is that it seems reasonable to worry about saturation in the extraction yields that is independent of taxa once we account for variation in extraction efficiency and genome size that is simply due to the elution step.
+May need to give this motivation earlier.</p>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="proofs-of-regression-results.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="references.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": true,
+"facebook": false,
+"twitter": false,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/mikemc/differential-abundance-theory/edit/main/derivations-dna.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": "https://github.com/mikemc/differential-abundance-theory/commits/main/derivations-dna.Rmd",
+"text": null
+},
+"view": {
+"link": "https://github.com/mikemc/differential-abundance-theory/blob/main/derivations-dna.Rmd",
+"text": null
+},
+"download": ["_main.pdf"],
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
