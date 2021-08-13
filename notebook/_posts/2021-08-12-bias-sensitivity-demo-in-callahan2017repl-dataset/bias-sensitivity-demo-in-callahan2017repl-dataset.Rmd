@@ -1,0 +1,225 @@
+---
+title: "Bias sensitivity demo in callahan2017repl dataset"
+description: |
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - bias sensitivity
+  - ref:callahan2017repl
+date: 2021-08-12
+draft: false
+output:
+  distill::distill_article:
+    self_contained: false
+    dev: svg
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  cache = TRUE,
+  autodep = TRUE,
+  cache.comments = FALSE
+)
+```
+
+```{r}
+library(tidyverse)
+library(speedyseq)
+library(metacal)
+```
+
+Our starting point is the data from @callahan2017repl.
+The following code chunk downloads the ASV abundance matrix, sample metadata, and taxonomy assignments for the vaginal samples.
+It requires that tidyverse and phyloseq are loaded (phyloseq can be used instead of speedyseq).
+Set `dl_path` to where you'd like to download the files.
+
+```{r import_data, cold_folding = TRUE, include = FALSE}
+# Download --------------------------------------------------------------------
+dl_path <- here::here("notebook/_data", "callahan2017repl")
+link <- "https://stacks.stanford.edu/file/druid:yb681vm1809/RepRefine_Scripts.tar.gz"
+if (!dir.exists(dl_path)) {
+  dir.create(dl_path)
+  download.file(link, file.path(dl_path, basename(link)))
+  system2("tar", args = c("-xvf", file.path(dl_path, basename(link)), "-C", dl_path))
+}
+load(file.path(dl_path, "RepRefine_Scripts", "input", "processed.rda"))
+# This loads:
+# df: the sample metadata
+# st: the sequence table (in counts)
+# ft: the sequence table normalized to frequencies / proportions
+# tax: taxonomy assignment matrix
+# 
+# To confirm relationship between ft and st, run 
+# all.equal(ft, st %>% apply(1, function(x) x / sum(x)) %>% t)
+# 
+# The taxonomy matrix has an extra column with a duplicate name of "Species"
+# that is all NAs, so let's remove that
+tax <- tax[, -8]
+# Import into phyloseq --------------------------------------------------------
+sam <- sample_data(df)
+st <- otu_table(st, taxa_are_rows = FALSE)
+tax <- tax_table(tax)
+ps <- phyloseq(sam, st, tax)
+# Check that all samples and taxa made it into the phyloseq object
+stopifnot(all.equal(colnames(st), taxa_names(ps)))
+stopifnot(all.equal(rownames(sam), sample_names(ps)))
+# Add ASV sequences to the refseq() slot
+seqs <- taxa_names(ps) %>% rlang::set_names() %>% Biostrings::DNAStringSet()
+ps <- merge_phyloseq(ps, seqs)
+# Rename the ASVs to simpler names (ASV1, ASV2, ...). The full sequences remain
+# in `refseq(ps)`.
+taxa_names(ps) <- paste0("ASV", seq(ntaxa(ps)))
+# Clean up objects
+rm(tax, df, sam, st, ft, seqs)
+```
+
+Optionally, the following code chunk uses munging functions from janitor and the latest version of speedyseq to select the metadata of primary interest, standardize format of column names, and convert categorial variables to factors.
+```{r}
+ps1 <- ps %>% 
+  select_sample_data(SubjectID, Cohort, Race, preterm, Outcome) %>%
+  rename_with_sample_data(janitor::make_clean_names) %>%
+  rename_with_tax_table(janitor::make_clean_names) %>%
+  mutate_sample_data(
+    across(c(subject_id, cohort, race, outcome), factor),
+  )
+```
+
+```{r}
+saveRDS(ps1, "callahan2017repl_phyloseq_clean.rds")
+```
+
+```{r}
+ps1 %>% tax_table
+ps1 %>% sample_data %>% glimpse
+```
+
+## Analysis of Callahan et al Figure 1
+
+### Basic setup
+
+We start starting from a phyloseq object of counts at the ASV level, which multiple samples per woman (`subject_id`).
+The analysis of Callahan et al Figure 1 was done on genus-level average proportions within a particular woman and used one-sided Wilcoxin tests.
+The following code chunks do this analysis for Gardnerella in the Stanford Cohort.
+
+First, obtain a data frame for plotting and testing.
+```{r}
+x <- ps1 %>%
+  filter_sample_data(cohort == "Stanford") %>%
+  transform_sample_counts(~ . / sum(.)) %>%
+  filter_tax_table(genus == "Gardnerella") %>%
+  tax_glom("genus") %>%
+  merge_samples2("subject_id", fun_otu = mean) %>%
+  as_tibble
+```
+
+This code chunk uses functions from the latest speedyseq version to simplify this procedure but should make fairly transparent what is going on:
+Subset to the chosen cohort, convert counts to proportions, subset to just Gardnerella and merge the Gardnerella ASVs, then average the Gardnerella proportions across samples within a subject, then produce a long-format data frame.
+
+```{r}
+# exact = FALSE will be used regardless b/c of ties
+wilcox.test(.abundance ~ outcome, data = x, alternative = "greater", exact = FALSE)
+```
+
+```{r}
+x %>%
+  ggplot(aes(outcome, .abundance + 1e-7)) +
+  geom_boxplot() +
+  ggbeeswarm::geom_quasirandom() +
+  scale_y_log10()
+```
+
+
+```{r}
+# regression on ranks should be similar
+f <- function(x) rank(x) / length(x)
+a <- lm(f(.abundance) ~ preterm, data = x)
+a %>% generics::tidy(conf.int = TRUE) %>% filter(term == "pretermTRUE")
+```
+
+Encapsulate this test in a function using `broom::tidy()` to get the results in a nicer form for analysis,
+
+```{r}
+test <- function(ps, genus, cohort = "Stanford", alternative = "two.sided") {
+  x <- ps %>%
+    filter_sample_data(cohort == !!cohort) %>%
+    transform_sample_counts(~ . / sum(.)) %>%
+    # subset_taxa(genus == "Gardnerella") %>%
+    filter_tax_table(genus == !!genus) %>%
+    tax_glom("genus") %>%
+    merge_samples2("subject_id", fun_otu = mean) %>%
+    as_tibble
+  wilcox.test(.abundance ~ outcome, data = x, 
+    alternative = alternative, exact = FALSE) %>%
+    broom::tidy()
+}
+test(ps1, "Gardnerella", alternative = "greater")
+test(ps1, "Lactobacillus", alternative = "less")
+```
+
+### Effect of bias against Gard
+
+
+Let's filter to the stanford samples and ASVs first to speed up the computations.
+
+```{r}
+ps2 <- ps1 %>% filter_sample_data(cohort == "Stanford") %>%
+  filter_taxa2(~ sum(.) > 0)
+test(ps2, "Gardnerella", alternative = "greater")
+```
+
+See what happens as we crank the bias up against Gard, relative to the protocol of the present study.
+How biased against Gard before the result disappears?
+
+Note: First I did the opposite accidentally, and considered what if we were biased against Gard only; that actually increased the p values, though not by much
+
+```{r}
+gard_idx <- which(tax_table(ps2) == "Gardnerella", arr.ind = TRUE)[,"row"]
+gard_avs <- ps2 %>% filter_tax_table(genus == "Gardnerella") %>% taxa_names
+is_gard <- seq(ntaxa(ps2)) %in% gard_idx
+
+#> eff_draws <- tibble(gard_efficiency = 1 / 2^seq(from = 0, to = 13)) %>%
+eff_draws <- tibble(gard_efficiency = 1 / 5^seq(from = 0, to = 3)) %>%
+  mutate(
+    .id = row_number(), 
+    efficiency_vector = map(gard_efficiency, ~.x^is_gard)
+  ) %>%
+  print
+#> eff_draws %>% pull(efficiency_vector) %>% .[[4]] %>% head(10)
+```
+
+```{r}
+res <- eff_draws %>%
+  mutate(
+    ps = map(efficiency_vector, ~ perturb(ps2, .x)),
+    test = map(ps, test, genus = "Gardnerella", alternative = "greater")
+  ) %>%
+  select(.id, gard_efficiency, test) %>%
+  unnest(test) %>%
+  print
+```
+
+How could there be no effect? Does this make sense? 
+Something to keep in mind is that I'm not resampling the counts, so the fact that the frequency of Gard may be getting dropped to undetectable levels does not come into play.
+
+Question: What is the effect of bias on ranks?
+
+With this particular choice of bias, where all taxa are the same against Gard, the shift in the logit of Gard will be the same in all samples, which means the rank ordering of the logits and hence of the proportions of Gard will be preserved.
+Thus there will be no impact on the Wilcoxon score.
+
+However, tests against other genera would be affected.
+
+```{r}
+res.lacto <- eff_draws %>%
+  mutate(
+    ps = map(efficiency_vector, ~ perturb(ps2, .x)),
+    test = map(ps, test, genus = "Lactobacillus", alternative = "less")
+  ) %>%
+  select(.id, gard_efficiency, test) %>%
+  unnest(test) %>%
+  print
+```
+
+
