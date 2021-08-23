@@ -1,0 +1,346 @@
+---
+title: "Simulate regression example"
+description: |
+  A short description of the post.
+author:
+  - name: Michael R. McLaren
+date: 08-03-2021
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+```{r}
+# library(here)
+library(tidyverse)
+
+library(cowplot)
+library(patchwork)
+theme_set(theme_cowplot(12))
+
+library(ggdist)
+library(ggbeeswarm)
+
+library(speedyseq)
+library(metacal)
+
+set.seed(42)
+```
+
+# Simulate actual abundances
+
+```{r}
+n_species <- 10
+n_samples <- 50
+
+species <- str_c("sp", seq(n_species))
+```
+
+## Actual abundances
+
+Log abundances are independent and follow a simple linear model,
+
+```
+log density = a_0 + a_1 * X + epsilon
+```
+
+```{r}
+n_samples <- 100
+x <- c(
+  rep(0, n_samples / 2),
+  rep(1, n_samples / 2)
+)
+X <- rbind(1, x)
+
+Sigma <- diag(1, nrow = n_species)
+rownames(Sigma) <- colnames(Sigma) <- species
+a_0 <- MASS::mvrnorm(
+  mu = rep(0, n_species), 
+  Sigma = diag(1, nrow = n_species)
+)
+a_1 <- MASS::mvrnorm(
+  mu = rep(0, n_species), 
+  Sigma = diag(1, nrow = n_species)
+)
+a <- cbind(a_0, a_1)
+names(a_0) <- names(a_1) <- rownames(a) <- species
+
+epsilon <- MASS::mvrnorm(
+  n = n_samples,
+  mu = rep(0, n_species), 
+  Sigma = diag(0.5, nrow = n_species)
+) %>% 
+  t
+
+y <- a %*% X + epsilon
+colnames(y) <- str_glue("sa{1:n_samples}")
+```
+
+```{r}
+sam <- tibble(.sample = colnames(y), x) %>%
+  mutate(across(x, factor))
+actual <- phyloseq(
+  otu_table(y, taxa_are_rows = TRUE) %>% transform_sample_counts(exp),
+  sample_data(sam)
+)
+```
+
+```{r}
+actual %>%
+  as_tibble %>%
+  ggplot(aes(y = .otu, x = .abundance, fill = x)) +
+  scale_x_log10() +
+  stat_dots()
+```
+
+## Biased abundances
+
+```{r}
+log_efficiency <- MASS::mvrnorm(
+  mu = rep(0, n_species),
+  Sigma = diag(3, nrow = n_species)
+) %>%
+  {. - mean(.)}
+efficiency <- exp(log_efficiency)
+# names(efficiency) <- species
+```
+
+```{r}
+log_efficiency %>% summary
+max(efficiency) / min(efficiency)
+efficiency %>% qplot + scale_x_log10()
+```
+
+To create an association of log mean efficiency and the covariate, I will set set it so that the species with the largest slope coefficient also has the largest efficiency.
+This scenario is inspired by the leopold2020host and brooks2015thet experiments.
+
+```{r}
+idx_slope <- which.max(a_1)
+idx_eff <- which.max(efficiency)
+names(efficiency) <- species
+names(efficiency)[idx_eff] <- species[idx_slope]
+names(efficiency)[idx_slope] <- species[idx_eff]
+```
+
+The observed (i.e. estimated) proportions and densities are given by perturbing the actual densties by the efficiencies, and normalizing to proportions or to the original (correct) total.
+
+```{r}
+observed_prop <- actual %>% perturb(efficiency)
+observed_dens <- actual %>% perturb(efficiency, norm = "keep")
+```
+
+## Mean efficiencies
+
+```{r mean-efficiency}
+mean_efficiency <- actual %>%
+  transform_sample_counts(close_elts) %>%
+  perturb(efficiency, norm = "none") %>%
+  sample_sums %>%
+  enframe(".sample", "mean_efficiency") %>%
+  left_join(sam, by = ".sample")
+```
+
+```{r}
+mean_efficiency %>%
+  ggplot(aes(y = as.factor(x), x = mean_efficiency)) +
+  scale_x_log10() +
+  stat_dotsinterval()
+```
+
+## Regressions and summary plots
+
+what is a nice pipeline for doing all the regressions?
+
+```{r}
+analysis_ps <- function(ps, ...) {
+  mat <- otu_table(ps) %>% orient_taxa(as = "columns") %>% log2
+  lm(mat ~ 1 + x, data = sample_data(ps) %>% as_tibble) %>%
+    broom::tidy()
+}
+analysis_sme <- function(x, ...) {
+  lm(log2(mean_efficiency) ~ 1 + x, data = mean_efficiency) %>%
+    broom::tidy()
+}
+
+true_coeffs <- list('(Intercept)' = a_0, x1 = a_1) %>%
+  map_dfr(enframe, "response", "truth", .id = "term")
+
+df <- bind_rows(
+  analysis_ps(actual) %>% add_column(type = "Actual"),
+  analysis_ps(observed_dens) %>% add_column(type = "Observed"),
+  analysis_sme(mean_efficiency) %>% 
+    add_column(type = "Mean efficiency", response = "Mean efficiency"),
+) %>%
+  mutate(
+    across(type, factor, levels = c("Actual", "Observed", "Mean efficiency")),
+    lower = estimate - 2 * std.error,
+    upper = estimate + 2 * std.error,
+  ) %>%
+  # Add the true coefficients
+  left_join(true_coeffs, by = c("response", "term"))
+```
+
+```{r}
+p1 <- df %>% 
+  filter(term == "x1") %>%
+  mutate(
+    across(response, fct_reorder, estimate)
+  ) %>%
+  ggplot(aes(y = response, x = estimate, color = type)) +
+  geom_vline(xintercept = 0, color = "grey") +
+  geom_pointinterval(aes(xmin = lower, xmax = upper)) +
+  geom_point(data = ~filter(., type == "Actual"),
+    aes(x = truth),
+    color = 'black', shape = '+', size = 4)
+p2 <- df %>% 
+  filter(term == "x1") %>%
+  mutate(
+    across(response, fct_reorder, estimate)
+  ) %>%
+  ggplot(aes(y = type, x = estimate, fill = type)) +
+  geom_vline(xintercept = 0, color = "grey") +
+  stat_dots()
+p1 / p2 + 
+  plot_layout(heights = c(1, 0.3)) &
+  colorblindr::scale_color_OkabeIto() &
+  colorblindr::scale_fill_OkabeIto()
+  # scale_color_brewer(type = 'qual', palette = 7) &
+  # scale_fill_brewer(type = 'qual', palette = 7)
+```
+
+```{r}
+ggsave('/tmp/regression-example.pdf', width = 6, height = 5, units = 'in')
+ggsave('/tmp/regression-example.png', width = 6, height = 5, units = 'in')
+```
+
+
+here
+
+- understand why the 'actual' estimates are generally more extreme than the true lfc
+<!--  -->
+
+
+## Data plots of specific examples
+
+Plots like the first ones I made for the Leopold data.
+
+```{r}
+species_to_plot <- c('sp9', 'sp1', 'sp5', 'sp7', 'sp8')
+```
+
+```{r}
+```
+
+### attempt 1
+
+
+```{r}
+mean_efficiency1 <- mean_efficiency %>%
+  rename(.abundance = mean_efficiency) %>%
+  add_column(.otu = "Mean efficiency")
+data_long <- 
+  bind_rows(
+    Actual = actual %>% as_tibble,
+    Observed = observed_dens %>% as_tibble,
+    'Mean efficiency' = mean_efficiency1,
+    .id = 'type'
+  )
+```
+
+
+```{r}
+species_to_plot <- c('Mean efficiency', 'sp9', 'sp1', 'sp5', 'sp7', 'sp8')
+
+data_long %>%
+  filter(.otu %in% species_to_plot) %>%
+  mutate(
+    across(.otu, factor, levels = species_to_plot)
+  ) %>% 
+  ggplot(aes(x, log2(.abundance), color = type)) +
+  facet_wrap(~.otu, scales = "free_y", ncol = 1) +
+  geom_quasirandom(alpha = 0.3, groupOnX = TRUE) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "pointrange") +
+  stat_smooth(aes(x = as.integer(x)),
+    method = "lm", geom = "line", size = 0.9
+  )
+```
+
+### attempt 2
+
+
+```{r}
+data_long <- 
+  bind_rows(
+    Actual = actual %>% as_tibble,
+    Observed = observed_dens %>% as_tibble,
+    .id = 'type'
+  )
+```
+
+
+```{r}
+species_to_plot <- c('sp9', 'sp1', 'sp5', 'sp7', 'sp8')
+
+p3 <- data_long %>%
+  filter(.otu %in% species_to_plot) %>%
+  mutate(
+    across(.otu, factor, levels = species_to_plot)
+  ) %>% 
+  ggplot(aes(x, log2(.abundance), color = type)) +
+  facet_grid(.otu~type, scales = "free_y") +
+  geom_quasirandom(alpha = 0.3, groupOnX = TRUE) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "pointrange") +
+  stat_smooth(aes(x = as.integer(x)),
+    method = "lm", geom = "line", size = 0.9
+  ) +
+  theme(legend.position = "none")
+
+p4 <- mean_efficiency %>%
+  ggplot(aes(x, log2(mean_efficiency))) +
+  geom_quasirandom(alpha = 0.3, groupOnX = TRUE) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "pointrange") +
+  stat_smooth(aes(x = as.integer(x)),
+    method = "lm", geom = "line", size = 0.9
+  )
+```
+
+```{r}
+p1 + p3 + p2 + p4 +
+  plot_layout(ncol = 2, heights = c(1, 0.3)) &
+  colorblindr::scale_color_OkabeIto() &
+  colorblindr::scale_fill_OkabeIto()
+
+```
+
+
+### Testing plot types
+
+The difference plots in 'dabestr' seem like they might be ideal; specifically the Gardner-Altman Two Group Estimation Plot
+
+```{r}
+# library(dabestr)
+```
+
+But perhaps it will be better to manually create this plot using ggdist.
+Could compute the bootstrapped difference estimates, then plot them with stat_halfeye in vertical orientation at x=3.
+
+
+HERE.
+
+https://mjskay.github.io/ggdist/
+
+```{r}
+```
+
+
+
+```{r}
+data_long %>%
+  filter(.otu == 'sp5', type == 'Actual') %>%
+  ggplot(aes(x, log2(.abundance))) +
+  geom_quasirandom(alpha = 0.3, groupOnX = TRUE)
+  
+
+```
+
