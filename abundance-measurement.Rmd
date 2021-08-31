@@ -1,172 +1,86 @@
-# How taxonomic bias affects abundance measurements {#abundance}
+# How taxonomic bias affects abundance measurements {#abundance-measurement}
 
-## Rewrite (in progress)
+To understand how bias affects the measured differential abundance between samples, we first consider how it affects measurements of individual samples.
 
-Behind any quantitative measurement lies a mathematical model, either implicit or explicit, that relates the readings of our instruments and the results of our statistical analyses with the biological reality we are measuring.
-This section develops a model of microbiome measurement, based on that of @mclaren2019cons, to describe how the actual absolute compositions of microbiome samples are related to estimates of relative and absolute abundance obtained by MGS.
-The next section shows how these relationships impact our measurements of differential abundance.
+Our primary tool for understanding the impact of taxonomic bias MGS measurement is the theoretical model of MGS measurement developed and empirically validated by @mclaren2019cons.
+This model is the simplest model of MGS measurement that includes multiplicative taxonomic bias while respecting the *compositional* nature of sequencing measurements, in which the total read count for a sample is unrelated to its total cell number or density (@gloor2017micr) ^[todo: details about this assumption].
+In this model, we suppose there are a set of *atomic taxa*, that differ in how efficiently they are measured but within which all cells behave similarly (r/v).
+For concreteness, we equate atomic taxa with species. 
+*(Note that bias may not be conserved w/in species; ref discussion of synthetic taxa later on)*.
+We ignore the possibility of contamination or false-positive taxonomic assignments---reads assigned to a given species and sample really do come from that species and sample.
 
-An MGS measurement of a microbiome sample turns a collection of biological source material (cells, viruses, and extracellular DNA) into a collection of taxonomically-assigned reads (or read pairs).
-For concreteness and simplicity, we suppose that all assigned reads come from cells and that the ground-truth biophysical quantity we wish to measure is the density of cells (by volume, or by wet or dry mass) belonging to various taxa, or relative abundances directly derived from these densities. 
-This particular simplification reflects our own and the literature's prokaryotic bias; however, the features of MGS measurement that we explore also apply to situations (such as studies of viruses, fungi, or environmental DNA) where cell-based measurement may be inappropriate.
-We next suppose that there are a set of atomic taxa, which are mutually distinct and within which we assume the properties that determine taxonomic bias are conserved.
-For convenience, we identify these atomic taxa with species under a given taxonomic classification system, while acknowledging that whether taxonomic bias is conserved within commonly-accepted species has yet to be investigated in any detail.
-Since DA analysis is commonly performed at a variety of taxonomic levels, we consider measurement of species and of synthetic taxa (such as a phylum or a clade in a phylogeny) that consist of multiple species.
-We assume that reads assigned to a given taxon and sample really do come from that taxon and sample, but note that taxonomic mislabeling and contamination (from the reagents, lab environment, or other samples) pose further challenges to DA analysis.
-
-- might want to note that we're mostly going to talk as if species-level taxonomic assignment is possible.
-
-Consider the MGS measurement of a particular sample.
-For a given taxon, we define the _absolute efficiency_ as the number of reads assigned to that taxon divided by the number of cells in the original sample.
-The absolute efficiency depends not only on the ability of the chosen protocol to measure this taxon, but further aspects such as how much the sequencing library was diluted and how deeply the library was then sequenced.
-We suppose that the absolute efficiencies of species can be written as a product of a species-specific, sample-independent factor and a species-independent, sample-specific factor.
-The species-specific factors reflects the differential ability of a given protocol to measure different species (i.e. taxonomic bias), whereas the sample-specific factor captures the fact that the reads in an MGS measurement are not directly related to the absolute number or density of cells in a sample regardless of which taxa are being measured.
-When we consider the _relative efficiencies_—or the ratios among absolute efficiencies—the sample-specific, taxon-independent factor cancels.
-Relative efficiencies quantify how much more efficiently different taxa are measured relative to each other.
-When we say efficiency unqualified, we mean efficiency relative to some fixed, arbitrary species in the denominator.
-
-For species, the relative efficiencies are sample-independent.
-In contrast, the relative efficiency of a synthetic taxon varies depending on the relative densities of its constituent species,
+Our model stipulates that the assigned read count of species $i$ in sample $a$ equal equals its cell density multiplied by a species-specific, sample-independent factor and a species-independent, sample-specific factor,
 \begin{align}
-  \text{efficiency}_T(a) = \frac{\sum_{t \in T} \text{density}_t(a) \cdot \text{efficiency}_t}{\sum_{t \in T} \text{density}_t(a)}
+  (\#eq:measurement-model)
+  \text{reads}_{i}(a)
+  = \text{density}_{i}(a) \quad \cdot
+    \underbrace{\text{efficiency}_{i}}_{\substack{\text{species specific,} \\  \text{sample independent}}}
+    \cdot \quad
+    \underbrace{\text{sequencing effort}(a)}_{\substack{\text{species independent,} \\  \text{sample specific}}}.
 \end{align}
-(May need to explain or derive this.)
-For example, @mclaren2019cons found that for a particular shotgun-sequencing protocol, the relative efficiency was X between two Firmicute species X and Y;
-hence the efficiency of Firmicutes could vary by X depending on which of these two species were dominant in a given sample.
-
-From efficiencies, we can determine the error in relative abundances estimated by our MGS measurement.
-
-- atomic taxa
-- synthetic taxa
-
-
-MGS analysis is commonly done on proportions - the density of a taxon relative to some designated taxonomic whole, such as all prokaryotes.
-
-- give equation def of proportion
-- give error in proportion, from efficiency
-
-
-outline
-
-- Relative-abundance measurements
-
-- Absolute-abundance measurements
-
-
-questions, thoughts
-
-- should I define absolute efficiency in terms of cells or density?
-- need to revise the story of the first paragraphs above.
-
-
-## Current working version
-
-<!-- TODO: Add an illustration of the bias model in panel 1B -->
-
-```{r fig-abundance, out.width = '65%', fig.cap = '(ref:cap-abundance)', cache = TRUE}
-svg_path <- here("figures/absolute-and-relative-abundance.svg")
-if (knitr::is_html_output()) {
-  knitr::include_graphics(svg_path)
-} else if (knitr::is_latex_output()) {
-  cowplot::ggdraw() + cowplot::draw_image(svg_path)
-}
-rm(svg_path)
-```
-
-(ref:cap-abundance) Panel A: Metagenomics output is not directly proportional to microbial cell density and so is typically interpreted as _relative abundances_, either as abundances relative to each other (ratio view) or to the total (proportion view). For illustration purposes, the effect of taxonomic bias on the metagenomics output is not shown. Panel B: The effect of taxonomic bias is to distort the relative abundances that are measured by fixed ratios.
-
-_Thoughts for figure 1: ideas for caption: topic sentence can be something about how metagenomics measures biased relative abudances; indicate that A is showing unbiased MGS output; OR: Can I remake this figure such that it shows biased metagenomics output? Consider making label about the model, rather than abundance_
-
-We can understand how taxonomic bias affect relative and absolute abundance measurement using a simplified model of microbiome measurement.
-(Details are given in Appendix Model REF)
-First, consider the MGS sequencing measurement. 
-We start from a sample with a given combination of species in differing absolute abundances, which throughout we take to be in units of density of cells per unit mass.
-(For simplicity we ignore issues relating to the sequencing of live versus dead cells and non-cellular DNA.)
-Sequencing results in a total number of taxonomically-classified reads that, while not arbitrary, do not straightforwardly or consistently reflect the differences in total microbial density among samples. 
-For this reason, these counts are typically only interpreted in relative terms  (Figure 1A)—either relative to each other (i.e., as ratios among taxa) or relative to the total (i.e., as proportions).
-Protocols can be implemented to preserve more information about total abundances (See Cruz et al, and Appendix); however, in the main text we focus on the more typical situation where the total count only tells us about the precision of the measured relative abundances and we must make additional measurements or assumptions to recover information about absolute microbial densities.
-
-The effect of taxonomic bias on the relative abundances in a sample is to perturb them by taxon-specific multiplicative factors—the taxa's _measurement efficiencies_—which quantify how efficiently each taxon is converted from cells into taxonomically classified sequencing reads (Figure 1B).
-A taxon's efficiency aggregates the bias acrewed during the entire measurement process and can be thought of as a product of efficiencies at various steps in the experimental workflow and other taxon- and protocol-specific factors.
-For example, _(Insert Gard and Lacto example, breaking down by extraction, PCR, and copy-number)_.
-Only the relative efficiencies affect the measured relative abundances; doubling all efficiencies would not change the mesaured ratios or proportions.
-Therefore we define the efficiencies as relative to a chosen reference taxon (or set of taxa); here we'll take to be that of the least-efficiently measured taxon being considered.
-
-- TODO: Somewhere Give 1-sentence summary of the model - absolute information is lost, and measured relative abundances are perturbed by taxon- and protocol-specific factors. (In the figure caption and/or start of this section and or right here as a summary/resolution)
-- Think about How what I write below depends on whether I'm taking this equation to in effect be a statement of the model, or the model is what I illustrated.
-- Should define what I mean by Taxon, and address that we're making a big assumption that efficiency of a taxon is fixed (including doesn't vary from lower-level variation)
-- A footnote or "Details" box can discuss what happens when there is genotypic or non-genotypic variation in efficiency within a taxon.
-
-
-## Relative-abundance measurements
-
-By this model, the ratios in the read counts of taxa, compared to the ratios among their cell densities, are multiplied by taxon- and protocol-specific factors (Figure, MWC).
+The species-specific factor is the *relative measurement efficiency* (or *efficiency* for short) of the species, which represents how much more easily that species is measured (converted from cells to assigned reads) relative to an abitrarily chosen reference species (@mclaren2019cons).
+The sample-specific factor, which we call the *sequencing effort* of the sample, reflects the fact that the number of reads per unit cell density varies among samples even in the absence of taxonomic bias due to variation in total density, library normalization, and total sequencing-run output.^[todo: add note about how, as defined, sequencing effort typically goes down with total density because of library normalization; also mention that it 'sequencing effort' is sometimes equated with total read count or library size, which is not what we've done here].
+Equation \@ref(eq:measurement-model) implies that the total reads from all species in the sample equal
 \begin{align}
-  (\#eq:ratio-err)
-  \frac{\text{reads}_{i}(s)}{\text{reads}_{j}(s)}
-  &= \frac{\text{density}_{i}(s)}{\text{density}_{j}(s)} \cdot \frac{\text{efficiency}_{i}}{\text{efficiency}_{j}}.
+  (\#eq:total-reads)
+  \text{total reads}(a)
+    = \text{total density}(a) \cdot \text{mean efficiency}(a) \cdot \text{sequencing effort}(a),
 \end{align}
-But what about the estimated proportions, estimated by dividing the taxon read counts by the total?
-The estimated proportion of a taxon $i$ in a sample $s$ under this model equals (@mclaren2019cons, Box)
+where 
 \begin{align}
-  (\#eq:prop-err)
-  \hat{\text{prop}}_{i}(s) 
-  &= \text{prop}_{i}(s) \cdot \frac{\text{efficiency}_{i}}{\text{mean efficiency}(s)}
+  (\#eq:mean-efficiency)
+  \text{mean efficiency}(a) 
+  \equiv \frac{\sum_{j}\text{density}_j(a)\cdot \text{efficiency}_j}{\text{total density}(a)}
 \end{align}
-where $\text{mean efficiency}(s)\equiv \sum_{j}\text{prop}_j(s)\cdot \text{efficiency}_j$ is the average efficiency of cells in the sample.
-The mean efficiency in the denominator of \@ref(eq:prop-err) was omitted in models of bias prior to that of @mclaren2019cons, but naturally arises from the requirement that the estimated proportions sum to 1 and captures the competition-to-be-measured that this sum-to-1 constraint implies ([Details](#details:relative)).
-Intuitively, Equation \@ref(eq:error) says that the estimated proportion of taxon $i$ will be too large when its measurement efficiency is greater than the average efficiency of cells in the sample.
+is the average or mean efficiency of cells in the sample.
 
-<details id="details:relative">
-<summary style="font-weight:bold;font-size:120%">Details: Taxonomic bias and relative-abundance estimates</summary>
-::: {.rmdnote}
-<!-- ### Details: Taxonomic bias and relative-abundance estimates {-} -->
+## Relative abundances (proportions and ratios)
 
-**Proportions:** The measured proportion of a taxon $i$ in a sample $s$, defined as the ratio of the taxon's density to the total density of all taxa in the sample, is
-\begin{align}
-  (\#eq:prop-def)
-  \text{prop}_{i}(s) \equiv \frac{\text{density}_{i}(s)}{\text{total density}(s)}.
-\end{align}
-The standard estimate for the proportion of taxon $i$ is the proportion of its reads,
-\begin{align}
-  (\#eq:prop-est)
-  \hat{\text{prop}}_{i}(s) \equiv \frac{\text{reads}_{i}(s)}{\text{total reads}(s)}.
-\end{align}
-These definitions imply that both the actual and the estimated proportions each sum to 1.
-Our model stipulates that within a given sample $s$, the estimated and actual proportions are related by 
-\begin{align}
-  \hat{\text{prop}}_{i}(s) = c(s) \cdot \text{prop}_{i}(s) \cdot \text{efficiency}_{i}
-\end{align}
-for some taxon-independent coefficient $c(s)$.
-The requirement that the estimated proportions sum to 1 implies that 
-\begin{align}
-  c(s) = \sum_j \text{prop}_{j}(s) \cdot \text{efficiency}_j = \text{mean efficiency}(s).
-\end{align}
+The term *relative abundance* carries multiple meanings in microbiome science.
+Microbiome researchers often use the relative abundance of a species in a sample to refer to its *proportion*, or number of cells from that species divided by the total number of cells from the taxonomic domain of interest (e.g. Prokaryotes).
+A second view, drawn from the statistical framework of Compositional Data Analysis, equates the relative abundances of species within a sample with the *ratios* of cell densities among two or more species (e.g. a ratio of 5:4:2 among three species).
+By this view, it is meaningless to refer to the relative abundance of an individual species.
+<!-- (Although a proportion is also technically a ratio [of a species to a higher-level taxon], here we use 'ratio' to refer specifically to ratios among species.) -->
+Although other interpretations exist ^[e.g. the rank order within a sample, or value associated with a species after a centered-log-ratio transform], we focus on the proportion and ratio views as they underly most DA analysis methods (and microbiome analysis in general), for both relative and absolute abundances, and the differences between them help to clarify the issue over when and why the effects of bias cancel in an analysis.
 
-**Ratios:** The actual ratio of taxon $i$ to taxon $j$,
+The standard estimate of the proportion of species $i$ in sample $a$ given by the ratio of its read count to the total,
+\begin{align*}
+  \hat{\text{prop}}_{i}(a) = \frac{\text{reads}_i(a)}{\text{total reads(a)}}.
+\end{align*}
+The effect of taxonomic bias on this estimate is to create a multipliative error equal to the ratio of the species' efficiency to the mean efficiency in the sample,
 \begin{align}
-  (\#eq:ratio-def)
-  \text{density}_{i/j}(s) \equiv \frac{\text{density}_{i}(s)}{\text{density}_{j}(s)}
+  (\#eq:prop-error)
+  \hat{\text{prop}}_{i}(a)
+  &= \text{prop}_{i}(a) \cdot \frac{\text{efficiency}_{i}}{\text{mean efficiency}(a)}.
 \end{align}
-is estimated by the ratio of reads assigned to each taxon,
-\begin{align}
-  (\#eq:ratio-est)
-  \hat{\text{density}}_{i/j}(s) \equiv \frac{\text{reads}_{i}(s)}{\text{reads}_{j}(s)} = \frac{\hat{\text{prop}}_{i}(s)}{\hat{\text{prop}}_{j}(s)}.
-\end{align}
-The error under multiplicative bias is
-\begin{align}
-  (\#eq:ratio-err)
-  \hat{\text{density}}_{i/j}(s) = \frac{\text{density}_{i}(s)}{\text{density}_{j}(s)} \cdot
-  \frac{\text{efficiency}_{i}(s)}{\text{efficiency}_{j}(s)}.
-\end{align}
+Intuitively, Equation \@ref(eq:prop-error) says that a species is measured as having a larger-than-actual proportion in direct relation to how much more more efficiently its cells are measured than the average cell in the sample (Figure \@ref(fig:error-proportions)).
+Consequently, the same species can be over or under measured in terms of its proportion.
+For instance, in samples from two hypothetical communities in Figure \@ref(fig:error-proportions), Species 3 has an efficiency of 6 and is under-estimated in Sample 1 (which has a mean efficiency of 8.33) but over-estimated in Sample 2 (which has a mean efficiency of 3.15).
 
-:::
-</details>
+The estimated ratio between species $i$ and $j$, given by the ratio of read counts, 
+\begin{align*}
+  \hat{\text{ratio}}_{i/j}(a) = \frac{\text{reads}_i(a)}{\text{reads}_j(a)},
+\end{align*}
+has a multiplicative error equal to the ratio in the species' efficiencies,
+\begin{align}
+  (\#eq:ratio-error)
+  \hat{\text{ratio}}_{i/j}(a)
+%  \frac{\text{reads}_{i}(a)}{\text{reads}_{j}(a)}
+  &= \frac{\text{density}_{i}(a)}{\text{density}_{j}(a)} \cdot \frac{\text{efficiency}_{i}}{\text{efficiency}_{j}}.
+\end{align}
+Equation \@ref(eq:ratio-error) says that the ratio between two species is over-estimated in direct relation to how much more efficiently cells of the first species is measured relative to the second.
+In contrast to estimates of proportions, estimates of species ratios have a consistent multiplicative error across samples.
+For instance, in the example of Figure \@ref(fig:error-proportions), the ratio of Species 3 (with an efficiency of 6) to Species 1 (with an efficiency of 1) is over-estimated by a factor of 6 in both communities despite their varying compositions.
+
+- note: the error is not necessarily consistent for ratios among higher-order taxa
+- note: The proportion equation is analogous to Equation \@ref(eq:ratio-error) (ratio case), with the denominator taxon is the entire taxonomic domain and the relevant efficiency is the weighted average of all species. In fact, both equations can be derived from a more general equation, where the observed ratio of two (potentially non-atomic) taxa equals the true ratio times the ratios of the mean efficiencies within each taxon.
+- note: the results for ratios of higher-order taxa, and of proportions, can both be seen as stemming from a general result where the error in the ratio is the ratio of the mean efficiency within that taxon.
+- perhaps have a box for this
 
 <!-- begin figure -->
 
-```{r fig-error-proportions, out.width = '90%', fig.cap = '(ref:cap-error-proportions)', cache = TRUE}
-svg_path <- here("figures/error-proportions.svg")
+```{r error-proportions, out.width = '90%', fig.cap = '(ref:cap-error-proportions)', cache = TRUE}
+svg_path <- here("figures/illustrations/error-proportions.svg")
 if (knitr::is_html_output()) {
   knitr::include_graphics(svg_path)
 } else if (knitr::is_latex_output()) {
@@ -175,91 +89,56 @@ if (knitr::is_html_output()) {
 rm(svg_path)
 ```
 
-(ref:cap-error-proportions) Top row: Error in proportions measured by MGS in two communities that contain different relative abundances of three taxa. Bottom row: Error in the estimated fold-change in the third taxon that is derived from these measurements.
+(ref:cap-error-proportions) **Taxonomic bias creates sample-dependent multiplicative errors in species proportions, which can lead to inaccurate fold changes between samples.** Top row: Error in proportions measured by MGS in two microbiome samples that contain different relative abundances of three species. Bottom row: Error in the estimated fold-change in the third species that is derived from these measurements.
 
 <!-- end figure -->
 
-This competitive aspect of proportional measurement creates a notable feature of the errors: They depend on the composition of the sample.
-The same taxon, subject to the same measurement efficiency, will have a different error in its estimated proportion in different samples depending on the taxonomic composition of the sample (Figure 2A+B).
-A taxon will be overestimated in samples where its efficiency is greater than that of the sample average, and underestimated in samples where its efficiency is less than the sample average (e.g. Taxon 3 in 2A vs 2B).
-This difference in the consistancy of ratios versus proportions propagates to ratio- and proportion-based absolute abundance estimates and, as we describe below, is a key tool for understanding how taxonomic bias affects different DA analyses.
+## Absolute abundances (cell densities)
 
-<!-- discussion of competition; tentative positioning -->
+Various experimental and computational methods have or can be used to supplement MGS measurements so as to convert the relative-abundance information in the read counts into estimates of (absolute) cell densities;
+however, these methods can largely be partitioned conceptually into those that use the estimated proportions or the estimated ratios provided by MGS.
+The error in density estimates due to taxonomic bias therefore follows that of the proportion and ratio estimates described above.
 
-_The below discussion makes more sense if the goal as density/AA inference, and not proportion inference. Perhaps should split out some if it into the AA section._
-
-Why does the sequencing outcome associated with one taxon depend on the rest of the sample?
-We can think of proportional measurement as a competition among all the cells in the sample for a limited pool of 100 percentage points, for which
-the measurement efficiencies determine each cell's ability to compete.
-It is therefore a cell's efficiency relative to its average competitor (all the cells in the sample) that determines how many percentage points it receives.
-This account highlights that it is the competition is the problem---if we were able to measure taxa/cells in a taxonomically biased but non-competitive manner, then we could get consistent errors. We cannot remove competition simply by using reads counts instead of proportions, since competition is intrinsic to sequencing experiments, due to limits in the yield during DNA extraction, PCR, and sequencing that occur in sequecing experiments.
-
-_Perhaps say something about ratios - since cells or taxa in the sample are subject to the same average competitor, the effect of the average competitor cancels out._
-
-Our ability to design-out these limits is limited and rarely attempted (ref Cruz for counter example).
-But we might overcome competition with other types of measurements, particularly those that target individual taxa. For example, ddPCR can be applied directly to an unextracted sample to count individual cells of a given taxon, before any competition associated with the sequencing protocol has occurred. Targeted qPCR quantifies a marker (typically the 16S gene) in the extracted DNA, and so is only affected by competition during the DNA extraction step. These measurements are still subjected to taxonomic bias, but the lack or reduction in competition means that the error due to taxonomic bias is likely to be relatively consistent. For this reason, these measurements can serve as useful control measurements for correctly for the variation in the sample mean efficiency in the sequencing measurement.
-
-## Absolute-abundance measurements
-
-- P: Motivation for AA
-However, these relative-abundance measures leave ambiguous what is happening to the absolute cell densities of taxa.
-- e.g. of proportion decrease coming from different explanations
-- e.g. of ratio varying having different explanations.
-
-AA methods have generally been motivated, developed, and applied ignoring taxonomic bias and assuming the estimated proportions are correct.
-
-The estimation procedures used by AA methods can be split into those that use the proportions estimated from the sequencing reads, and those that use ratios.
-
-Proportion-based estimation involves the intuitive procedure of multiplying the estimated proportions by an independent estimate of the total cell density in the sample.
-(The total-density estimates can be obtained by a wide variety of means, reviewed in APPENDIX.)
-By this approach, the estimated density of a taxon $i$ in sample $s$ is simply
+Proportion-based density estimation is based on the idea that if we know the (true) proportion of a species and the (true) total density of all species, we can multiply these numbers obtain the species' density.
+This method therefore involves multiplying the proportion of a species estimated from MGS with an estimate of total microbial density obtain through other means (e.g., through direct cell counting or qPCR of a universal marker gene) to estimate 
+its density,
 \begin{align}
   (\#eq:density-prop-est)
-  \hat{\text{density}}_{i}(s) 
-  = \hat{\text{prop}}_{i}(s) \cdot \hat{\text{total density}}(s).
+  \hat{\text{density}}_{i}(a) 
+  = \hat{\text{prop}}_{i}(a) \cdot \hat{\text{total density}}(a).
 \end{align}
-This estimate equals the true density if the estimated proportions and total density are both accurate.
-Accounting for the error in the estimated proportions due to taxonomic bias (by substituting in EQ-REF) and potential error in the estimated total density gives
+The error in this proportion-based density estimate is
 \begin{align}
-  (\#eq:density-prop-err)
-  \hat{\text{density}}_{i}(s) 
-  &= \text{density}_{i}(s) \cdot \frac{\text{efficiency}_{i}}{\text{mean efficiency}(s)} \cdot \text{error in }\hat{\text{total density}}(s).
+  (\#eq:density-prop-error)
+  \hat{\text{density}}_{i}(a) 
+  = \text{density}_{i}(a) \cdot \frac{\text{efficiency}_{i}}{\text{mean efficiency}(a)} 
+  \cdot \substack{\text{fold error in} \\ \hat{\text{total density}}(a)}.
 \end{align}
-Densities estimated from proportions are subject to the same bias-induced error as those proportions, which depends on sample composition through the sample's mean efficiency.
+The multiplicative error consists of two factors: the error in the estimated proportion (due to taxonomic bias in the MGS measurement), and any error in the estimated total density.
+In the case of perfect knowledge of the total density, the fold error in proportion-based density estimates varies across samples inversely with the mean efficiency.
 
-Error in the total density estimate is also typically ignored but may be considerable (Ref future box) and can worsen or improve the error in DA analysis; we return to its implications in the context of considering how these errors impact DA analysis.
+- note: right now I'm not consistently ref'ing the equations where the results come from
 
-Ratio-based density estimation embodies the fact that, without knowing the total abundance, we can regain absolute abundance information if we can determine the abundance of one or more _reference taxa_.
-Given an estimate of the density of reference taxon $r$, we can estimate the density of taxon $i$ by multipling the ratio of $i$ to $r$ in the reads by the density of $r$,
+Ratio-based density estimation follows from the fact that, in the absence of taxonomic bias, the conversion rate from reads to density is just the sequencing effort of the sample and is thus the same for all species (Equation \@ref(eq:measurement-model)).
+Knowing the density of at least one _reference_ species therefore enables us to convert from reads to density for all species.
+One approach to obtaining such reference species is to add one or more extraneous species in known (typically constant) abundance (a "spike-in") to each sample prior to sequencing (REFs).
+A second approach is to determine a set of naturally occurring species that are thought to have a constant, though typically unknown, abundance across samples; in this case we can only estimate species' densities relative to these "housekeeping species" (REFs).
+A third (seemingly untried) possibility is to measure the density of one or more naturally occurring species using a method such as targeted CFU counting, fluorescence flow cytometry or ddPCR directly on cells, or ddPCR or qPCR on extracted DNA.
+Given the estimate of the density of reference taxon $r$, we estimate the density of taxon $i$ by multipling the ratio of $i$ to $r$ in the reads by the density of $r$,
 \begin{align}
-  \hat{\text{density}}_{i}(s) 
-  &= \frac{\text{reads}_{i}(s)}{\text{reads}_{r}(s)} \cdot \hat{\text{density}}_{r}(s);
+  (\#eq:density-ratio-est)
+  \hat{\text{density}}_{i}(a) = \frac{\text{reads}_{i}(a)}{\text{reads}_{r}(a)} \cdot \hat{\text{density}}_{r}(a)
 \end{align}
-So far this approach has been mainly used with spike-in experiments, in which an extraneous taxon is added in a known (and typically constant) abundance to each sample so that it can serve as the reference taxon.
-It has also been used by methods that computationally determine a set of "housekeeping taxa" that they then assume have a constant abundance across samples.
-Another potential application is to use naturally occurring taxa that we have biological reason to believe are constant, as has been argued for host and organelle-derived reads in plant and animal microbiome studies.
-Moreover, EQREF makes clear there is no need for the reference taxa to be constant or known in advance, so long as we can measure its abundance: Hence the reference taxon can also be a naturally occurring taxon of varying abundance whose density we have estimated using a method such as ddPCR directly on cells or (q/dd)PCR on the extracted DNA.
-
-The error in this estimate, accounting for the error in the estimated ratio due to taxonomic bias (EQ-REF) and potential error in the estimated density of the reference taxon, is described by
+(Appendix ??? describes how this equation can be extended to multiple reference species.)
+For a constant reference species with unknown density, we can set $\hat{\text{density}}_{r}(a)$ equal to 1 to estimate density in units of the density of the reference species.
+The error in this ratio-based density estimate is
 \begin{align}
-  \hat{\text{density}}_{i}(s) 
-  &= \text{density}_{i}(s) \cdot \frac{\text{efficiency}_{i}}{\text{efficiency}_{r}} \cdot \text{error in } \hat{\text{density}}_{r}(s)
+  (\#eq:density-ratio-error)
+  \hat{\text{density}}_{i}(a) 
+  = \text{density}_{i}(a) \cdot \frac{\text{efficiency}_{i}}{\text{efficiency}_{r}} 
+  \cdot \substack{\text{fold error in} \\ \hat{\text{density}}_{r}(a)}.
 \end{align}
-Again, the properties of the corresponding relative-abundance estimate carries over, so that the error induced by taxonomic bias in the metagenomics measurement is independent of sample composition.
-The reference density estimates are subject to error, but we can reasonably expect this to be more consistent across samples (see box), leaving the overall error relatively constant.
+Again, the multiplicative error consists of two factors: the error in the estimated ratio (due to taxonomic bias in the MGS measurement), and error in the estimated density of the reference taxa.
+So long as the fold error in the reference density is constant across samples, so will be the error in the estimated density of the focal species $i$.
 
-A warning note: The distinction between ratio and proportion-based estimation depends on whether an equation resembling X or Y is used for the final density estimates, and does not cleanly align with which empirical method is used to obtain absolute-abundance information. In particular, some studies that use spike-ins and most that use host or organelle reads to obtain absolute abundances do not follow this approach: Instead, these studies use the ratio of total reads of focal taxa to the reference reads as a proxy for total density to use in forming proportion-based estimates (EQREF). (For studies using host reads, the total density estimate may come from WGS sequencing and the estimated proportions from 16S sequencing.) 
-Alhough there may be other advantages to this approach, the above observations suggest that it may be more susceptible to taxonomic bias in the sequencing measurement than using a ratio-based approach on the same underlying data.
-
-**Update:** Actually, the two methods are equivalent when the total density and proportion are estimated using the same reads.
-Let $B$ be all bacteria and $H$ be the host.
-Consider using WGS reads to estimate the absolute abundance of bacterial taxon $i$,
-\begin{align}
-  \hat{\text{density}}_{i}(s) 
-  &= 
-  \underbrace{\frac{\text{reads}_{B}}{\text{reads}_{H}}}_\text{est'd bact'l density} \cdot 
-  \underbrace{\frac{\text{reads}_{i}}{\text{reads}_{B}}}_\text{est'd prop'n}
-  = \frac{\text{reads}_{i}}{\text{reads}_{H}}
-\end{align}
-So the problem/difference arises when we the proportion is estimated either by a different technology (e.g. when density is estimated via WGS and proportion is estimated by 16S sequencing) or the two estimates going into the above are not just ratios of reads.
-For example, ratios of bacterial to host reads could be used for the density estimate, while the proportion is estimated by Metaphlan.
+- note: these two approaches are not always distinct, and it seems that many/most authors are thinking of spike-ins and housekeeping taxa in terms of the proportion-based method; I need to think about how to address this point. 
