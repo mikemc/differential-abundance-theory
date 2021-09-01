@@ -1,144 +1,103 @@
-# How taxonomic bias affects differential-abundance analysis
+# How taxonomic bias affects differential-abundance analysis {#differential-abundance}
 
-_The current text generally assumes that taxa are atomic._
+How do the measurement errors described in the previous section impact our ability to estimate the changes in microbial abundances across samples or between different host and environmental conditions?
+Though there are many ways to quantitatively define such change, here we restrict our attention to inferring the multiplicative or (equivalently) log fold change in proportions, ratios, and cell densities, as such inference is ubiquitous in microbiome DA analysis and have more direct ecological interpretations (via the processes of exponential growth and death) than other DA measures.
+These measures of DA are also affected by taxonomic bias in our model in a manner that is straightforward to understand in terms of the multiplicative errors described in the previous section.
 
-The current practice of ignoring bias in DA and other analyses of the differences betwen samples is sometimes justified by the idea that the error in measurements of in individual samples should not affect the measured differences between samples, so long as they have been subjected to the same taxonomic bias.
-This argument is predicated on an assumption that consistent taxonomic bias creates consistent errors in the quanity of interest.
-The previous section showed that while this may be true for ratio-based abundance measurements, it is not true for proportion-based measurements.
-This section formally describes how the errors in the measurements of individual samples translate into errors (or lack thereof) in differential abundance analysis of (log) fold changes in proportions, ratios, and densities.
+- Maybe: Add a final sentence summary that the constant multiplicative error in ratio-based abundance estimates does not affect DA measurement, but the varying error induced by variation in the mean efficiency affects DA analysis on proportion-based estimates.
 
 ## Change between a pair of samples
 
-Before considering the sterotypical many-sample DA analysis, it is instructive to 
+Before considering the stereotypical many-sample DA analysis, it is instructive to 
 consider simplest analysis of differential abundance: the estimation of fold changes in abundance between a pair of samples.
-This case is relevant for understanding common visualizations for comparing abundances across individual samples, such as the ubiquitous proportion bar plot and abundances-through-time trajectories within a single host or environment.
-Just as important, it helps to bridge intuitions from the single-sample results of the previous section to the many-sample case.
+This case is relevant for understanding common visualizations for comparing abundances across individual samples, such as the ubiquitous proportion bar plot and abundances-through-time trajectories within a single host or environment, and conceptually bridges the single-sample results of the previous section to the many-sample case.
 
 <!-- P: error in FC proportions -->
-The composition-dependent effect of bias on fold error in proportions leads to error in fold-change estimates that is proportional to the inverse change in mean efficiency (REF Figure 2B).
-From the error in individual sample \@ref(eq:prop-err), it follows that the estimated fold change in proportion of taxon $i$ from sample $s$ to sample $t$ is
+The composition-dependent effect of bias on fold error in proportions leads to error in fold-change estimates that is proportional to the inverse change in mean efficiency.
+From the error in an individual sample \@ref(eq:prop-error), it follows that the estimated fold change in proportion of taxon $i$ from sample $a$ to sample $b$ is
 \begin{align}
-  (\#eq:prop-fc-err)
-\underbrace{\frac{\hat{\text{prop}}_{i}(t)}{\hat{\text{prop}}_{i}(s)}} _\text{estimate}
+  (\#eq:prop-fc-error)
+% \tag*{Fold change in proportion}
+\underbrace{\frac{\hat{\text{prop}}_{i}(b)}{\hat{\text{prop}}_{i}(a)}} _\text{estimated FC}
   &= \frac
-    {\text{prop}_{i}(t) \cdot \cancel{\text{efficiency}_{i}} / {\text{mean efficiency}(t)}}
-    {\text{prop}_{i}(s) \cdot \cancel{\text{efficiency}_{i}} / {\text{mean efficiency}(s)}}
+    {\text{prop}_{i}(b) \cdot \cancel{\text{efficiency}_{i}} / {\text{mean efficiency}(b)}}
+    {\text{prop}_{i}(a) \cdot \cancel{\text{efficiency}_{i}} / {\text{mean efficiency}(a)}}
 \\[0.5ex]
-  &= 
-  \underbrace{\frac{\text{prop}_{i}(t)}{\text{prop}_{i}(s)}}_\text{actual}
-  \cdot 
-  \underbrace{\left[\frac{\text{mean efficiency}(t)}{\text{mean efficiency}(s)}\right]^{-1}}_\text{error}
+  &=
+  \underbrace{\frac{\text{prop}_{i}(b)}{\text{prop}_{i}(a)}}_\text{actual FC}
+  \cdot
+  \underbrace{\left[\frac{\text{mean efficiency}(b)}{\text{mean efficiency}(a)}\right]^{-1}}_\text{fold error}
   .
 \end{align}
 The sample-independent efficiency factor of the error cancels, but the sample-dependent mean efficiency does not, leaving an error equal to the inverse of the change in the mean efficiency from $s$ to $t$.
-In the example in Figure 2, the mean efficiency decreases by 2.64X from 8.33 to 3.15, creating an artificial fold increase of 2.64X in the estimated fold changes.
-This same error applies to all taxa, but its consequences differ depending on the taxon's actual fold change.
-For Taxon 1, which increases by 2.3X, we estimate larger increase of 6.5X; For Taxon 2, which decreases with a FC of 0.15X, we see a lesser decrease of 0.44X; For taxon 3, which decreases with a FC by 0.6X, we see an _increase_ of 1.75X.
-Thus for the same pair of samples we can see errors of increased magnitude, errors of decreased magnitude, and errors of changed direction (or sign) for different taxa depending on how the magnitide and direction of the true change compares to that of the mean efficiency. Finally, any taxon whose proportion is constant will appear to vary precisely as the inverse mean efficiency.
 
-TODO: Fig 2 Add numbers for the other taxa.
+The bottom row of Figure \@ref(fig:error-proportions) illustrates how variation in mean efficiency leads to error in the inferred fold changes between a pair of samples.
+The mean efficiency decreases by a factor of 2.6 (FC: 0.4X) from Sample 1 to Sample 2.
+Consequently, the FC of each species is measured to be 2.6X larger than the true value.
+Though the fold error for all species is the same, the implications depend on the actual FC and correspond to three distinct types of error: an increase in magnitude, a decrease in magnitude, and a change in direction (or sign).
+We can see each type of error in Figure 2.
+For Species 1, which increases and thus moves in the opposite direction of the mean efficiency, we see an increase in magnitude of the estimated FC (actual FC: 2.3X, measured FC: 6.5X).
+For Species 2, which decreases and thus moves in the same direction as the mean efficiency but by a larger factor, we see an decrease in magnitude (actual FC: 0.15X, measured FC: 0.44X).
+For Species 2, which decreases by a smaller factor than the mean efficiency, we see a change in direction (actual FC: 0.6X, measured FC: 1.8X), such that the species actually appears to increase!
 
-<!-- P: error in proportion-based AAs (revise) -->
-Taxonomic bias causes the same error in the estimated fold changes in proportion-based density estimates.
-A similar calculation from the error in individual density estimates \@ref(eq:density-prop-err) shows that the error in the fold change of a taxon $i$ is given by the analogous formula to \@ref(eq:prop-fc-err), with density subsituted for proprotion.
-The same types of errors (in magnitude and sign) can arise (Figure 3), now depending on how the magnitide and direction of the true change in density compares to that of the mean efficiency (Figure 3 TBD).
-Maybe text:
-- Alternative view of what is doing on, using the Lacto/Gard example, where a rarer but lower efficiency taxon grows. By first view, the mean efficiency decreases, causing an upward bias in the FC estimates. By the second view, the gains in total density are incorrectly attributed to the more efficiently measured taxon.
-- This figure and its discussion should relate these two views. Perhaps the first mention of AA estimates should as well.
-- Note: Whereas sign errors in proportion FCs require the involvement of at least three taxa (TODO: explain in footnote), sign errors in proportion-based density FCs can occur even with just two taxa.
+In contrast, because species ratios are distorted by a constant factor, their measured fold changes remain accurate.
+The fold error in Equation \@ref(eq:ratio-error) completely cancels when we divide the ratio measured for one sample $a$ by another sample $b$.
 
-NOTE: Having a figure and example specifically for density is not necessary for this draft.
+If other error sources remain negligible, than this dichotomy continues to apply to proportion- and ratio-based density estimates.
+The inferred FCs in proportion-based density estimates will be incorrect by a factor equal to the inverse fold change in the mean efficiency, creating magnitude and/or directional errors.
+Moreover, any species with a constant density will appear to vary inversely with the mean efficiency.
+In contrast, fold changes in ratio-based density estimates remain accurate.
 
+## Regression analysis of many samples
 
-<!-- P: error in FC ratios and ratio-based AAs -->
-(In contrast to proportion-based estimates) Because consistent taxonomic bias creates a consistent error in ratio-based estimates, the error completely cancels, leaving accurate fold changes.
-From \@ref(eq:ratio-err), the estimated fold change in the ratio of taxon $i$ to taxon $j$ from sample $s$ to sample $t$ is
+DA analysis of many samples across host or environmental conditions can typically be framed as a regression problem, in which we analyze the relationship between a microbial _response variable_, such as log density of some focal species $i$, and one or more _covariates_, such the pH or temperature of the sampled environment or whether the sample is from a healthy or sick person.
+A substantial fraction of DA analyses use minor elaborations on the simple linear regression model, which for a response of log species density can be written
 \begin{align}
-  (\#eq:ratio-fc-err)
-  \underbrace{ \frac{{\text{reads}_{i}(t)}/{\text{reads}_{j}(t)}} {{\text{reads}_{i}(s)}/{\text{reads}_{j}(s)}} }_\text{estimate}
-  &= 
-  \frac{{\text{density}_{i}(t)}/{\text{density}_{j}(t)}} {{\text{density}_{i}(s)}/{\text{density}_{j}(s)}}
-  \cdot
-  \frac{\cancel{\text{efficiency}_{i}}/\cancel{\text{efficiency}_{j}}} {\cancel{\text{efficiency}_{i}}/\cancel{\text{efficiency}_{j}}}
-  \\[0.5ex]&= 
-  \underbrace{ \frac{{\text{density}_{i}(t)}/{\text{density}_{j}(t)}} {{\text{density}_{i}(s)}/{\text{density}_{j}(s)}} }_\text{actual}
-  .
+  (\#eq:regression)
+  \log \text{density}_i(a) = \alpha + \beta x(a) + \varepsilon_i(a).
 \end{align}
-(Describe FCs in Figure 2 and Figure 3 density e.g., seeing the correct FCs.)
-(_Need to make plain in the equation that this is the estimated fold change in the density of taxon i; perhaps have notation for this._)
+Here $x$ is a continuous covariate (e.g. pH) or a binary covariate (e.g. $x=1$ for treated patients and $x=0$ for controls), $\alpha$ and $\beta$ are regression coefficients, and $\varepsilon_i(a)$ is a mean-zero random variable that reflects the residual (unexplained) variation in the response (log density of species $i$).
+Our interest is usually in the coefficient $\beta$ (slope or average difference between conditions) that describes how the species' abundance changes with $x$, while the intercept $\alpha$ captures differences in the baseline abundance and---we hope---measurement efficiency among species.
+How does taxonomic bias under our measurement model affect estimates of $\beta$ in the simple linear regression?
 
-### Synthetic or higher-level taxa
-
-_Some of these concepts would best be introduced in the previous secton on abundances.
-Alternatively, we might want to separate them into a box or appendix on multiplicative aggregation._
-
-<!-- P: Synthetic taxa intro -->
-
-Frequently, relative- and absolute-abundance estimation are used to infer fold changes in higher-level taxa.
-
-- Visual or statistical estimation of changes in phylum abundance is a ubiquitous form of analysis in bacterial microbiome studies.
-- @chng2020meta - use fold changes in the ratio of bacterial to host reads to estimate the change in bacterial biomass during mouse antibiotics experiment
-- @rao2021mult - use a spike-in to infer changes in total domain abundance for each of archaea, bacteria, and fungi.
-- @karasov2020ther - ratio of microbial to host reads to infer changes in microbial biomass 
-
-We know that efficiencies vary widely within domains and also has been observed to vary within phyla and even within species.
-What are the implications of this within-taxon variation for infered fold changes?
-
-<!-- P: Synthetic taxa results -->
-
-Unfortunately, the bias invariance of ratio-based inference of species need not apply to ratios involving higher-level taxa.
-The estimated fold change in the proportion, ratio, or density of a synthetic taxon $T$ has additional multiplicative error equal to its fold change in efficiency.
-This error can be substantial when there is a substantial turnover from dominance by high- to low-efficiency species (or vice versa).
-(todo: ref relevant equation from previous section)
-
-An alternative approach to creating synthetic quantitative features was develoepd in the Compositional Data Analysis field that retains the so-called perturbation invariance property of atomic features.
-These "balances" are constructed by multiplying, rather than adding, the abundances of the atomic elements (equivalent to adding the abundances after log transformation instead of before) (@vandenboogaart2013anal).
-The changes in balances retain bias invariance (@mclaren2019cons Appendix 1, and REF Appendix).
-Balances have been used to construct candidate disease biomarkers (@riverapinto2018bala, @quinn2020inte), develop phylogenetic community distance measures (@silverman2017aphy), and look for clades associated with traits (@washburne2017phyl). 
-But they face from conceptual and practice issues relating to the sparsity of microbiome data. 
-Perhaps more important, products of species abundances do not obviously map onto the ecological notion of abundance and hence do not seem to fully substitute for attempting to infer the changes in taxon abundance as conceived in the usual sense of additive aggregation.
-A benefit of products, however, is that they are also robust to the fact that we may not know the appropriate ecological conversion rate for different species; for example, cells of one clade might be twice as impactful per cell on a host or  ecosystem as cells from another clade.
-Grappling with these issues remains an important goal for future theoretical and empirical research.
-
-## Regression over many samples
-
-Formal DA analysis is typically used to measure average patterns across many samples, such as how the abundance of a taxon varies with some covariate of interest.
-The covariate may be discrete, such as whether the sample is from a healthy or sick person, or it may be continuous, such as a measure of space, time, or temperature.
-Often these analyses can be framed as a regression problem.
-For example, we might hypothesize that the log density of an individual taxon $i$ changes with a variable $x$ according to the simple linear regression, 
+Consider the case where the response is log density that has been estimated using proportion-based density estimation (Equation \@ref(eq:density-prop-est)) with error-free estimates of the total density.
+If the true log density follows the regression Equation \@ref(eq:regression), then it follows from Equation \@ref(eq:density-prop-error) the estimated log density equals 
 \begin{align}
-  E\left[\log \text{density}_{i} \mid x \right] = a_{0} + a_{1}x
+  (\#eq:regression-error)
+  \log \hat{\text{density}}_i(a)
+%  &= \alpha + \beta x(a) + \varepsilon_i(a) + \log \text{efficiency}_i - \log \text{mean efficiency}(a)
+  = [\alpha + \log \text{efficiency}_i] + [\beta - \log \text{mean efficiency}(a)] x(a) + \varepsilon_i(a).
 \end{align}
-where $x$ is either continuous (e.g., sediment depth) or binary (e.g., $x=1$ for treated patients and $x=0$ for controls).
-For a continuous covariate, these coefficients are the intercept, $a_0$, and the slope, $a_1$, of a line.
-For a binary covariate, they are the average abundance in the first condition and the change in average abundance of the second condition.
-How does taxonomic bias in the measurements of individual samples affect our estimate of the regression, and in particular the slope or difference term $a_1$, for log proportions, ratios, and densities?
+This equation shows that the species-specific portion of the error affects the intercept term while the sample-specific portion (log mean efficiency) affects the slope term.
+Thus, as in the case of fold changes between two samples (Equation \@ref(eq:prop-fc-error)), it is the variation in the (log) mean efficiency across samples that we must worry about distorting our DA results.
 
-_NOTE: Consider making the above abundance instead of density, and say that it could be proportion, ratio, or density_
+The variation in measurement error created by the log mean efficiency impacts the point estimate and precision of the regression coefficient $\beta$.
+Box \@ref(regression-error) mathematically describes this effect for estimation method of Ordinary Least Squares (OLS) and Maximum Likelihood Estimation (MLE) and Figure \@ref(fig:regression-example) illustrates using simulated data.
+Variation in the log mean efficiency that is associated with the covariate $x$ creates a systematic error in the estimated slope $\hat \beta$ equal to the negative of the (scaled) covariance of log mean efficiency with $x$.
+The absolute error is the same for all species; however, its relative value depends on the magnitude of the covariance of the log mean efficiency with $x$ relative to that of the response (here, $\log \text{density}_{i}$) with $x$ or, equivalently, the relative magnitudes of their slopes.
+As in the case of fold changes between pairs of samples, the net effect can be decreases in magnitude (Species 9, 10, and 1 in Figure \@ref(fig:regression-example)), changes in sign (Species 5), or increases in magnitude (remaining species) depending on these relative values.
+Variation in the log mean efficiency that is uncorrelated with $x$ does not systematically distort $\hat \beta$ but does affect its precision, typically leading to increased standard errors as the variation in log mean efficiency effectively acts as an additional source of noise in measured abundance (Figure \@ref(fig:regression-example) D).
+The exception is for species whose residual variation is strongly positively correlated with that of log mean efficiency (here, Species 9), which can appear to have less random variation and receive standard errors that are too small.
+Decreased magnitudes and increased standard errors can both cause associations to be missed that would otherwise have been detected (Species 10 and 1), while increased magnitudes can turn weak or statistically insignificant associations into strong and statistically significant ones (Species 7, 6 and 4).
 
-### Proportion-based
+With this understanding in place, we briefly summarize how taxonomic bias affects estimation of the simple linear model in other abundance types.
+The results for proportion-based density estimates with accurate total densities also apply to LFC analysis of proportions.
+Similar results apply to microbiome regression tools (such as corncob; @martin2020mode) that perform regression on the logit (instead of log) proportion of a species; however, 
+the mean efficiency of the entire sample must instead be replaced with the mean efficiency among all species excluding the focal species, which causes the absolute error in regression coefficients to vary somewhat across species.
+Because ratios and ratio-based densities are subject to consistent multiplicative error, in analysis of log ratios and the log densities derived from them, only the estimated intercept $\hat \alpha$ is affected by taxonomic bias, while the point estimate and standard error of the estimated slope $\hat \beta$ remain unaffected.
 
-P: Results for proportions and for proportion-based density, and 
-- Equations for both; ref details box and SI for details and derivations
-- The sample-dependent term is absorbed by the model intercept, which is typically not of interest to the researcher. - connect to canceling of efficiencies in FC result
-- Error in slope equal to inverse slope in mean efficiency - connect to FC result
-- Intuitive summary in terms of the correlation / covariation with the covariate 
-    - When covaries - statistical bias
-    - When doesn't covary - systematic errors between pairs of samples acts as random error in the regression -> reduced precision and power to detect differences.
-- as w/ FCs, whether the error is significant depends on magnitude of true slope relative to slope of ME.
-- in addition, depends on the SEs of the estimated slope
+- Important complications to mention:
+  - Error in total density or targeted density estimates
+  - Counting error (so far ignored) can lead to missed associations of species with low measurement efficiencies. Example: G. vaginalis associations are not detected by several studies that use certain V13 primers that simply don't amplify this species well. This is a case where the precision in estimated associations is dramatically reduced, by a different mechanism than what is described above.
 
-P: Discuss figure showing results of real and/or simulated example
-- shared LFC error -> sign or (2 types of) magnitude errors for different taxa
-        - if use leopold e.g., edit to show diff taxa on sample samples
-- increase in residual variation and hence standard errors (NEED TO SHOW)
-- old text
-    - Notably, the error in an absolute sense is the same for all taxa—the slope is always reduced by the same amount—but the implications differ for various taxa depending on their slopes, causing magnitude or sign errors depending how the coefficient derived from the (unknown) true abundances compares to that of the mean efficiency (Figure \@ref(fig:regression-example)).
-    
-#### Figure
+<!-- Figure: Regression example -->
 
 ```{r regression-example, fig.cap = '(ref:regression-example)'}
-svg_path <- here::here("figures/leopold2020host-example.svg")
+svg_path <- here::here(
+  "notebook/_posts/2021-08-03-simulate-regression-example/",
+  "simulate-regression-example_files/figure-html5/",
+  "main-figure-1.svg"
+)
 if (knitr::is_html_output()) {
   knitr::include_graphics(svg_path)
 } else if (knitr::is_latex_output()) {
@@ -147,74 +106,68 @@ if (knitr::is_html_output()) {
 rm(svg_path)
 ```
 
-(ref:regression-example) **Taxonomic bias distorts multi-sample differential abundance inference when the mean efficiency of samples is associated with the covariate of interest.**
+(ref:regression-example) **Taxonomic bias distorts multi-sample differential abundance inference when the mean efficiency of samples is associated with the covariate of interest.** This figure shows the results of a regression analysis of simulated microbiomes consisting of 50 samples and 10 species from two environmental conditions indexed by $x=0$ and $x=1$. In this simulation, the species with the largest efficiency (Species 9) also has the largest positive LFC, which drives the positive association of the log mean efficiency with the condition (shown in Panels A and B). This positive LFC in the log mean efficiency induces a systematic negative shift in the estimated LFCs of all species (Panels C and D). Panel D shows the mean LFC (points) with 95% confidence intervals (CIs), for each species estimated from either the actual or the measured densities. The error (difference in LFC estimates on measured and actual) equals the negative LFC of the mean efficiency (shown in Panel B).
 
-TODO: Add SI figure showing the distribution of mean efficiencies and the relationship with Mel that goes with this figure
+<!-- end Figure -->
 
-Ideal figure perhaps shows how observed = actual + eff - mean eff, and individual taxa cases of sign and magnitude errors, and the distributional shift of all taxa, with the specific examples pulled from this distribution
+::: {.rmdnote}
 
+## Box: Error in estimated regression coefficients and standard errors {#regression-error}
 
-```{r lfc-distribution, fig.cap = '(ref:lfc-distribution)', out.width = "60%"}
-svg_path <- here::here("figures/illustrations/lfc-distribution.svg")
-if (knitr::is_html_output()) {
-  knitr::include_graphics(svg_path)
-} else if (knitr::is_latex_output()) {
-  cowplot::ggdraw() + cowplot::draw_image(svg_path)
-}
-rm(svg_path)
-```
+Results from statistics on regression under measurement error can help us understand the effect of bias on DA regression analysis.
 
-(ref:lfc-distribution) **Taxonomic bias causes magnitude and sign errors in differential-abundance estimates.** In the absence of other types of errors, consistent taxonomic bias causes shift in the estimated log fold changes (LFC) or slopes in a differential-abundance analysis that is shared by all taxa, creating magnitude or sign errors depending on the true LFC. 
+Consider Equation \@ref(eq:regression) for the simple linear regression of log density of a species $i$ on covariate $x$.
+Let $y$ stand for the actual log density of a focal species $i$, $z$ stand for the log density that we've measured, and $d = z - y$ equal the difference between the two, which here is the log efficiency of species $i$ minus the log mean efficiency of the sample.
+Let $s_{xy}$ denote the sample covariance between variables $x$ and $y$, $s^{2}_{x} = s_{xx}$ and $s_{x}$ denote the sample variance and standard deviation, and $r_{xy} = s_{xy}/(s_{x}s_{y})$ denote the sample correlation.
 
-### Ratio-based
+The ordinary least squares (OLS) and maximum likelihood (MLE) estimates of the slope of $z$ equals the sample covariance of $z$ and $x$ divided by the sample variance in $x$ or, equivalently, the sample correlation of $z$ and $x$ multiplied by the ratio of their sample standard deviations,
+\begin{align}
+  \hat \beta_z = \frac{s_{zx}}{s^2_x} = r_{zx} \cdot \frac{s_y}{s_x}.
+\end{align}
+From the (bi)linearity of sample covariances it follows that
+\begin{align}
+  \hat \beta_z 
+  = \frac{s_{yx}}{s^2_x} + \frac{s_{dx}}{s^2_x} 
+  = \frac{r_{yx} s_y}{s_x} + \frac{r_{dx} s_d}{s_x} 
+  = \hat \beta_y + \hat \beta_d,
+\end{align}
+where $\hat \beta_y$ and $\hat \beta_d$ denote the slope estimates for $y$ and $d$ (were these values to be known).
+The absolute error in the estimate $\hat \beta_{z}$ of $\hat \beta_{y}$ is therefore $\hat \beta_{d}$; it is large in a practical sense when $\hat \beta_{d}$ is large (in absolute value) compared to $\hat \beta_{y}$, which corresponds to the covariance of $d$ with $x$ being large compared to the covariance of $y$ with $x$.
 
-1 short P explaining how it is no surprise that in ratio based, the error is absorbed by the intercept and the slopes remain accurate.
-- (summary of previous) leads to Taxonomic bias does not affect ratio-based DA analysis
-- include consideration of error in density estimate
+In our case, the covariance of $d$ equals the negative of the covariance of log mean efficiency with $x$.
+The absolute error (i.e., the _bias_ in a statistical sense) in $\hat \beta$ is equals the negative covariance of log mean efficiency scaled by the variance in $x$.
+This absolute error is the same for all species; however, its practical significance varies depending on its magnitude relative to that of the slope of the actual log densities.
+For species that covary with $x$ more strongly than the log mean efficiency, the error will be relatively small.
+This situation might occur either because the mean efficiency varies relatively little across samples or because its variation is relatively less correlated with $x$ compared to the log density of the focal species.
 
-## Caveats and other considerations
+We can similarly understand the impact of measurement error on the precision of our slope estimates.
+The OLS and MLE estimated standard error in $\hat \beta$ are both approximately
+\begin{align}
+  \hat{\text{se}}(\hat \beta)
+  \approx \frac{s_{\hat \varepsilon}}{s_x \sqrt{n}},
+\end{align}
+where $s_{\hat \varepsilon}$ is the sample standard deviation of the residuals
+(@wasserman2004allo Chapter 13).
+The sample residuals of $z$, $y$, and $d$ have a similar relationship to the regression coefficient estimates,
+\begin{align}
+  \hat \varepsilon_z 
+    &\equiv z - \hat \beta_z x
+  \\&= (y + d) - (\hat \beta_y + \hat \beta_d) x
+  \\&= (y - \hat \beta_y x) + (d - \hat \beta_d x)
+  \\&= \hat \varepsilon_y + \hat \varepsilon_d.
+\end{align}
+(Note, here I've omitted the subscript indicating the dependence on the sample.)
+It follows that the sample variances of the residuals of $z$, $y$, and $d$ are related through
+\begin{align}
+  s^2_{\hat \varepsilon_{z}} 
+  = s^2_{\hat \varepsilon_{y} + \hat \varepsilon_{d}}
+  = s^2_{\hat \varepsilon_{y}} + s^2_{\hat \varepsilon_{d}} + 2 s_{\hat \varepsilon_{y} \hat \varepsilon_{d}}.
+\end{align}
+The standard deviation of the $z$ residuals is increased above that of the $y$ residuals when the $d$ residuals are either uncorrelated or positively correlated with the $y$ residuals, but may be decreased when the $y$ and $d$ residuals are negatively correlated.
 
-- Other error sources and violations of this idealized model
-    - inconsistent error in density estimate, could be correlated or not with the covariate
-    - for DNA based: non-linearity of extraction
-    - contamination
-- implications of these in our above results
-    - proportion-based: won't get perfect error sharing across taxa
-    - ratio-based: won't get perfect canceling
-    - -> can limit the effectiveness of our 'solutions' below.
+In our case, the $d$ residuals equal the negative residuals of the log mean efficiency.
+It is plausible that for most species, their residual variation will have a small covariance with log mean efficiency and the net effect of variation in the mean efficiency will be to increase the estimated standard errors, as occurs with most species in Figure \@ref(fig:regression-example).
+However, high-efficiency species that vary substantially in proportion across samples may be strongly positively correlated with log mean efficiency such that the estimated standard errors decrease, as we see with Species 9 in Figure \@ref(fig:regression-example).
 
-For this version, can just say this, and in future versions I can be more concrete as I think through more .
-
-### Error in density estimates
-
-In reality, there will be some error in the total density.
-If this error is correlated with the mean efficiency of the sequencing measurement, it can actually reduce the error in the fold change estimate (See Box).
-
-Possible continuations of this P:
-1) Such a correlation might arise through DNA extraction bias when the total density is measurements of total abundance from DNA, such as florescent-based DNA quantification or qPCR of a universal 16S marker.
-In this case, a perfectly linear but taxonomically biased extraction protocol will have a DNA yield that is proportional to the true density and the average absolute extraction efficiency of its cells.
-16S concentration in the extracted DNA will be proportional to the average produce of extraction efficiency with 16S copy number.
-
-2) work from old, and just use qPCR as a focal example.
-
-- Could also mention live vs dead cells and cell-free DNA as another bias source, giving a ref to below article
-- also mention primer bias; again can be helpful if shared. Obvious case is if both qPCR and seq primers are not getting certain taxonomic groups, that might be picked up by an alt approach like bulk DNA or flow cytometry.
-
-Next P:
-Shows subtleties and utility of thinking through an explicit model of the measurement process. 
-When we do not attempt to correct for bias, DNA-based estimate of total might be better for proportion-based density estimates despite giving a poor reflection of the total density.
-For example, (Lacto/Gard example) -> extraction and copy number bias gibe spurious results in total, but good results in individual taxa.
-(Have a details box that does this as a worked example)
-However, the non-linearity of DNA extraction may be a major worry in some cases and does not affect direct cell-density measurements.
-Therefore, alternative options from the solutions section below may be preferable.
-
-Old text to use: 
-
-Interestingly, taxonomic bias may actually make qPCR a better method for absolute quantification than cell counting for 16S rRNA gene sequencing experiments.
-16S rRNA gene qPCR measures the concentration of 16S rRNA gene copies in the extracted DNA and is therefore necessarily affected by three large sources of bias in 16S rRNA gene experiments: extraction, amplification, and copy-number variation.
-Yet these biases are shared by the sequencing measurement.
-Though they make qPCR measurements a bad proxy for total cell density, when used for absolute differential abundance inference the shared bias in the qPCR and sequencing measurements can offset each other, leading to estimated fold changes that are relatively unaffected by taxonomic bias.
-(Jian, Salonen, and Korpela 2021 suggests some of these ideas and APPENDIX gives a mathematical justification.)
-If common primers are used by qPCR and 16S rRNA gene sequencing, the bias due to primer mismatches and other sources of variation in amplification could even be accounted for in this manner.
-Yet ideally we would still be able to estimate and correct remaining error due to unshared bias or to mechanisms, such as saturation during DNA extraction, that could break the assumed proportionality between qPCR measurements and total abundance.
-In this case, ...
+:::
+<!-- </details> -->
