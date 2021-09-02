@@ -1,15 +1,27 @@
 ---
 title: "Simulate regression example"
 description: |
-  A short description of the post.
+  Simulate an example of how bias impacts a regression analysis.
 author:
   - name: Michael R. McLaren
 date: 08-03-2021
 output:
   distill::distill_article:
     self_contained: false
+    toc: true
+    dev: svg
 ---
 
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  comment = "#>",
+  collapse = TRUE,
+  cache = TRUE,
+  autodep = TRUE,
+  echo = TRUE
+)
+```
 
 ```{r}
 # library(here)
@@ -28,16 +40,16 @@ library(metacal)
 set.seed(42)
 ```
 
-# Simulate actual abundances
+# Simulate data
 
 ```{r}
 n_species <- 10
 n_samples <- 50
 
-species <- str_c("sp", seq(n_species))
+species <- str_c("Species ", seq(n_species))
 ```
 
-## Actual abundances
+## Actual densities
 
 Log abundances are independent and follow a simple linear model,
 
@@ -46,7 +58,7 @@ log density = a_0 + a_1 * X + epsilon
 ```
 
 ```{r}
-n_samples <- 100
+n_samples <- 50
 x <- c(
   rep(0, n_samples / 2),
   rep(1, n_samples / 2)
@@ -70,37 +82,49 @@ epsilon <- MASS::mvrnorm(
   n = n_samples,
   mu = rep(0, n_species), 
   Sigma = diag(0.5, nrow = n_species)
-) %>% 
+) %>%
   t
 
 y <- a %*% X + epsilon
 colnames(y) <- str_glue("sa{1:n_samples}")
 ```
 
+For the data frame of true coefficients, convert from log-e to log-2.
+
+```{r}
+true_coeffs <- list('(Intercept)' = a_0, x1 = a_1) %>%
+  map_dfr(enframe, ".otu", "truth", .id = "term") %>%
+  mutate(across(truth, ~ . / log(2))) %>%
+  print
+```
+
 ```{r}
 sam <- tibble(.sample = colnames(y), x) %>%
   mutate(across(x, factor))
-actual <- phyloseq(
+actual_dens <- phyloseq(
   otu_table(y, taxa_are_rows = TRUE) %>% transform_sample_counts(exp),
   sample_data(sam)
 )
 ```
 
 ```{r}
-actual %>%
+actual_dens %>%
   as_tibble %>%
   ggplot(aes(y = .otu, x = .abundance, fill = x)) +
   scale_x_log10() +
   stat_dots()
 ```
 
-## Biased abundances
+## Taxonomic bias and measured densities
+
+Draw efficiencies from a log normal distribution; set relative to the geometric mean efficiency.
 
 ```{r}
 log_efficiency <- MASS::mvrnorm(
   mu = rep(0, n_species),
   Sigma = diag(3, nrow = n_species)
 ) %>%
+  # {. - min(.)}
   {. - mean(.)}
 efficiency <- exp(log_efficiency)
 # names(efficiency) <- species
@@ -123,224 +147,321 @@ names(efficiency)[idx_eff] <- species[idx_slope]
 names(efficiency)[idx_slope] <- species[idx_eff]
 ```
 
-The observed (i.e. estimated) proportions and densities are given by perturbing the actual densties by the efficiencies, and normalizing to proportions or to the original (correct) total.
+Data frame with all species parameters,
 
 ```{r}
-observed_prop <- actual %>% perturb(efficiency)
-observed_dens <- actual %>% perturb(efficiency, norm = "keep")
+species_params <- true_coeffs %>%
+  pivot_wider(names_from = term, values_from = truth) %>%
+  rename(intercept = '(Intercept)') %>%
+  left_join(efficiency %>% enframe('.otu', 'efficiency'), by = '.otu') %>%
+  mutate(log2_efficiency = log2(efficiency)) %>%
+  print
 ```
 
-## Mean efficiencies
+```{r}
+species_params %>%
+  ggplot(aes(x1, log2_efficiency)) +
+  geom_text(aes(label = str_extract(.otu, '[0-9]+')))
+```
+
+Question: Is it true that the first species is driving the association?
+
+
+
+The measured (i.e. estimated) proportions and densities are given by perturbing the actual densties by the efficiencies, and normalizing to proportions or to the original (correct) total.
+
+```{r}
+measured_prop <- actual_dens %>% perturb(efficiency)
+measured_dens <- actual_dens %>% perturb(efficiency, norm = "keep")
+```
+
+## Compute mean efficiencies
 
 ```{r mean-efficiency}
-mean_efficiency <- actual %>%
+mean_eff <- actual_dens %>%
   transform_sample_counts(close_elts) %>%
   perturb(efficiency, norm = "none") %>%
   sample_sums %>%
   enframe(".sample", "mean_efficiency") %>%
-  left_join(sam, by = ".sample")
+  left_join(sam, by = ".sample") %>%
+  mutate(log2_mean_efficiency = log2(mean_efficiency))
 ```
 
 ```{r}
-mean_efficiency %>%
+mean_eff %>%
   ggplot(aes(y = as.factor(x), x = mean_efficiency)) +
   scale_x_log10() +
   stat_dotsinterval()
 ```
 
-## Regressions and summary plots
+# Plots
 
-what is a nice pipeline for doing all the regressions?
+## Estimated and actual densities
 
 ```{r}
-analysis_ps <- function(ps, ...) {
-  mat <- otu_table(ps) %>% orient_taxa(as = "columns") %>% log2
-  lm(mat ~ 1 + x, data = sample_data(ps) %>% as_tibble) %>%
-    broom::tidy()
-}
-analysis_sme <- function(x, ...) {
-  lm(log2(mean_efficiency) ~ 1 + x, data = mean_efficiency) %>%
-    broom::tidy()
-}
+lvls <- a_1 %>% sort(decreasing = TRUE) %>% names
 
-true_coeffs <- list('(Intercept)' = a_0, x1 = a_1) %>%
-  map_dfr(enframe, "response", "truth", .id = "term")
-
-df <- bind_rows(
-  analysis_ps(actual) %>% add_column(type = "Actual"),
-  analysis_ps(observed_dens) %>% add_column(type = "Observed"),
-  analysis_sme(mean_efficiency) %>% 
-    add_column(type = "Mean efficiency", response = "Mean efficiency"),
+dens <- bind_rows(
+  Actual = actual_dens %>% as_tibble,
+  Measured = measured_dens %>% as_tibble,
+  .id = 'type'
 ) %>%
+  rename(density = .abundance) %>%
   mutate(
-    across(type, factor, levels = c("Actual", "Observed", "Mean efficiency")),
-    lower = estimate - 2 * std.error,
-    upper = estimate + 2 * std.error,
-  ) %>%
-  # Add the true coefficients
-  left_join(true_coeffs, by = c("response", "term"))
+    log2_density = log2(density),
+    across(.otu, factor, levels = lvls)
+  )
 ```
 
 ```{r}
-p1 <- df %>% 
+p_species_all <- dens %>%
+  ggplot(aes(x, log2_density, color = type)) +
+  labs(y = "Log density ") +
+  facet_grid(.otu~type, scales = "fixed") +
+  geom_quasirandom(alpha = 0.3, groupOnX = TRUE) +
+  # stat_summary(fun.data = "mean_cl_boot", geom = "pointrange") +
+  stat_summary(geom = "point") +
+  stat_smooth(aes(x = as.integer(x)),
+    method = "lm", size = 0.9, fill = 'grey', se = FALSE
+  ) +
+  theme(legend.position = "none")
+p_species_all 
+```
+
+```{r}
+p_mean_eff <- mean_eff %>%
+  ggplot(aes(x, log2(mean_efficiency))) +
+  labs(y = "Log efficiency ") +
+  geom_quasirandom(alpha = 0.3, groupOnX = TRUE) +
+  # stat_summary(fun.data = "mean_cl_boot", geom = "pointrange") +
+  stat_summary(geom = "point") +
+  stat_smooth(aes(x = as.integer(x)),
+    method = "lm", size = 0.9, color = 'black', fill = 'grey', se = FALSE
+  )
+p_mean_eff 
+```
+
+```{r}
+p_mean_eff + p_species_all +
+  plot_layout(ncol = 1, heights = c(0.2, 1)) &
+  colorblindr::scale_color_OkabeIto() &
+  colorblindr::scale_fill_OkabeIto()
+```
+
+## Regression coefficients
+
+```{r}
+lm_fit_mean_eff <- mean_eff %>%
+  {lm(log2_mean_efficiency ~ 1 + x, .)}
+lm_results_mean_eff <- lm_fit_mean_eff %>%
+  broom::tidy(conf.int = TRUE)
+```
+
+```{r}
+lm_fits <- dens %>%
+  group_by(.otu, type) %>%
+  nest %>%
+  mutate(
+    fit = map(data, ~lm(log2_density ~ 1 + x, .))
+  )
+lm_results <- lm_fits %>%
+  mutate(
+    fit = map(fit, broom::tidy, conf.int = TRUE)
+  ) %>%
+  select(-data) %>%
+  unnest(fit) %>%
+  ungroup %>%
+  left_join(true_coeffs, by = c(".otu", "term"))
+
+lm_results_slope <- lm_results %>%
   filter(term == "x1") %>%
   mutate(
-    across(response, fct_reorder, estimate)
+    across(.otu, fct_reorder, estimate)
   ) %>%
-  ggplot(aes(y = response, x = estimate, color = type)) +
+  arrange(.otu)
+```
+
+```{r, fig.dim = c(5.5, 7)}
+# params for arrows showing error
+delta <- lm_results_mean_eff %>% filter(term == "x1") %>% pull(estimate)
+start <- lm_results_slope %>% filter(type == 'Actual', .otu == 'Species 9') %>%
+  pull(estimate)
+
+p_coef_ci <- lm_results_slope %>% 
+  ggplot(aes(y = .otu, x = estimate, color = type)) +
+  labs(x = "Log fold change", y = NULL) +
   geom_vline(xintercept = 0, color = "grey") +
-  geom_pointinterval(aes(xmin = lower, xmax = upper)) +
+  geom_pointinterval(aes(xmin = conf.low, xmax = conf.high)) +
+  theme(legend.position = 'top') +
+  guides(color = guide_legend(reverse = TRUE)) +
+  annotate(
+    geom = 'segment', color = "darkgrey",
+    arrow = grid::arrow(length = unit(0.1, "inches")), 
+    x = start, xend = start - delta, 
+    y = 10.5, yend = 10.5
+  ) +
+  coord_cartesian(clip = 'off')
+
+p_coef_ci_with_true_coef <- p_coef_ci +
   geom_point(data = ~filter(., type == "Actual"),
     aes(x = truth),
     color = 'black', shape = '+', size = 4)
-p2 <- df %>% 
+
+p_coef_ci_mean_eff <- lm_results_mean_eff %>% 
   filter(term == "x1") %>%
-  mutate(
-    across(response, fct_reorder, estimate)
-  ) %>%
+  ggplot(aes(y = "Mean efficiency", x = estimate)) +
+  expand_limits(
+    x = c(
+      min(lm_results_slope$conf.low), 
+      max(lm_results_slope$conf.high)
+  )) +
+  labs(x = "Log fold change", y = NULL) +
+  geom_vline(xintercept = 0, color = "grey") +
+  geom_point() +
+  annotate(
+    geom = 'segment', color = "darkgrey",
+    arrow = grid::arrow(length = unit(0.1, "inches")), 
+    x = 0, xend = delta, 
+    y = 1.0, yend = 1.0
+  )
+
+p_coef_dot <- lm_results_slope %>% 
   ggplot(aes(y = type, x = estimate, fill = type)) +
+  labs(x = "Log fold change", y = "Type") +
   geom_vline(xintercept = 0, color = "grey") +
   stat_dots()
-p1 / p2 + 
-  plot_layout(heights = c(1, 0.3)) &
+
+p_coef_ci_mean_eff / p_coef_ci_with_true_coef / p_coef_dot + 
+  plot_layout(heights = c(0.2, 1, 0.3)) &
   colorblindr::scale_color_OkabeIto() &
   colorblindr::scale_fill_OkabeIto()
-  # scale_color_brewer(type = 'qual', palette = 7) &
-  # scale_fill_brewer(type = 'qual', palette = 7)
 ```
 
+The true coefficients fall within the 'Actual' CIs, confirming that our simulations worked.
+For the manuscript figure, we won't include the true data-generating coefficients, since our aim is to illustrate the relationship between coefficients estimated on the 'Actual' and 'Measured' measurements.
+
+## Manuscript figure
+
+Chose species that show the full range of qualitative behaviors in terms of the effect of taxonomic bias on the estimated slope coefficient.
+
+- Species 9: Bias causes a substantial decrease in the magnitude of the slope
+- Species 10: Bias causes a substantial decrease in the magnitude of the slope, such that the estimate is no longer distinguishable from zero.
+- Species 5: Bias causes a sign error
+- Species 7: Bias cases a small negative slope that would not have been distinguishable from zero to become significantly (in a biological and statistical sense) negative
+- Species 2: Bias cases a substantially negative slope to become more negative (increased magnitude)
+
+<!--  -->
+
 ```{r}
+species_to_plot <- str_c("Species ", c('9', '10', '5', '7', '2'))
+p_species_focal <- p_species_all
+p_species_focal$data <- p_species_focal$data %>% 
+  filter(.otu %in% species_to_plot)
+
+# Bold these species in coeffcient CI plot
+p_coef_ci1 <- p_coef_ci +
+  theme(
+    axis.text.y = element_text(
+      face = ifelse(levels(p_coef_ci$data$.otu) %in% species_to_plot, 
+        "bold", "plain")
+    )
+  )
+
+# Set range of mean eff panel to match
+rng <- p_species_focal$data %>%
+  pull(log2_density) %>%
+  {max(.) - min(.)}
+m <- p_mean_eff$data %>% pull(mean_efficiency) %>% log2 %>% mean
+p_mean_eff1 <- p_mean_eff + 
+  expand_limits(y = c(m - rng/2, m + rng/2))
+```
+
+```{r main-figure, fig.dim = c(7, 7)}
+(p_mean_eff1 + ggtitle("Mean efficiency")) +
+  (p_coef_ci_mean_eff + ggtitle("LFC in mean efficiency")) + 
+  (p_species_focal + ggtitle("Actual and measured densities\nof select species")) + 
+  (p_coef_ci1 + ggtitle("Estimated LFCs of all species") +
+    theme(legend.box.margin = margin(b = -15))
+  ) + 
+  plot_layout(ncol = 2, heights = c(0.2, 1)) +
+  plot_annotation(tag_levels = 'A') &
+  colorblindr::scale_color_OkabeIto() &
+  colorblindr::scale_fill_OkabeIto() &
+  theme(
+    plot.title = element_text(face = "plain")
+  )
+```
+
+```{r, eval = FALSE, include = FALSE}
 ggsave('/tmp/regression-example.pdf', width = 6, height = 5, units = 'in')
 ggsave('/tmp/regression-example.png', width = 6, height = 5, units = 'in')
 ```
 
-
-here
-
-- understand why the 'actual' estimates are generally more extreme than the true lfc
-<!--  -->
+## Standard errors
 
 
-## Data plots of specific examples
-
-Plots like the first ones I made for the Leopold data.
-
-```{r}
-species_to_plot <- c('sp9', 'sp1', 'sp5', 'sp7', 'sp8')
+```{r, fig.dim = c(5,5)}
+lm_results %>%
+  mutate(across(.otu, factor, levels = lm_results_slope$.otu %>% levels)) %>%
+  ggplot(aes(y = .otu, x = std.error, color = type)) +
+  facet_wrap(~term) +
+  geom_point() +
+  colorblindr::scale_color_OkabeIto()
 ```
 
-```{r}
-```
+Can see that the standard error is generally increased in the measured density estimates except for Species 9, whose residual variation we expect to be correlated with the log mean efficiency and hence negatively correlated with the measurement error.
 
-### attempt 1
-
-
-```{r}
-mean_efficiency1 <- mean_efficiency %>%
-  rename(.abundance = mean_efficiency) %>%
-  add_column(.otu = "Mean efficiency")
-data_long <- 
-  bind_rows(
-    Actual = actual %>% as_tibble,
-    Observed = observed_dens %>% as_tibble,
-    'Mean efficiency' = mean_efficiency1,
-    .id = 'type'
-  )
-```
-
+Let's confirm that the relationship between the SEs in the measured response, the actual response, and the mean efficiency agree with our theoretical expectation.
+To do so, we must compute the sample covariance of the residual of the actual response and the mean efficiency for each species.
 
 ```{r}
-species_to_plot <- c('Mean efficiency', 'sp9', 'sp1', 'sp5', 'sp7', 'sp8')
-
-data_long %>%
-  filter(.otu %in% species_to_plot) %>%
+aug_mean_eff <- lm_fit_mean_eff %>% 
+  broom::augment() %>% 
+  add_column(.sample = mean_eff$.sample)
+aug <- lm_fits %>%
   mutate(
-    across(.otu, factor, levels = species_to_plot)
-  ) %>% 
-  ggplot(aes(x, log2(.abundance), color = type)) +
-  facet_wrap(~.otu, scales = "free_y", ncol = 1) +
-  geom_quasirandom(alpha = 0.3, groupOnX = TRUE) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "pointrange") +
-  stat_smooth(aes(x = as.integer(x)),
-    method = "lm", geom = "line", size = 0.9
+    .sample = map(data, pull, '.sample'),
+    augment = map(fit, broom::augment),
+  ) %>%
+  select(-data, -fit) %>%
+  unnest(c(.sample, augment)) %>%
+  ungroup %>%
+  left_join(aug_mean_eff, by = c(".sample", "x"), suffix = c('.dens', '.mean_eff'))
+```
+
+```{r}
+cov_actual_with_mean_eff <- aug %>%
+  filter(type == 'Actual') %>%
+  with_groups(.otu, summarize,
+    cov = cov(.resid.dens, .resid.mean_eff)
+  ) %>%
+  print
+```
+
+
+```{r}
+std_err_mean_eff <- lm_fit_mean_eff %>% broom::tidy() %>%
+  filter(term == 'x1') %>% pull(std.error)
+std_errs <- lm_results_slope %>%
+  select(type, .otu, std.error) %>%
+  pivot_wider(names_from = type, values_from = std.error, 
+    names_prefix = "se_") %>%
+  left_join(cov_actual_with_mean_eff, by = '.otu') %>%
+  print
+```
+
+
+```{r}
+std_errs %>%
+  mutate(.otu,
+    se2_Measured = se_Measured^2,
+    pred = se_Actual^2 + std_err_mean_eff^2 -
+      cov * 2 / ((n_samples - 2) * var(x))
+      # cov * 2 * (n_samples - 1) / (n_samples * (n_samples - 2) * var(x))
   )
 ```
 
-### attempt 2
+The prediction for the squared standard error from the theoretical calculation agrees with what we observe.
 
-
-```{r}
-data_long <- 
-  bind_rows(
-    Actual = actual %>% as_tibble,
-    Observed = observed_dens %>% as_tibble,
-    .id = 'type'
-  )
-```
-
-
-```{r}
-species_to_plot <- c('sp9', 'sp1', 'sp5', 'sp7', 'sp8')
-
-p3 <- data_long %>%
-  filter(.otu %in% species_to_plot) %>%
-  mutate(
-    across(.otu, factor, levels = species_to_plot)
-  ) %>% 
-  ggplot(aes(x, log2(.abundance), color = type)) +
-  facet_grid(.otu~type, scales = "free_y") +
-  geom_quasirandom(alpha = 0.3, groupOnX = TRUE) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "pointrange") +
-  stat_smooth(aes(x = as.integer(x)),
-    method = "lm", geom = "line", size = 0.9
-  ) +
-  theme(legend.position = "none")
-
-p4 <- mean_efficiency %>%
-  ggplot(aes(x, log2(mean_efficiency))) +
-  geom_quasirandom(alpha = 0.3, groupOnX = TRUE) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "pointrange") +
-  stat_smooth(aes(x = as.integer(x)),
-    method = "lm", geom = "line", size = 0.9
-  )
-```
-
-```{r}
-p1 + p3 + p2 + p4 +
-  plot_layout(ncol = 2, heights = c(1, 0.3)) &
-  colorblindr::scale_color_OkabeIto() &
-  colorblindr::scale_fill_OkabeIto()
-
-```
-
-
-### Testing plot types
-
-The difference plots in 'dabestr' seem like they might be ideal; specifically the Gardner-Altman Two Group Estimation Plot
-
-```{r}
-# library(dabestr)
-```
-
-But perhaps it will be better to manually create this plot using ggdist.
-Could compute the bootstrapped difference estimates, then plot them with stat_halfeye in vertical orientation at x=3.
-
-
-HERE.
-
-https://mjskay.github.io/ggdist/
-
-```{r}
-```
-
-
-
-```{r}
-data_long %>%
-  filter(.otu == 'sp5', type == 'Actual') %>%
-  ggplot(aes(x, log2(.abundance))) +
-  geom_quasirandom(alpha = 0.3, groupOnX = TRUE)
-  
-
-```
-
+TODO: Sort out why it is this version, and not the other, that gives agreement.
+Perhaps the standard errors being returned by R are using the MLE estimate of sigma instead of the OLS estimate?
