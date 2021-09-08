@@ -13,37 +13,25 @@ In particular, MGS measurements are _taxonomically biased_: Taxa vary dramatical
 As a result, the abundance measurements obtained by MGS are inaccurate representations of the actual abundances and also tend to differ across protocols (@mclaren2019cons), studies, and even experimental batches (@yeh2018taxo). 
 This bias arises from variation in how taxa respond to each step in an MGS protocol, from sample collection to bioinformatic classification.
 Although often associated with variation in primer binding and amplification rates and marker-gene copy-number, large variation in DNA extraction efficiency and in the ability to correctly classify reads make taxonomic bias a feature of both shotgun and marker-gene measurements.
-The error it causes have been found to in some cases to supersede sizeable biological differences (e.g. @lozupone2013meta) and has plausibly caused replication failures for prominent findings such as the association of decreased Bacteroides and increased Firmicutes in stool with obesity (@finucane2014atax) and the association of certain taxa in the vagina of pregnant women with preterm birth (@callahan2017repl).
+The error it causes have been found to in some cases to supersede sizable biological differences (e.g. @lozupone2013meta) and has plausibly caused replication failures for prominent findings such as the association of decreased Bacteroides and increased Firmicutes in stool with obesity (@finucane2014atax) and the association of certain taxa in the vagina of pregnant women with preterm birth (@callahan2017repl).
+
+<!-- Revise below here to outline -->
 
 <!-- P: Taxonomic bias and DA -->
 
-Although many microbiome researchers are aware of taxonomic bias, it is standard practice to ignore it when performing a DA analysis and interpretting its results.
-One reason for this practice is a widespread belief that taxonomic bias does not affect the inferred _differences between samples_, so long as those samples have been subjected to the same measurement protocol.
-This belief stems from an assumption that the effect of taxonomic bias is to consistently increase or decrease the measured abundance of a given taxon in every sample, so that its effects cancels when computing change across samples.
-@kevorkian2018esti (see also @lloyd2020evid) were, to our knowledge, the first to make this argument mathematically explicit; however, their argument was based on a faulty assumption about the effect of bias on MGS measurement (@mclaren2019cons and Section \@ref(abundance)).
-@mclaren2019cons subsequently analyzed the effects of bias using a mathematical model of MGS measurement, which they validated using marker-gene and shotgun measurements of artificially-assembled (or "mock") bacterial communities.
-They found that the _relative_ measurement efficiencies among taxa are consistent across samples that vary in taxonomic composition (provided they are measured by the same protocol).
-But a bias that is consistent in terms of relative efficiencies will nevertheless cause error in the proportion of a taxon that depends on sample composition and hence can lead to spurious estimated changes across samples.
-In contrast, they showed that error in the ratio between a pair of taxa has an error that is sample-independent error and hence does in fact cancel when estimating log fold changes in the ratio.
-Although they considered measures of relative abundance (proportions and ratios), the same underlying error dynamics apply to methods for inferring cell densities from MGS, which themselves are based on MGS-derived proportions or ratios.
-Together, these results of @mclaren2019cons indicate that taxonomic bias may lead to spurious DA results, but may be more problematic for certain experimental and analytical approaches than others.
+The typical approach to countering taxonomic bias in DA analysis is to standardize the measurement protocol used within a given study.
+In broad strokes, the thinking is that the measurements of samples measured by the same protocol will be affected by bias in the same way and so the inferred differences between samples (the focus of DA analysis) will be unaffected.
+For example, if taxonomic bias consistently causes the measured proportion of a given species to be 10X too high, we can still accurately infer its fold changes across samples.
+@kevorkian2018esti and @lloyd2020evid were the first (to our knowledge) to make this argument explicit mathematically; however, @mclaren2019cons used a theoretical model (supported by measurements of defined bacterial communities) to show that consistent taxonomic bias can lead to variable fold errors in measured proportions.
+These varying errors can lead to spurious conclusions for how the proportion of a taxon varies across samples, even in the direction of change (for example, causing a taxon that decreases appear to increase).
+Yet @mclaren2019cons also found that certain changes in relative abundance---in particular, fold changes in the ratios among species---are robust to the effects of bias.
+The implications of these findings for changes in absolute abundance---which remain subject to taxonomic bias in the underlying MGS measurement---and for DA analysis across many species and many samples---as commonly done in microbiome association testing---have yet to be investigated.
 
-<!-- P: What is needed? -->
+<!-- P: Objective and summary of the present article -->
 
-Here we address a number of crucial remaining questions about the impact of taxonomic bias on DA analysis:
-
-- How do these results for the changes between a pair of samples extend to the proto-typical DA analysis of a (linear) regression over many samples?
-- How does taxonomic bias affect the wide variety of abundance measures, and methods for converting relative to absolute abundance, which are currently used in DA analyses?
-- What is the impact on DA analysis of taxonomic bias and other forms of error in the supplemental measurements (such as cytometry and bulk 16S qPCR) that are commonly combined with MGS to obtain absolute abundances?
-- What is the impact of variation in efficiency within a taxon on DA analysis of the taxon? (e.g. what is the impact of variation in efficiency among Firmicutes species on the infered change in Firmicute abundance?)
-- Last but not least, for which biological scenarios is taxonomic bias likely and not likely to lead to biologically significant inferential errors?
-
-We address these questions through a combination of mathematical analysis, simulation, and analysis and interpretation of data from previously published experiments.
-
-<!-- P: Solutions -->
-
-A second reason that taxonomic bias is generally not addressed (beyond protocol standardization) is a severe lack of proposed, tractable solutions to address it.
-We propose and demonstrate several methods for quantifying, correcting, or otherwise accounting for the effect of taxonomic bias in DA analyses that can be widely deployed today with only modest changes to existing experimental and analytical workflows.
-Over time, application of these methods to past and future experiments will provide crucial quantitative information about taxonomic bias and the conditions under which spurious results arise for particular DA methodologies.
-Collectively, these methods and insights can provide a practical solution to taxonomic bias in DA analysis and the confidence that is necessary to codify our statistical findings into scientific knowledge and translate them into real-world diagnostics and interventions.
+Here we use a combination of theoretical analysis, simulation, and re-analysis of published experiments to consider when and why taxonomic bias in MGS measurements leads to spurious results in DA analysis of relative and absolute abundance.
+Our analysis clarifies how the folk wisdom that taxonomic bias does not affect the analysis of change across samples is only partially correct and can give a false sense of security in the accuracy of DA results.
+Yet we also present several potential solutions---methods for quantifying, correcting, or otherwise accounting for the effect of taxonomic bias in DA analyses that can be deployed today with only modest changes to existing experimental and analytical workflows.
+Over time, application of these methods to past and future experiments will provide crucial quantitative information about taxonomic bias and the conditions under which spurious results arise for various DA methodologies.
+Collectively, these methods and insights may provide practical solutions to taxonomic bias in DA analysis and the confidence that is necessary to codify the statistical findings of microbiome studies into readily-translatable scientific knowledge.
 
