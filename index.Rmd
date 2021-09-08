@@ -1,5 +1,5 @@
 ---
-title: "Taxonomic bias can create spurious results in microbiome differential-abundance analyses unless it is properly accounted for"
+title: "Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements"
 author:
   - Michael R. McLaren^[North Carolina State University; send correspondence to m.mclaren42@gmail.com]
   - Karen G. Lloyd^[University of Tennessee]
