@@ -1,59 +1,60 @@
-# Implications for real-world inference 
+# Implications for real-world inference {#implications}
 
-These observations show that the effects of taxonomic bias do in fact cause error in proportion-based differential abundance analyses.
-Yet if the mean efficiency varies much less across samples than the abundances of individual taxa, this error will be negligible.
-Alternatively, if variation in the mean efficiency is effectively random (not associated with regression covariates), the effect of bias may be to increase the residual variance and thus reduce our statistical power to assay differential abundance—unfortunate to be sure, but perhaps not as much as confidently inferring changes with the wrong sign or magnitude.
-But there are salient biological scenarios where substantial associations between the mean efficiency and covariate can in fact lead to spurious differential abundance inference.
-   
-## Scenarios in which bias may cause spurious results
+Partial but not full canceling of the effect of bias in proportion-based analyses, such that possible to have spurious results in principle; but what about in practice?
+Predicting how frequently or which results are likely to be majorly affected is difficult because it depends on the joint variation in efficiencies of species and species abundance dynamics, both of which are poorly understood in most to all biological systems. 
+However, through a combination of theoretical considerations, hypothetical scenarios, and real case studies we can begin to develop an understanding or the relevant considerations and build framework for improving our understanding as our knowledge of these dynamics improves.
 
-Figure \@ref(fig:vaginal-example) illustrates how a change in dominance by from a high- to low- efficiency taxon (or vice versa) can easily create spurious DA results.
-Indeed, this scenario may be particularly common in vaginal microbiome studies.
-Human microbiomes often dominated by *Lactobacillus*, but can become dominated by non-*Lactobacillus* species such as *Gardnerella* vaginalis and *Atopobium vaginae*, and these low-*Lactobacillus* states are associated with the disease bacterial vaginosis and, in pregnant women, an increased risk of preterm birth.
-Using mock community measurements from @brooks2015thet, @mclaren2019cons showed that the efficiency of two common *Lactobacillus* species were 20-30X greater than *G. vaginalis* and *A. vaginae*.
-Therefore we should expect samples dominated by *Lactobacillus* to have a much larger mean efficiency than those those dominated by *G. vaginalis* and *A. vaginae*, which would distort the observed associations of all taxa with any covariate that is also associated with *Lactobacillus* dominance.
-The extraction and 16S sequencing protocol used by @brooks2015thet is similar to that used in the VaHMP MOMs-PI study also led by these researchers to investigate the associations of these taxa with preterm birth (@fettweis2019thev), demonstrating the potential for serious real-world consequences for these statistical/technical concerns.
+## Systematic error in slope or LFC estimates
 
-- Discussion of the vaginal example in the above paragraph should be distilled in conjunction with the discussion of this example in the previous section
-- Group-B strep / S. agalactiae is another "pathobiont" that has a low efficiency and I might as well included here for completeness. Can cite brooks2015thet and pace2021comp
+Recall from Section \@ref(differential-abundance) that the error in the slope or LFC in a DA regression analysis is proportional to the covariance of the log mean efficiency with the covariate.
+This covariance can be split into two components: the standard deviation of (log) mean efficiency and its correlation with the covariate.
+Hence when considering whether taxonomic bias creates large error, it can be useful to separately ask whether the mean efficiency is likely to vary across samples and whether it is likely to be correlated with a covariate of interest.
 
-Similar dynamics occur in a plant-fungal interactions experiment performed by @leopold2020host (Figure \@ref(fig:regression-example)).
-The authors inoculated commensally-colonized trees with a fungal pathogen.
-Using DNA mock communities, they showed that (excluding bias from DNA extraction) the pathogen was 10X more efficiently measured than the median commensal and 40X more efficiently measured than the lowest-efficiency commensal.
-In most hosts, the pathogen increased rapidly between timepoints, driving an increase in the sample mean efficiency that in turn leads to larger decreases being observed in the proportions of commensal taxa than what is predicted using calibrated (bias-corrected) values (REF APPENDIX).
-For example, the calibrated proportions indicate that the commensal *Penicillium* slightly increased in hosts from the Eastern US and slightly decreased in hosts from the Western US.
-Yet the observed (uncalibrated) proportions show moderate and large decreases, respectively (Figure \@ref(fig:regression-example) above).
+One approach to studying the mean efficiency empirically is to analyze data from studies for which control measurements allow direct measurement of species' efficiencies.
+@brooks2015thet performed 16S rRNA gene sequencing of mock communities of seven bacterial species thought to play a critical role in the human vaginal microbiome with the MGS protocol developed for the Vaginal Human Microbiome Project (VaHMP). @mclaren2019cons later used this data to estimate the efficiencies of these seven species and develop a method to use these estimates to infer the true compositions of natural samples (see Section \@ref(#calibrate-compositions)).
+SI Analysis (MOMS-PI) uses these estimated efficiencies to correct the compositions and explore the implied variation in mean efficiency in the VaHMP's Multi-Omic Microbiome Study: Pregnancy Initiative (MOMS-PI) @fettweis2019thev.
+The vaginal microbiome during pregnancy is characterized by relatively low diversity, often with a single _Lactobacillus_ species often forming a majority of reads (considered to be the healthy state) but with occasional shifts to high proportions of other species, such as _Gardnerella vaginalis_, _Atopobium vaginae_, and _Streptococcus agalactiae_, which are thought to cause or indicate poor vaginal health and increased risk of preterm birth.
+The analysis of @mclaren2019cons showed that the efficiencies of two common _Lactobacillus_ species, _L. crispatus_ and _L. iners_, were 20-30X greater than that of _G. vaginalis_, _A. vaginae_, and _S. agalactiae_.
+Analysis of microbiome trajectories of a single patient across visits indicates that the mean efficiency typically decreases by a factor of 3-10X when the community shifts from a high to low-_Lactobacillus_ state.
+(NOTE: This is a super preliminary claim based on looking at just one woman, and is just a placeholder)
+Decreases in mean efficiency during transitions from _Lactobacillus_ to _Gardnerella_ dominance can be expected to be even more extreme for commonly-used vaginal microbiome primers that fail to amplify _Gardnerella_.
 
-- In last sentence, insert the the values of the LFCs (ideally with evaluated R code)
+<!-- Can cite brooks2015thet and pace2021comp for Group-B strep / S. agalactiae as a "pathobiont".  -->
 
-These examples involved scenarios where individual taxa can constitute a large proportion of the community.
-But in samples from highly-diverse ecosystems such as human gut, soil, and ocean sediment, one species rarely dominates.
-In these cases it might seem intuitive that the mean efficiency should be relatively stable across samples: As diversity increases, the mean efficiency effectively averages over efficiencies from a greater number of taxa and so (by the central limit theorem) will converge to a constant value—if taxon efficiencies are statistically independent of taxon abundances (REF APPENDIX).
-In practice, associations between efficiencies and abundances may be common and can allow large shifts in mean efficiency to occur even in highly diverse samples.
+A second study in which control communities make it possible to directly analyze the impact of taxonomic bias in experimental samples was performed by @leopold2020host.
+To study the interactions between a host plant and its fungal commensals and pathogen, the authors inoculated trees with a fungal synthetic community and later exposed plants to a fungal pathogen.
+The authors used ITS amplicon sequencing to measure communities before and after infection, along with mock communities which they used to estimate the species efficiencies with the method of @mclaren2019cons.
+(DNA mocks were used, so that bias due to DNA extraction is not included, but other major bias sources such as PCR and ribosomal copy-number-variation are included.) The pathogen was 10X more efficiently measured than the median commensal and 40X more efficiently measured than the lowest-efficiency commensal.
+A re-analysis of their data (SI Analysis) shows that the mean efficiency varies by ??? in pre-infection communities and by an average of ??? pre- and post-infection, with the latter driven by the dramatic increase in the high-efficiency pathogen.
 
-- on the example of 'ocean sediment' in the above P: I asked KL "is it reasonable to characterize the ocean sediment communities from your 2020 paper as "high diversity"? In particular, species- or OTU-level Inverse Simpson values are what's relevant here. I'm guessing it's intermediate diversity - much less than gut and soil, but much more than the vaginal microbiome", and she replied "The total microbial diversity in marine sediments worldwide is similar to that of soil. I'll email you Hoshino et al., 2020 which addresses this." However I'm not sure if the high diversity KL is noting applies to individual soil samples (i.e. what scale)
-- Should make sure the above paragraph's claims are precise and accurate; see AW's feedback
-- "As diversity increases" specifically refers to inverse simpson diversity / q=2. Should I explicitly state that?
-- "statistically independent of taxon abundances" - I need to make sure I'm being accurate/precise here. What do we actually know? Maybe simpler to say, if taxon efficiencies are not correlated with taxon abundance
+These case studies indicate that one mechanism for variability in the mean efficiency is swings between very high ($\sim 1$) and low ($\ll 1$) proportions of species with particularly high or low efficiencies.
+In highly diverse ecosystems, as seen in soil and the human gut (CHECK), one species rarely dominates within a given sample and so such large swings are not possible.
+We might therefore think that the mean efficiency will remain fairly stable in these settings.
+In fact, one can show mathematically that in randomly assembled communities, the mean efficiency becomes more stable as (Inverse Simpson) diversity increases, as the mean effectively averages over a greater number of species.
+Real communities do not assemble randomly, however.
+Variance in the mean efficiency may remain high if environmental filtering leads to different groups of organisms dominating in different environments, particularly if shared phenotypic values or evolutionary history causes these groups to differ in their efficiencies as well as their ecology.
+For example, gut microbiomes typically have high diversity at the species level but are dominated by just a small number of phyla, and two in particular: The Bacteroidetes and the Firmicutes, the ratio of which varies substantially across individuals (CHECK).
+Many DNA extraction protocols have been found to more efficiently lyse Gram-negative Bacteroidetes species than Gram-positive Firmicutes species (though variation can also be substantial within phyla, @mclaren2019cons).
+Gut samples with large differences in their Bacteroidetes and Firmicutes proportions may therefore have large variation in mean efficiency even if the individual species within each phylum never reach a large proportion.
+On the other hand, competitive-exclusion dynamics can favor more stable taxonomic and/or phenotypic compositions across samples and might thereby drive a more stable mean efficiency than under random assembly
 
-The human gut provides a clear example of how such associations might arise.
-Gut microbiomes typically have high diversity at the species level but are dominated by just a small number of phyla, and two in particular: The Bacteroidetes and the Firmicutes.
-The ratio of Bacteroidetes to Firmicutes can shift substantially between individuals and has been linked to a number of host traits and health conditions.
-In addition, many DNA extraction protocols more efficiently lyse Gram-negative Bacteroidetes species than Gram-positive Firmicutes species (though there can also be significant variation in extraction efficiency among species within these phyla (@mclaren2019cons).
-For such protocols, we should expect Bacteroidetes-dominated samples to have substantially larger mean efficiencies than Firmicutes-dominated samples, regardless of species-level diversity.
-This association of efficiency with phylum abundance will distort DA inferences at any taxonomic level if the covariate is also associated with these phyla.
+Systematic error in DA results requires that the variation in log mean efficiency is correlated with the covariate.
+The examples above each suggest plausible biologically-significant scenarios in which such correlations might arise.
+For example, in the vaginal microbiome a decline in _Lactobacillus_ and rise of species including _Gardnerella vaginalis_ is associated with preterm birth in pregnant women; hence the variation in mean efficiency driven by these species may also create an association of mean efficiency with preterm status.
+In the plant-fungal experiment of @leopold2020host, the increase in pathogen proportion after infection leads to a large increase in the mean efficiency over time, which systematic increases the observed decline in the proportions of commensal species (SI Analysis).
+The ratio of Bacteroidetes to Firmicutes has been linked to several host traits and health conditions, and thus the variation in efficiency between these two phyla may also drive an association of mean efficiency with these traits.
 
-- mclaren2019cons measures overall extraction efficiency, not lysis efficiency; is that important for the above text?
+<!-- General mechanisms -->
 
-This example illustrates a general mechanism by which association between the abundances and efficiencies of taxa are created by the common influence of evolutionary history.
-Just as shared evolutionary history creates positive associations in ecological traits that drives positive correlations in how related taxa vary in abundance across samples, so does it create positive associations in bias-related traits that can lead to similar efficiencies among closely related taxa.
-Such phylogenically-associated, bias-affecting traits include cell-wall toughness, ribosomal-operon copy number, binding affinity for a given set of primers, and representativeness in taxonomic databases.
-Ecology and efficiency are both affected by the same evolutionary history, leading to positive associations between the two: A change in diet that increases the relative abundances of many Bacteroidetes species also increases the relative abundance of many easy-to-lyse species.
+Are there general mechanisms by which we might expect associations to arise between mean efficiency and the covariates commonly of interest in microbiome studies?
+One possibility is that the ecology and measurement efficiency of species may become correlated simply due to shared evolutionary history.
+A species' efficiency is heavily influenced by genetically determined traits such as cell-wall structure, ribosomal-operon copy number, sequence in a primer-targeted region, GC content, and even whether the species is present in a given taxonomic database.
+Shared evolutionary history among phylogenetically-close species is expected and has been observed to create positive associations in these traits among more closely related species, such that we should expect a significant degree of phylogenetic conservation in efficiency.
+Meanwhile, the same shared evolutionary history creates phylogenetic conservation in ecological traits that drives species abundance dynamics.
+In this way, we may expect evolution to lead to a situation in which groups of species with similar efficiencies have similar shifts in abundance between conditions, creating the potential for commensurate shifts in mean efficiency.
+For example, a change in diet that favors Bacteroidetes species relative to Firmicutes based on the resulting gut conditions will also increase the relative abundance of easy-to-lyse species.
 
-- first sentence in above P: "the abundances and efficiencies" - the idea is that both are determined by genetically encoded traits
-- this is prob a tricky idea for readers and will have to take care in communicating it, and find nice refs
-
-Associations between measurement efficiency and relative abundance can also arise because a single trait affects both.
+Associations between efficiency and abundance can also arise more directly when a single microbial trait affects both.
 For example, microbes at the ocean floor are slowly buried, sinking into a low nutrient, low oxygen environment.
 @lloyd2020evid estimate the log fold change in the estimated absolute abundance of various taxa with sediment depth (as a proxy for time) to determine which taxa are able to persist and even grow in this difficult environment.
 It is plausible that microbes with tougher cell walls would tend to persist longer (alive or dead) in the sediment, while at the same time being more difficult to extract DNA from than microbes with weaker cell walls.
@@ -61,40 +62,43 @@ As the relative abundance of tougher species increases with depth, the mean extr
 This decrease would increase the inferred log fold changes and could lead to inferred growth of taxa that are actually just persisting or even slowly dying off.
 Another example of a trait that might simultaneously affect efficiency and relative abundance is ribosomal copy number, which increases the measurement efficiency in ribosomal amplicon experiments and is also linked to differences in ecology and population dynamics among species.
 
-### Error in absolute abundance measurements
+<!-- P: relative magnitude of species and mean efficiency changes -->
+The biological significance of the error in $\hat \beta$ depends on the relative magnitude of the LFC (or covariance with the covariate $x$) in the focal species vs in the mean efficiency.
+It may generally be true that the largest species LFCs in a DA analysis, which are often of primary interest in a microbiome study, will tend to be larger than the LFC of the mean efficiency, at least in high-diversity settings.
+(This seems intuitively likely and true in examples, but I haven't analyzed it much mathematically and don't have a firm handle on this question.)
+Further investigation into this question may improve our confidence in the top hits identified in published DA analyses meeting certain conditions.
+However, we must remain weary of cases (as in the vaginal-microbiome and plant-fungal-interactions examples above) in which a shift in a single species can drive large changes in mean efficiency and lead to significant errors for all other species.
+The experimental and computational methods discussed in Section \@ref(solutions) can mitigate taxonomic bias in these clearly-problematic cases while also helping to amass empirical evidence on the conditions in which bias is unlikely to cause major inferential errors.
 
-- Ben flags that this concept/section main idea should be highlighted more
-
-So far we have ignored error associated with our absolute abundance measurements.
-In fact, these measurements can also have a tendency to measure contributions from some taxa more efficiently than others.
-**TODO: State how this could create problems.
-Might also note the ambiguity in what the truth/target is (e.g.
-live cells, or all cells; cells, or 16S rRNA gene copies; observations in Jian, Salonen, and Korpela 2021).**
-Interestingly, taxonomic bias may actually make qPCR a better method for absolute quantification than cell counting for 16S rRNA gene sequencing experiments.
-16S rRNA gene qPCR measures the concentration of 16S rRNA gene copies in the extracted DNA and is therefore necessarily affected by three large sources of bias in 16S rRNA gene experiments: extraction, amplification, and copy-number variation.
-Yet these biases are shared by the sequencing measurement.
-Though they make qPCR measurements a bad proxy for total cell density^[See note from KL below], when used for absolute differential abundance inference the shared bias in the qPCR and sequencing measurements can offset each other, leading to estimated fold changes that are relatively unaffected by taxonomic bias.
-(Jian, Salonen, and Korpela 2021 suggests some of these ideas and APPENDIX gives a mathematical justification.)
-If common primers are used by qPCR and 16S rRNA gene sequencing, the bias due to primer mismatches and other sources of variation in amplification could even be accounted for in this manner.^[See discussion below]
-Yet ideally we would still be able to estimate and correct remaining error due to unshared bias or to mechanisms, such as saturation during DNA extraction, that could break the assumed proportionality between qPCR measurements and total abundance.
-
-- from KL on qPCR being a bad proxy: We showed this empirically for all published measurements in marine sediments in Lloyd et al., 2013 doi:10.1128/AEM.02090-13. Apologies for the self-citation.
-- In the above sentence "If common primers are used...", KL asked a question that shows I'm not being clear enough about what I'm talking about here. KL: "Wouldn't you want to use taxa specific primers for qPCR and general primers for the amplicon libraries to do this analysis? If they're the same primer sets, then it doesn't tell you anything about the relative abundance of individual taxa within the population grabbed by the primers." my reply: "The "solutions" section talks about using targeted qPCR; this section is talking about qPCR with "universal" primers for the purpose of estimating the total absolute abundance, for use in FRAxC instead of cell counting. There have been quite a few papers doing this recently and 16S sequencing companies are starting to offer it as a service so I've been thinking through the implications. This section needs to be expanded and the point I'm making about using qPCR for FRAxC is still somewhat preliminary and something we should chat about"
-- should caveat something like 'Unfortunately, qPCR shares a limitation with DNA-based measurements: It assumes linearity of DNA extraction'
-    - this should start own paragraph on this issue. For now, can be a 2 sentence paragraph and ref the appendix.
+- TODO: Address DA analysis of aggregate (or synthetic) taxa, such as phyla, which may be prone to errors due to changes in the species-level make-up of the taxon.
 
 
-## Section conclusion
+**Error in total-density measurements:**
 
-These examples show that there is potential for bias to distort DA results in both low and high diversity settings, but its effects may be negligible in many studies.
-By applying the types of methods demonstrated here to a range of biological and experimental contexts, and further developing theory, we will deepen our understanding of when bias is unlikely to significantly distort biological findings.
+So far we have ignored error in total-density measurements that are used to convert estimated proportions to estimated densities;
+however, in reality these measurements are likely to contain substantial systematic error that can either worsen or improve the error in LFC estimates.
 
-(prob move to the conclusion:)
-With this knowledge in hand we will be better placed to make the inevitable tradeoffs when designing new experiments (in terms of how much bias-mitigation measures to use) and also be better able to evaluate our confidence in past results.
+- Todo: Add to previous section or Appendix with the relevant theory.
 
-## Notes for revision
+To understand how, we can consider the question of whether bulk 16S qPCR or flow cytometry is a more appropriate method of measuring total bacterial density for use in proportion-based density measurement (@galazzo2020howt, @jian2021comm).
+16S rRNA-gene qPCR measures the concentration of 16S rRNA gene copies in the extracted DNA and is therefore affected by variation among species in DNA extraction efficiency, 16S copy number, and primer-binding and amplification efficiency.
+For example, @mclaren2019cons found that the product of extraction efficiency and 16S copy number for _Lactobacillus iners_ was 20X larger than _Gardnerella vaginalis_ (CHECK NUMBERS), such that we should expect samples dominated by _L. iners_ to result in qPCR estimates 10-20X higher than equally dense samples dominated by _G. vaginalis_.
+These observations suggest that 16S qPCR is a poor proxy for fold changes in total bacterial density.
+Yet, as recently suggested by @jian2021comm, this taxonomic bias in qPCR may simultaneously make it a good measure of total density for use with 16S amplicon sequencing for proportion-based density estimation.
+16S amplicon sequencing shares these same sources of bias and so is likely to have species efficiencies highly similar to those for the qPCR measurements, which we can predict to cause the mean 16S-qPCR efficiency to closely follow the mean 16S-sequencing efficiency, such that the error induced by one largely cancels the error induced by the other (Ref Appendix).
+In contrast, species-specific efficiencies in bulk cell counting are less likely to be strongly correlated with those from 16S sequencing.
+Even supposing cell counting were to provide perfectly accurate measures of total density, it may actually perform worse than qPCR for DA analysis of proportion-based density estimation precisely because the error does not mirror that in the 16S measurement.
 
-Include simulation results indicating that bias might not be a problem.
+On the other hand, bulk or targeted measurement (or DNA spike-ins) that occurs post DNA-extraction is subject to other error that is not likely to counter that of the 16S-based proportion estimates.
+The yield of DNA extraction can show highly random variation and also be highly non-linear (as a function of cellular biomass) at high concentrations.
+This features create error that is unlikely to offset the variation in mean efficiency in the 16S sequencing (todo: clarify why).
+Targeted measurement of cells and cellular spike-ins, discussed in Section \@ref(solutions), can avoid this issue while also facilitating ratio-based analysis while (unlike bulk cell counting) remaining robust mean-efficiency variation.
 
+## Loss of power and precision (stub)
 
-Outline?
+Variation in mean efficiency that is not associated with covariates can still majorly hinder the goals of microbiome studies by causing reductions in the precision of LFC estimates and the power to detect true associations of a given size.
+
+- Illustrate with case studies?
+- Mention counting noise as an important factor that we've so far ignored but that can interact with taxonomic bias to lead to very low precision in LFC estimates. Low efficiency can put a species below the detection limit set by sample read depth, making it impossible to get precise LFCs. Study-specific efficiencies can explain why associations often do not replicate across studies. Example: _Gardnerella vaginalis_ associations are not detected in certain vaginal microbiome studies that used V13 primers which we now know are bad at amplifying it.
+- Conclude with a nod to the value of the solutions in Section \@ref(solutions) to address these issues: Correcting the errors caused by mean-efficiency variation can improve precision, and bias-sensitivity analysis and bias-aware meta-analysis can give a better sense of the increased uncertainty in LFC estimates due to unknown efficiencies, thereby helping us to understand the increased rate of false positives and/or the larger range of LFC estimates that are compatible with the observed data than what is implied by a bias-free model.
+
