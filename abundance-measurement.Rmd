@@ -77,9 +77,19 @@ svg_path <- here("figures/illustrations/error-proportions.svg")
 if (knitr::is_html_output()) {
   knitr::include_graphics(svg_path)
 } else if (knitr::is_latex_output()) {
-  cowplot::ggdraw() + cowplot::draw_image(svg_path)
+  # cowplot::ggdraw() + cowplot::draw_image(svg_path)
+  pdf_path <- file.path("/tmp", "bookdown-differential-abundance-theory",
+    "error-proportions.pdf")
+  args <- c(
+    "--export-area-page", 
+    "--export-type=pdf", 
+    str_c("--export-filename=", pdf_path),
+    svg_path
+  )
+  system2("inkscape", args = args)
+  knitr::include_graphics(pdf_path)
 }
-rm(svg_path)
+rm(svg_path, pdf_path)
 ```
 
 (ref:cap-error-proportions) **Taxonomic bias creates sample-dependent multiplicative errors in species proportions, which can lead to inaccurate fold changes between samples.** Top row: Error in proportions measured by MGS in two microbiome samples that contain different relative abundances of three species. Bottom row: Error in the estimated fold-change in the third species that is derived from these measurements.
