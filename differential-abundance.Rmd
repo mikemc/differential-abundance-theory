@@ -4,8 +4,6 @@ How do the measurement errors described in the previous section impact our abili
 Though there are many ways to quantitatively define such change, here we restrict our attention to inferring the multiplicative or (equivalently) log fold change in proportions, ratios, and cell densities, as such inference is ubiquitous in microbiome DA analysis and have more direct ecological interpretations (via the processes of exponential growth and death) than other DA measures.
 These measures of DA are also affected by taxonomic bias in our model in a manner that is straightforward to understand in terms of the multiplicative errors described in the previous section.
 
-- Maybe: Add a final sentence summary that the constant multiplicative error in ratio-based abundance estimates does not affect DA measurement, but the varying error induced by variation in the mean efficiency affects DA analysis on proportion-based estimates.
-
 ## Change between a pair of samples
 
 Before considering the stereotypical many-sample DA analysis, it is instructive to 
@@ -85,10 +83,6 @@ The results for proportion-based density estimates with accurate total densities
 Similar results apply to microbiome regression tools (such as corncob; @martin2020mode) that perform regression on the logit (instead of log) proportion of a species; however, 
 the mean efficiency of the entire sample must instead be replaced with the mean efficiency among all species excluding the focal species, which causes the absolute error in regression coefficients to vary somewhat across species.
 Because ratios and ratio-based densities are subject to consistent multiplicative error, in analysis of log ratios and the log densities derived from them, only the estimated intercept $\hat \alpha$ is affected by taxonomic bias, while the point estimate and standard error of the estimated slope $\hat \beta$ remain unaffected.
-
-- Important complications to mention:
-  - Error in total density or targeted density estimates
-  - Counting error (so far ignored) can lead to missed associations of species with low measurement efficiencies. Example: G. vaginalis associations are not detected by several studies that use certain V13 primers that simply don't amplify this species well. This is a case where the precision in estimated associations is dramatically reduced, by a different mechanism than what is described above.
 
 <!-- Figure: Regression example -->
 

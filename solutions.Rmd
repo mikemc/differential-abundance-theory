@@ -4,8 +4,6 @@ The theoretical results from Section \@ref(differential-abundance) suggest a num
 We present five that seem particularly promising:
 The first three are method for correcting or otherwise account for the effects of taxonomic bias to obtain more accurate DA results, whereas the second two treat the measurement efficiencies as unknown parameters and seek to understand the additional uncertainty they create, either in the results of individual studies or in joint analysis of multiple studies that used different MGS protocols.
 
-- Somewhere note that we're considering ideas beyond 'MGS protocol optimization', but that is still important - tuning protocols to reduce taxonomic bias, and to make it as consistent as possible across samples. (Our results confirm the importance of both of these)
-
 ## Calibrate compositions using community controls {#calibrate-compositions}
 
 The most complete but experimentally challenging approach to mitigating taxonomic bias involves directly measuring the efficiencies of individual species using control samples (@mclaren2019cons).
@@ -16,17 +14,7 @@ These calibrated compositions can then be used for arbitrary downstream microbio
 Calibration of species not in the controls requires first imputing their efficiencies from the control measurements, for example using phylogenetic relationships, genetic characteristics (such as 16S copy number), and/or phenotypic properties (such as cell-wall structure).
 Though such imputation is conceptually straightforward to implement, its reliability and utility remain untested.
 
-- The above states the gist; can also have a paragraph with description/discussion of how this is/has been used so far, and ongoing developments and challenges. Some bullets for this follow.
-- A mock-community approach may be sufficient for synthetic-community experiments, where all taxa are culturable, and for relatively simple natural communities like the vaginal microbiome that are dominated by a small number of culturable taxa.
-- But suitable mock controls may not be feasible for most complex natural ecosystems and require significant effort to develop.
-- An closely-related alternative to mocks are controls derived from natural samples, which provide a way to calibrate measurements from protocols to a reference protocol (@mclaren2019cons).
-- A natural fecal standard is currently being developed by [NIST](https://www.nist.gov/programs-projects/human-gut-microbiome-reference-material) and one has recently been made available commercially by Zymo Research ([ZymoBIOMICS Fecal Reference](https://www.zymoresearch.com/collections/zymobiomics-microbial-community-standards/products/zymobiomics-fecal-reference-with-trumatrix-technology)).
-- Ensuring accurate quantification, stability, homogeneity of such controls remains a major challenge.
-- Careful testing is also needed to ensure that the preparation and storage of the controls has not significantly affected the taxonomic bias relative to the experimental samples in a given application.
-- As it is feasible to characterize a single standard much more extensively than a typical community sample, we may be able to obtain an estimated composition we feel comfortable treating as the ground truth. 
-- Yet even when this is not possible, such natural standards can allow us to reconcile results across studies despite not knowing the truth.
-- Given the significant uncertainty about estimated efficiencies (stemming from all the above raised caveats), rather than as providing calibration to the 'truth', the estimated efficiencies might be best seen as priors or hypotheses to inform a bias-sensitivity analysis of the sort described below.
-- Should mention the two extant cases where mocks of relevant taxa have been created: The vaginal-HMP / MOMS-PI study (@brooks2015thet and @fettweis2019thev) and the @leopold2020host plant-fungal experiment. Note that even in these cases, calibration hasn't been much used, partly because of a lack of workflows or understanding of when and why it is necessary. Ideally we can give an illustration; this section can be a good use of the @leopold2020host change-over-time result, though I'm not sure whether to discuss that here or in the 'real-world' section.
+- The above states the approach; can add description/discussion of application to the MOMS-PI and @leopold2020host cases and developments and challenges in availability of control communities
 
 ## Use ratio-based abundance measurement
 
@@ -41,21 +29,6 @@ For the latter, practical options include
 
 TBD what further discussion or illustration to have here.
 
-### notes
-
-For spike-ins, a crucial consideration may be whether the spike-in is added pre- or post-DNA extraction (ref appendix, Harrison).
-Similarly, we must consider whether targeted measurements are made pre extraction (e.g. CFU counting or ddPCR directly on cells) or post extraction (e.g. ddPCR or qPCR of DNA).
-If DNA yield is linear, then either approach should give reliable fold changes; but if DNA yield is non-linear (for example, saturating in higher biomass samples) then systematic errors can still arise with the post-extraction approach, though these may still be reduced compared to proportion-based inference (REF appendix).
-(Why expect to be reduced: This saturation will still be less than what would be imposed by library normalization, though I need to think about this a bit.)
-In additional, substantial random variation in the (log) DNA yield of a sample with a given biomass will reduce the precision of the estimated abundances that is possible with the post-extraction approach in a manner that cannot be circumvented by increasing the number of spike-in or targeted species.
-
-Notes on implementation:
-
-- Targeted measurement 
-- Although solutions can be hacked together, ideally we'd have new statistical tools to jointly model MGS and supplemental measurements or spike-ins and housekeeping taxa.
-- These would account for the uncertainty associated with the targeted measurements, including detection limits, and could naturally allow for handling the fact that targeted taxa may not be present in every sample.
-- The appendix gives some theoretical insight into how to deal with a given reference taxon not being present or detectable in every sample
-
 ## Calibrate fold changes using measurements of targeted taxa
 
 In some cases, we may still which to use a proportion-based approach to analyzing variation in density.
@@ -64,7 +37,7 @@ In this case, targeted measurements of one or more reference species can be used
 Recall that the error in proportion-based log fold changes (LFCs) is shared among species and is equal to the inverse LFC fold change in mean efficiency (Equations \@ref(eq:prop-fc-error) and \@ref(eq:regression-error); Figure \@ref(fig:regression-example)D).
 Consequently, an accurate LFC of one or more reference species can serve as a general validation or used to correct the LFCs of all species.
 
-- NOTE: I'm not sure if I really understand this example below, since I don't see how this interpretation of the Table 1 results mesh with Figure 4
+- Note: I may not correctly understand the next example, since I don't yet see how this interpretation of Table 1 meshes with Figure 4
 
 We illustrate this idea with an example from the study by @lloyd2020evid described in Section \@ref(implications), which estimated doubling times for various taxa from the measured log increase in cell density with burial time in marine sediments.
 The primary analysis, which used proportion-based density estimates, was supported by targeted measurements (qPCR) of 16S concentration for several bacterial and archeal taxa (CHECK).
@@ -89,8 +62,6 @@ The simulated efficiency vectors may be generated to reflect certain hypotheses 
 The utility of such simulations can increase the more we learn about the magnitude of bias in different systems and the taxonomic and protocol features that determine it.
 Future work in developing tools and methods for simulating efficiency vectors and performing bias sensitivity analyses could be a valuable way to assay and improve the reliability of microbiome results—for differential abundance and microbiome analyses more generally.
 
-- Aim to illustrate with a simulated or real example
-
 ## Use bias-aware meta-analysis
 
 So far we have considered analysis of samples subject to the same taxonomic bias;
@@ -98,17 +69,6 @@ however, meta-analysis of microbiome samples measured across multiple studies mu
 This inconsistency in taxonomic bias across studies poses a problem even for ratio-based analyses where the effects of bias might cancel within a study.
 
 A potential solution is to perform a bias-aware meta-analyses that jointly analyzes multiple data from studies while explicitely acknowledges the distinct, unknown taxonomic bias in each study.
-Parametric microbiome meta-analysis models already include sets of species-specific latent parameters to model "batch effects" --- amorphous differences in the measurements of each study.
+Parametric microbiome meta-analysis models already include sets of species-specific latent parameters to model "batch effects"---amorphous differences in the measurements of each study.
 By configuring these models so that these latent parameters correspond to the study and species specific efficiencies, we can increase the biological interpretability of these models and gain ability to determine whether disageements in DA results across studies are due to differences in taxonomic bias or other differences (such as host cohort or study design).
 Using a biophysically motivated model parameterization may also lead to performance gains in terms of increased explanatory power for a given model complexity, as seen for models of mock community measurements by @mclaren2019cons, which can increase improve our ability to find reproducible microbial associations in a given meta-study.
-
-### notes
-
-When the goal is to perform a meta-analysis that combines studies that have used different protocols, the unknown measurement efficiencies of each protocol can be explicitly included as parameters of the statistical model that is used.
-Unknown efficiencies can be included in "compositional" linear modeling frameworks such as ALDEx2, DivNet, and fido simply by adding a protocol-specific term to the linear model of taxon log ratios.
-[*Add sentence on how this can be used for non-compositional analyses.*]
-Thus such bias-aware meta-analyses are already technically feasible and—if bias is truly consistent within a protocol or study—may provide a more powerful alternative to non-parametric or other meta-analysis methods that do not model bias explicitly.
-
-- Aim to  illustrate with a simulated or real example
-
-- Value: If results of individual studies might be fairly robust to unknown bias, then might be able to efficiently (from a statistical POV) pool studies when they biologically agree or rule out bias (under the used assumptions) as the cause of disagreement when they don't agree.

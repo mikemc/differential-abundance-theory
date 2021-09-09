@@ -1,0 +1,86 @@
+# Notes from September 2021 revision
+
+# How taxonomic bias affects abundance measurements {#abundance-measurement}
+
+- Footnote: "This model is the simplest model...total cell number or density (@gloor2017micr) ^[todo: details about this assumption]."
+- Footnote: "The sample-specific factor...and total sequencing-run output.^[todo: add note about how, as defined, sequencing effort typically goes down with total density because of library normalization; also mention that it 'sequencing effort' is sometimes equated with total read count or library size, which is not what we've done here]."
+- on assumption of conserved efficinecy within speies: Note that bias may not be conserved w/in species; might add and ref discussion of synthetic taxa later on
+
+## Relative abundances (proportions and ratios)
+
+
+- after defining species ratios, might note: (Although a proportion is also technically a ratio [of a species to a higher-level taxon], here we use 'ratio' to refer specifically to ratios among species.)
+
+- note: the error is not necessarily consistent for ratios among higher-order taxa
+- note: The proportion equation is analogous to Equation \@ref(eq:ratio-error) (ratio case), with the denominator taxon is the entire taxonomic domain and the relevant efficiency is the weighted average of all species. In fact, both equations can be derived from a more general equation, where the observed ratio of two (potentially non-atomic) taxa equals the true ratio times the ratios of the mean efficiencies within each taxon.
+- note: the results for ratios of higher-order taxa, and of proportions, can both be seen as stemming from a general result where the error in the ratio is the ratio of the mean efficiency within that taxon.
+- perhaps have a box for this
+
+## Absolute abundances (cell densities)
+
+- note: right now I'm not consistently ref'ing the equations where the results come from
+- note about ratio-based density inference: see note left in the abundance-measurement.Rmd 
+
+# How taxonomic bias affects differential-abundance analysis {#differential-abundance}
+
+- Maybe: Add a final sentence summary that the constant multiplicative error in ratio-based abundance estimates does not affect DA measurement, but the varying error induced by variation in the mean efficiency affects DA analysis on proportion-based estimates.
+
+## Change between a pair of samples
+
+## Regression analysis of many samples
+
+- Important complications to mention:
+  - Error in total density or targeted density estimates
+  - Counting error (so far ignored) can lead to missed associations of species with low measurement efficiencies. Example: G. vaginalis associations are not detected by several studies that use certain V13 primers that simply don't amplify this species well. This is a case where the precision in estimated associations is dramatically reduced, by a different mechanism than what is described above.
+
+# Potential solutions {#solutions}
+
+- Somewhere note that we're considering ideas beyond 'MGS protocol optimization', but that is still important - tuning protocols to reduce taxonomic bias, and to make it as consistent as possible across samples. (Our results confirm the importance of both of these)
+
+## Calibrate compositions using community controls {#calibrate-compositions}
+
+- The above states the gist; can also have a paragraph with description/discussion of how this is/has been used so far, and ongoing developments and challenges. Some bullets for this follow.
+- A mock-community approach may be sufficient for synthetic-community experiments, where all taxa are culturable, and for relatively simple natural communities like the vaginal microbiome that are dominated by a small number of culturable taxa.
+- But suitable mock controls may not be feasible for most complex natural ecosystems and require significant effort to develop.
+- An closely-related alternative to mocks are controls derived from natural samples, which provide a way to calibrate measurements from protocols to a reference protocol (@mclaren2019cons).
+- A natural fecal standard is currently being developed by [NIST](https://www.nist.gov/programs-projects/human-gut-microbiome-reference-material) and one has recently been made available commercially by Zymo Research ([ZymoBIOMICS Fecal Reference](https://www.zymoresearch.com/collections/zymobiomics-microbial-community-standards/products/zymobiomics-fecal-reference-with-trumatrix-technology)).
+- Ensuring accurate quantification, stability, homogeneity of such controls remains a major challenge.
+- Careful testing is also needed to ensure that the preparation and storage of the controls has not significantly affected the taxonomic bias relative to the experimental samples in a given application.
+- As it is feasible to characterize a single standard much more extensively than a typical community sample, we may be able to obtain an estimated composition we feel comfortable treating as the ground truth. 
+- Yet even when this is not possible, such natural standards can allow us to reconcile results across studies despite not knowing the truth.
+- Given the significant uncertainty about estimated efficiencies (stemming from all the above raised caveats), rather than as providing calibration to the 'truth', the estimated efficiencies might be best seen as priors or hypotheses to inform a bias-sensitivity analysis of the sort described below.
+- Should mention the two extant cases where mocks of relevant taxa have been created: The vaginal-HMP / MOMS-PI study (@brooks2015thet and @fettweis2019thev) and the @leopold2020host plant-fungal experiment. Note that even in these cases, calibration hasn't been much used, partly because of a lack of workflows or understanding of when and why it is necessary. Ideally we can give an illustration; this section can be a good use of the @leopold2020host change-over-time result, though I'm not sure whether to discuss that here or in the 'real-world' section.
+
+## Use ratio-based abundance measurement
+
+For spike-ins, a crucial consideration may be whether the spike-in is added pre- or post-DNA extraction (ref appendix, Harrison).
+Similarly, we must consider whether targeted measurements are made pre extraction (e.g. CFU counting or ddPCR directly on cells) or post extraction (e.g. ddPCR or qPCR of DNA).
+If DNA yield is linear, then either approach should give reliable fold changes; but if DNA yield is non-linear (for example, saturating in higher biomass samples) then systematic errors can still arise with the post-extraction approach, though these may still be reduced compared to proportion-based inference (REF appendix).
+(Why expect to be reduced: This saturation will still be less than what would be imposed by library normalization, though I need to think about this a bit.)
+In additional, substantial random variation in the (log) DNA yield of a sample with a given biomass will reduce the precision of the estimated abundances that is possible with the post-extraction approach in a manner that cannot be circumvented by increasing the number of spike-in or targeted species.
+
+Notes on implementation:
+
+- Targeted measurement 
+- Although solutions can be hacked together, ideally we'd have new statistical tools to jointly model MGS and supplemental measurements or spike-ins and housekeeping taxa.
+- These would account for the uncertainty associated with the targeted measurements, including detection limits, and could naturally allow for handling the fact that targeted taxa may not be present in every sample.
+- The appendix gives some theoretical insight into how to deal with a given reference taxon not being present or detectable in every sample
+
+## Calibrate fold changes using measurements of targeted taxa
+
+- Note: I may not correctly understand the next example, since I don't yet see how this interpretation of Table 1 meshes with Figure 4
+
+## Perform a bias sensitivity analysis
+
+- Aim to illustrate with a simulated or real example
+
+## Use bias-aware meta-analysis
+
+When the goal is to perform a meta-analysis that combines studies that have used different protocols, the unknown measurement efficiencies of each protocol can be explicitly included as parameters of the statistical model that is used.
+Unknown efficiencies can be included in "compositional" linear modeling frameworks such as ALDEx2, DivNet, and fido simply by adding a protocol-specific term to the linear model of taxon log ratios.
+[*Add sentence on how this can be used for non-compositional analyses.*]
+Thus such bias-aware meta-analyses are already technically feasible and—if bias is truly consistent within a protocol or study—may provide a more powerful alternative to non-parametric or other meta-analysis methods that do not model bias explicitly.
+
+- Aim to  illustrate with a simulated or real example
+
+- Value: If results of individual studies might be fairly robust to unknown bias, then might be able to efficiently (from a statistical POV) pool studies when they biologically agree or rule out bias (under the used assumptions) as the cause of disagreement when they don't agree.
