@@ -1,0 +1,4 @@
+# Knitr cache for posts
+**_cache/
+# Distill site output; this will be copied to the site branch
+_site/

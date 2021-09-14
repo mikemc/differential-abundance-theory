@@ -1,0 +1,10 @@
+---
+title: "About this site"
+description: |
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+This site contains analyses for a manuscript on the impact of taxonomic bias on microbimoe differential-abundance methods.
