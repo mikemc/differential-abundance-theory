@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>B Differential relative abundance | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements</title>
+  <meta name="description" content="B Differential relative abundance | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements" />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="B Differential relative abundance | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="B Differential relative abundance | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements" />
+  
+  
+  
+
+<meta name="author" content="Michael R. McLaren" />
+<meta name="author" content="Karen G. Lloyd" />
+<meta name="author" content="Benjamin J. Callahan" />
+
+
+<meta name="date" content="2021-09-15" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="models.html"/>
+<link rel="next" href="absolute.html"/>
+<script src="libs/header-attrs-2.9/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+TeX: {extensions: ["cancel.js"]}
+});
+</script>
+
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
+<li class="chapter" data-level="1" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>1</b> Introduction</a></li>
+<li class="chapter" data-level="2" data-path="abundance-measurement.html"><a href="abundance-measurement.html"><i class="fa fa-check"></i><b>2</b> How taxonomic bias affects abundance measurements</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="abundance-measurement.html"><a href="abundance-measurement.html#relative-abundances-proportions-and-ratios"><i class="fa fa-check"></i><b>2.1</b> Relative abundances (proportions and ratios)</a></li>
+<li class="chapter" data-level="2.2" data-path="abundance-measurement.html"><a href="abundance-measurement.html#absolute-abundances-cell-densities"><i class="fa fa-check"></i><b>2.2</b> Absolute abundances (cell densities)</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="differential-abundance.html"><a href="differential-abundance.html"><i class="fa fa-check"></i><b>3</b> How taxonomic bias affects differential-abundance analysis</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="differential-abundance.html"><a href="differential-abundance.html#change-between-a-pair-of-samples"><i class="fa fa-check"></i><b>3.1</b> Change between a pair of samples</a></li>
+<li class="chapter" data-level="3.2" data-path="differential-abundance.html"><a href="differential-abundance.html#regression-analysis-of-many-samples"><i class="fa fa-check"></i><b>3.2</b> Regression analysis of many samples</a></li>
+<li class="chapter" data-level="3.3" data-path="differential-abundance.html"><a href="differential-abundance.html#regression-error"><i class="fa fa-check"></i><b>3.3</b> Box: Error in estimated regression coefficients and standard errors</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="implications.html"><a href="implications.html"><i class="fa fa-check"></i><b>4</b> Implications for real-world inference </a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="implications.html"><a href="implications.html#systematic-error-in-slope-or-lfc-estimates"><i class="fa fa-check"></i><b>4.1</b> Systematic error in slope or LFC estimates</a></li>
+<li class="chapter" data-level="4.2" data-path="implications.html"><a href="implications.html#loss-of-power-and-precision-stub"><i class="fa fa-check"></i><b>4.2</b> Loss of power and precision (stub)</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="solutions.html"><a href="solutions.html"><i class="fa fa-check"></i><b>5</b> Potential solutions</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="solutions.html"><a href="solutions.html#calibrate-compositions"><i class="fa fa-check"></i><b>5.1</b> Calibrate compositions using community controls</a></li>
+<li class="chapter" data-level="5.2" data-path="solutions.html"><a href="solutions.html#use-ratio-based-abundance-measurement"><i class="fa fa-check"></i><b>5.2</b> Use ratio-based abundance measurement</a></li>
+<li class="chapter" data-level="5.3" data-path="solutions.html"><a href="solutions.html#calibrate-fold-changes-using-measurements-of-targeted-taxa"><i class="fa fa-check"></i><b>5.3</b> Calibrate fold changes using measurements of targeted taxa</a></li>
+<li class="chapter" data-level="5.4" data-path="solutions.html"><a href="solutions.html#perform-a-bias-sensitivity-analysis"><i class="fa fa-check"></i><b>5.4</b> Perform a bias sensitivity analysis</a></li>
+<li class="chapter" data-level="5.5" data-path="solutions.html"><a href="solutions.html#use-bias-aware-meta-analysis"><i class="fa fa-check"></i><b>5.5</b> Use bias-aware meta-analysis</a></li>
+</ul></li>
+<li class="appendix"><span><b>Appendix</b></span></li>
+<li class="chapter" data-level="A" data-path="models.html"><a href="models.html"><i class="fa fa-check"></i><b>A</b> Measurement models</a>
+<ul>
+<li class="chapter" data-level="A.1" data-path="models.html"><a href="models.html#actual-abundances-and-general-notation"><i class="fa fa-check"></i><b>A.1</b> Actual abundances and general notation</a></li>
+<li class="chapter" data-level="A.2" data-path="models.html"><a href="models.html#metagenomics-measurement"><i class="fa fa-check"></i><b>A.2</b> Metagenomics measurement</a></li>
+<li class="chapter" data-level="A.3" data-path="models.html"><a href="models.html#bulk-absolute-abundance-measurement"><i class="fa fa-check"></i><b>A.3</b> Bulk absolute abundance measurement</a></li>
+<li class="chapter" data-level="A.4" data-path="models.html"><a href="models.html#targeted-absolute-abundance-measurement"><i class="fa fa-check"></i><b>A.4</b> Targeted absolute abundance measurement</a></li>
+<li class="chapter" data-level="A.5" data-path="models.html"><a href="models.html#spike-ins"><i class="fa fa-check"></i><b>A.5</b> Spike-ins</a></li>
+<li class="chapter" data-level="A.6" data-path="models.html"><a href="models.html#complications"><i class="fa fa-check"></i><b>A.6</b> Complications</a>
+<ul>
+<li class="chapter" data-level="A.6.1" data-path="models.html"><a href="models.html#abundances-units-and-protocol-stages"><i class="fa fa-check"></i><b>A.6.1</b> Abundances units and protocol stages</a></li>
+<li class="chapter" data-level="A.6.2" data-path="models.html"><a href="models.html#saturation-in-dna-extraction-yields"><i class="fa fa-check"></i><b>A.6.2</b> Saturation in DNA extraction yields</a></li>
+<li class="chapter" data-level="A.6.3" data-path="models.html"><a href="models.html#taxonomic-resolution-of-measurements"><i class="fa fa-check"></i><b>A.6.3</b> Taxonomic resolution of measurements</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="B" data-path="relative.html"><a href="relative.html"><i class="fa fa-check"></i><b>B</b> Differential relative abundance</a>
+<ul>
+<li class="chapter" data-level="B.1" data-path="relative.html"><a href="relative.html#proportion-based-analyses"><i class="fa fa-check"></i><b>B.1</b> Proportion-based analyses</a>
+<ul>
+<li class="chapter" data-level="B.1.1" data-path="relative.html"><a href="relative.html#log-proportion"><i class="fa fa-check"></i><b>B.1.1</b> Log proportion</a></li>
+<li class="chapter" data-level="B.1.2" data-path="relative.html"><a href="relative.html#log-odds-logit"><i class="fa fa-check"></i><b>B.1.2</b> Log odds (logit)</a></li>
+</ul></li>
+<li class="chapter" data-level="B.2" data-path="relative.html"><a href="relative.html#ratio-based-analyses"><i class="fa fa-check"></i><b>B.2</b> Ratio-based analyses</a></li>
+<li class="chapter" data-level="B.3" data-path="relative.html"><a href="relative.html#higher-order-taxa-formed-by-additive-aggregation"><i class="fa fa-check"></i><b>B.3</b> Higher-order taxa formed by additive aggregation</a></li>
+</ul></li>
+<li class="chapter" data-level="C" data-path="absolute.html"><a href="absolute.html"><i class="fa fa-check"></i><b>C</b> Differential absolute abundance</a>
+<ul>
+<li class="chapter" data-level="C.1" data-path="absolute.html"><a href="absolute.html#using-bulk-abundance-measurements"><i class="fa fa-check"></i><b>C.1</b> Using bulk abundance measurements</a>
+<ul>
+<li class="chapter" data-level="C.1.1" data-path="absolute.html"><a href="absolute.html#shared-bias-components"><i class="fa fa-check"></i><b>C.1.1</b> Shared bias components</a></li>
+</ul></li>
+<li class="chapter" data-level="C.2" data-path="absolute.html"><a href="absolute.html#using-reference-taxa"><i class="fa fa-check"></i><b>C.2</b> Using reference taxa</a>
+<ul>
+<li class="chapter" data-level="C.2.1" data-path="absolute.html"><a href="absolute.html#taxa-with-targeted-abundance-measurements"><i class="fa fa-check"></i><b>C.2.1</b> Taxa with targeted abundance measurements</a></li>
+<li class="chapter" data-level="C.2.2" data-path="absolute.html"><a href="absolute.html#cellular-spike-ins"><i class="fa fa-check"></i><b>C.2.2</b> Cellular spike-ins</a></li>
+<li class="chapter" data-level="C.2.3" data-path="absolute.html"><a href="absolute.html#dna-spike-ins"><i class="fa fa-check"></i><b>C.2.3</b> DNA spike-ins</a></li>
+<li class="chapter" data-level="C.2.4" data-path="absolute.html"><a href="absolute.html#taxa-assumed-to-have-a-constant-abundance"><i class="fa fa-check"></i><b>C.2.4</b> Taxa assumed to have a constant abundance</a></li>
+<li class="chapter" data-level="C.2.5" data-path="absolute.html"><a href="absolute.html#multiple-reference-taxa"><i class="fa fa-check"></i><b>C.2.5</b> Multiple reference taxa</a></li>
+</ul></li>
+<li class="chapter" data-level="C.3" data-path="absolute.html"><a href="absolute.html#using-an-equivolumetric-protocol"><i class="fa fa-check"></i><b>C.3</b> Using an equivolumetric protocol</a></li>
+<li class="chapter" data-level="C.4" data-path="absolute.html"><a href="absolute.html#computational-methods"><i class="fa fa-check"></i><b>C.4</b> Computational methods</a></li>
+</ul></li>
+<li class="chapter" data-level="D" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html"><i class="fa fa-check"></i><b>D</b> Proofs of regression results</a>
+<ul>
+<li class="chapter" data-level="D.1" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#general-regression"><i class="fa fa-check"></i><b>D.1</b> General regression</a></li>
+<li class="chapter" data-level="D.2" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#linear-least-squares-regression"><i class="fa fa-check"></i><b>D.2</b> Linear least-squares regression</a>
+<ul>
+<li class="chapter" data-level="D.2.1" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#linear-regression-of-microbiome-abundances"><i class="fa fa-check"></i><b>D.2.1</b> Linear regression of microbiome abundances</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="E" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html"><i class="fa fa-check"></i><b>E</b> DNA measurement and spike-ins</a>
+<ul>
+<li class="chapter" data-level="E.1" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#expanded-model-and-notation"><i class="fa fa-check"></i><b>E.1</b> Expanded model and notation</a></li>
+<li class="chapter" data-level="E.2" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#targeted-dna-measurement"><i class="fa fa-check"></i><b>E.2</b> Targeted DNA measurement</a></li>
+<li class="chapter" data-level="E.3" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#dna-spike-ins-1"><i class="fa fa-check"></i><b>E.3</b> DNA spike-ins</a></li>
+<li class="chapter" data-level="E.4" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#implications-1"><i class="fa fa-check"></i><b>E.4</b> Implications</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="relative" class="section level1" number="7">
+<h1><span class="header-section-number">B</span> Differential relative abundance</h1>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+TeX: {extensions: ["cancel.js"]}
+});
+</script>
+<p>This section describes the effects of bias on common approaches to analyzing differential relative abundance.
+We introduce the critical distinction between analyses based on proportions and analyses based on ratios.
+Analyses based on proportions can be distorted by bias, whereas analyses of log fold changes (LFCs) in ratios of atomic taxa are invariant to bias.
+If atomic taxa may be aggregated into synthetic taxa by multiplication (or by adding log abundance), and ratios formed from such aggregates; LFCs for such generalized ratios remain bias invariant.
+But if atomic taxa are aggregated additively by summing their read counts—as often done to analyze higher-order taxa such as phyla—then bias invariance only applies if the aggregated taxa have the same efficiency.
+The error induced by bias in (some) proportion-based methods has a simple form that suggests tractable experimental methods by which it may be estimated and corrected, which we discuss in Section <a href="#calibration"><strong>??</strong></a>.
+Section <a href="absolute.html#absolute">C</a> shows that methods for obtaining absolute abundances from MGS data can generally be split into those based on proportions and those based on ratios, so that the proportion-ratio dichotomy also provides a useful framework for understanding analyses of differential absolute abundance.</p>
+<div id="proportion-based-analyses" class="section level2" number="7.1">
+<h2><span class="header-section-number">B.1</span> Proportion-based analyses</h2>
+<div id="log-proportion" class="section level3" number="7.1.1">
+<h3><span class="header-section-number">B.1.1</span> Log proportion</h3>
+<p>To simplify notation where possible, I will write <span class="math inline">\(B\)</span> for <span class="math inline">\(B^{(M)}\)</span> when only the metagenomics measurements are relevant.</p>
+<p>It follows from <a href="models.html#eq:m">(A.3)</a> that the observed fold change in the proportion of taxon <span class="math inline">\(i\)</span> from sample <span class="math inline">\(j\)</span> to <span class="math inline">\(j&#39;\)</span> is
+<span class="math display" id="eq:m-fc">\[\begin{align}
+  \tag{B.1}
+  \frac{m_{ij&#39;}}{m_{ij}}
+  = \frac{a_{ij&#39;} \cancel{B_i} / \bar B_{j&#39;}}{a_{ij} \cancel{B_i} / \bar B_{j}}
+  = \frac{a_{ij&#39;}}{a_{ij}} \cdot \frac{\bar B_j}{\bar B_{j&#39;}}.
+\end{align}\]</span>
+The taxon-specific error term (<span class="math inline">\(B_i\)</span>) cancels, leaving a multiplicative error equal to the inverse change in the sample mean efficiency <span class="math inline">\(\bar B^{(M)}\)</span>.
+Framed in terms of the log fold change, this equation becomes
+<span class="math display" id="eq:m-lfc">\[\begin{align}
+  \tag{B.2}
+  \underbrace{ \log m_{ij&#39;} - \log m_{ij} }_\text{observed LFC}
+  &amp;= \underbrace{ \log a_{ij&#39;} - \log a_{ij} }_\text{true LFC}
+  - \underbrace{ \left(\log \bar B_{j&#39;} - \log \bar B_j\right) }_\text{LFC in mean efficiency},
+\end{align}\]</span>
+so that the additive error is the LFC in mean efficiency between the two samples.</p>
+<p>Analyzing fold changes in a regression framework typically entails considering the expectation of the logarithm of the response conditional on the value of a set of covariates <span class="math inline">\(X\)</span>.
+I use <span class="math inline">\(E [Y \mid X]\)</span> as shorthand for <span class="math inline">\(E [Y \mid X = x]\)</span>, the expected value of a random variable <span class="math inline">\(Y\)</span> given a vector of covariate values <span class="math inline">\(x\)</span>.
+Applying logarithms to <a href="models.html#eq:m">(A.3)</a> gives
+<span class="math display" id="eq:m-log">\[\begin{align}
+  \tag{B.3}
+  \log m_i = \log a_i + \log B_i - \log \bar B
+\end{align}\]</span>
+which, after conditioning on the covariates, becomes
+<span class="math display" id="eq:m-log-regression">\[\begin{align}
+  \tag{B.4}
+  E [\log m_i \mid X] 
+  = E [\log a_i \mid X] + \log B_i - E [\log \bar B \mid X].
+\end{align}\]</span>
+The taxon-specific term <span class="math inline">\(\log B_i\)</span> creates a constant error that is unproblematic for differential abundance analysis, which is typically ignores the baseline abundance of the taxon.
+However, the sample-specific error <span class="math inline">\(\log \bar B\)</span> can distort the inferred relationship between <span class="math inline">\(X\)</span> and the expected value of the true log proportion if its expected value also varies with <span class="math inline">\(X\)</span>.</p>
+<p><strong>TODO: Explain this <span class="math inline">\(\gamma\)</span> notation for the regression coefficients, or find a more recognizable notation.</strong></p>
+<p>Consider the special case of the linear regression
+<span class="math display">\[\begin{align}
+  \log a_i &amp;= X \gamma + \epsilon,
+\end{align}\]</span>
+where <span class="math inline">\(X\)</span> is a <span class="math inline">\(J\times p\)</span> covariate matrix and <span class="math inline">\(\gamma\)</span> is a <span class="math inline">\(p\times 1\)</span> vector of coefficients.
+Suppose we knew the values of each of the terms in <a href="relative.html#eq:m-log">(B.3)</a>.
+Setting each term as the left-hand-side of its own corresponding regression, the least-squares coefficients are related as (<a href="proofs-of-regression-results.html#eq:regression-coefficient-error">(D.2)</a>)
+<span class="math display" id="eq:m-log-regression-coefficients">\[\begin{align}
+  \tag{B.5}
+  \hat \gamma{(\log m_i)} = \hat \gamma{(\log a_i)} + \hat \gamma{(\log B_i)} - \hat \gamma{(\log \bar B)}.
+\end{align}\]</span>
+For the simple linear regression,
+<span class="math display">\[\begin{align}
+  \log a_i &amp;= \gamma_0 + \gamma_1 x + \epsilon,
+\end{align}\]</span>
+with an intercept coefficient <span class="math inline">\(\gamma_0\)</span> and a slope coefficient <span class="math inline">\(\gamma_1\)</span>, the relation <a href="relative.html#eq:m-log-regression-coefficients">(B.5)</a> implies
+<span class="math display" id="eq:m-log-simple-regression-coefficients">\[\begin{align}
+  \tag{B.6}
+  \hat \gamma_0{(\log m_i)} &amp;= \hat \gamma_0{(\log a_i)} + \log B_i - \hat \gamma_0{(\log \bar B)} \\
+  \hat \gamma_1{(\log m_i)} &amp;= \hat \gamma_1{(\log a_i)} - \hat \gamma_1{(\log \bar B)},
+\end{align}\]</span>
+Since <span class="math inline">\(\log B_i\)</span> is constant, it only affects the intercept.
+The slope estimate for the metagenomics proportions, <span class="math inline">\(\hat \gamma_1{(\log m_i)}\)</span>, is systematically decreased from that of the true proportions, <span class="math inline">\(\hat \gamma_1{(\log a_i)}\)</span>, by that for the sample mean efficiency, <span class="math inline">\(\hat \gamma_1{(\log \bar B)}\)</span>.</p>
+</div>
+<div id="log-odds-logit" class="section level3" number="7.1.2">
+<h3><span class="header-section-number">B.1.2</span> Log odds (logit)</h3>
+<p>The proportion of a taxon saturates at <span class="math inline">\(1\)</span> as its absolute abundance increases, while the odds, <span class="math inline">\(a_i / (1 - a_i) = A_i / (A_T - A_i)\)</span>, continue to increase.
+For this reason it is often more natural to perform regression on the log odds, or <em>logit-transformed proportion</em>, rather than log proportion.</p>
+<p>The observed log odds of taxon <span class="math inline">\(i\)</span> is
+<span class="math display">\[\begin{align}
+  \operatorname{logit} m_{ij} 
+  = \log \frac{m_{ij}}{1 - m_{ij}}
+  = \log \frac{M_{ij}}{M_{Tj} - M_{ij}}.
+\end{align}\]</span>
+To understand the effects of bias on the measured log odds, it is helpful to define a variable <span class="math inline">\(\bar B_{-i,j}\)</span> to denote the mean efficiency in sample <span class="math inline">\(j\)</span> among
+taxa <em>other than <span class="math inline">\(i\)</span></em>,
+<span class="math display" id="eq:mean-efficiency-not-i">\[\begin{align}
+  \tag{B.7}
+  \bar B_{-i,j} 
+  \equiv \frac{\sum_{k \ne i} B_k A_{kj}}{\sum_{k \ne i} A_{kj}}
+  = \frac{\sum_{k \ne i} B_k a_{kj}}{1 - a_{ij}}.
+\end{align}\]</span>
+The measured proportion of non-<span class="math inline">\(i\)</span> taxa is
+<span class="math display" id="eq:one-minus-m">\[\begin{align}
+  \tag{B.8}
+  1 - m_{ij}
+  &amp;= \sum_{k \ne i} m_{kj}
+\\&amp;= \sum_{k \ne i} a_{kj} \cdot \frac{B_k}{\bar B_j}
+\\&amp;= (1 - a_{ij}) \cdot \frac{\bar B_{-i,j}}{\bar B_j},
+\end{align}\]</span>
+where the final expression follows from <span class="math inline">\(\sum_{k\ne i} a_{kj} B_k = (1-a_{ij}) \bar B_{-i,j}\)</span>.
+Intuitively, Equation <a href="relative.html#eq:one-minus-m">(B.8)</a> says that the fold error in the proportion of “not-<span class="math inline">\(i\)</span>” equals the mean efficiency of the “not-<span class="math inline">\(i\)</span>” part of the sample relative to the mean efficiency of the sample as a whole.
+This result means that the measured odds of taxon <span class="math inline">\(i\)</span> is
+<span class="math display" id="eq:m-odds">\[\begin{align}
+  \tag{B.9}
+  \frac{m_{ij}}{1 - m_{ij}}
+  &amp;= \frac{a_{ij}}{1 - a_{ij}} \cdot \frac{B_i}{\bar B_{-i,j}},
+\end{align}\]</span>
+This formula resembles Equation <a href="models.html#eq:M-ratio">(A.2)</a> for the measured ratio of two taxa <span class="math inline">\(i\)</span> and <span class="math inline">\(i&#39;\)</span>, but with taxon <span class="math inline">\(i&#39;\)</span> corresponding to all not-<span class="math inline">\(i\)</span> taxa.
+In this case, however, the efficiency of not-<span class="math inline">\(i\)</span> varies among samples as changes in their relative abundances change <span class="math inline">\(\bar B_{-i, j}\)</span>.
+Hence, in contrast to the ratio of two taxa, the error is not consistent across samples.</p>
+<p>The error in the logit of taxon <span class="math inline">\(i\)</span> is
+<span class="math display" id="eq:m-logit">\[\begin{align}
+  \tag{B.10}
+  \operatorname{logit} m_i = \operatorname{logit} a_i + \log B_i - \log \bar B;
+\end{align}\]</span>
+note the log rather than logit operators in the efficiency terms.
+The corresponding regression equation is
+<span class="math display" id="eq:m-logit-regression">\[\begin{align}
+  \tag{B.11}
+  E [\operatorname{logit} m_i \mid X] 
+  = E [\operatorname{logit} a_i \mid X] + \log B_i - E [\log \bar B_{-i} \mid X].
+\end{align}\]</span></p>
+</div>
+</div>
+<div id="ratio-based-analyses" class="section level2" number="7.2">
+<h2><span class="header-section-number">B.2</span> Ratio-based analyses</h2>
+<p>The previous section showed that differential abundance analyses based on proportions may be sensitive to bias, due to the dependence of the multiplicative error in measured proportions on the sample mean efficiency (Equation <a href="models.html#eq:m">(A.3)</a>).
+In contrast, the multiplicative error in the ratios among taxa (Equation <a href="models.html#eq:M-ratio">(A.2)</a>) is independent of sample composition, such that a differential abundance analysis based on log ratios is invariant to bias.
+The simplest such analysis is when “abundance” is equated with the log ratio of two specific taxa; however, any linear combination of log ratios may be used, which includes a variety of so-called Compositional Data Analysis (CoDA) methods that have recently been applied in microbiome DA analysis (see below).
+<span class="citation"><a href="#ref-mclaren2019cons" role="doc-biblioref">McLaren, Willis, and Callahan</a> (<a href="#ref-mclaren2019cons" role="doc-biblioref">2019</a>)</span> described the bias invariance of ratio-based methods (see their Equations 6 and 7).
+Here we show how this general result applies to specific types of differential relative abundance.</p>
+<p>We first consider the ratio a pair of taxa <span class="math inline">\(i\)</span> and <span class="math inline">\(i&#39;\)</span>.
+It follows from Equation <a href="models.html#eq:M-ratio">(A.2)</a> that the measured fold change in the ratio of taxon <span class="math inline">\(i\)</span> to taxon <span class="math inline">\(i&#39;\)</span> from sample <span class="math inline">\(j\)</span> to sample <span class="math inline">\(j&#39;\)</span> is
+<span class="math display" id="eq:M-ratio-fc">\[\begin{align}
+  \tag{B.12}
+  \frac{m_{ij&#39;} / m_{i&#39;j&#39;}}{m_{ij} / m_{i&#39;j}}
+  = \frac{a_{ij&#39;} \cancel{B_i} / a_{i&#39;j&#39;} \cancel{B_{i&#39;}}}
+         {a_{ij} \cancel{B_i} / a_{i&#39;j} \cancel{B_{i&#39;}}}
+  = \frac{a_{ij&#39;} / a_{i&#39;j&#39;}}{a_{ij} / a_{i&#39;j}}.
+\end{align}\]</span>
+The error in each ratio, <span class="math inline">\(B_i / B_{i&#39;}\)</span>, is constant and so cancels completely, leaving the true fold change.
+To see the effect of bias on regression of log ratios, we note that the error equation <a href="models.html#eq:M-ratio">(A.2)</a> implies
+<span class="math display" id="eq:M-ratio-log">\[\begin{align}
+  \tag{B.13}
+%  \log m_i - \log m_{i&#39;} = \log a_i - \log a_{i&#39;} + \log B_i - \log B_{i&#39;} \\
+  \log \frac{m_i}{m_{i&#39;}} = \log \frac{a_i}{a_{i&#39;}} + \log \frac{B_i}{B_{i&#39;}}.
+\end{align}\]</span>
+Taking the conditional expectation given a covariate vector <span class="math inline">\(X\)</span> gives
+<span class="math display" id="eq:m-ratio-log-regression">\[\begin{align}
+  \tag{B.14}
+  E\left[ \log \frac{m_i}{m_{i&#39;}} \mid X \right] 
+  = E\left[ \log \frac{a_i}{a_{i&#39;}} \mid X \right] + \log \frac{B_i}{B_{i&#39;}}.
+\end{align}\]</span>
+In contrast to the case of a log proportion (Equation <a href="relative.html#eq:m-log-regression">(B.4)</a>), the effect of bias on the log ratio is simply to create a constant shift and therefore does not affect differential-abundance analysis.</p>
+<p>CoDA DA methods often draw upon generalized notion of ratio, in which the numerator and/or denominator consist of a product of powers of multiple taxa.
+Such a generalized ratio is determined by length-<span class="math inline">\(I\)</span> vectors <span class="math inline">\(n\)</span> and <span class="math inline">\(d\)</span> giving the power of each taxon in the numerator and denominator, with <span class="math inline">\(n_i = 0\)</span> indicating that the taxon does not affect the term.
+Denoting the actual value of a given generalized ratio in sample <span class="math inline">\(j\)</span> as <span class="math inline">\(y_j\)</span> and the observed as <span class="math inline">\(z_j\)</span>, we have
+<span class="math display" id="eq:generalized-ratio">\[\begin{align}
+  \tag{B.15}
+  \text{actual:}   \quad  y_j = \frac{\prod_i A_{ij}^{n_i}}{\prod_i A_{ij}^{d_i}} &amp;&amp;
+  \text{observed:} \quad  z_j = \frac{\prod_i M_{ij}^{n_i}}{\prod_i M_{ij}^{d_i}}.
+\end{align}\]</span>
+Under the MWC bias model, the observed and actual log ratios are related as
+<span class="math display" id="eq:generalized-ratio-log">\[\begin{align}
+  \tag{B.16}
+  \log z_j &amp;= \log y_j + \log \frac{\prod_i B_{ij}^{n_i}}{\prod_i B_{ij}^{d_i}}.
+\end{align}\]</span>
+Hence, as with the simple ratio between two taxa, the error due to bias is independent of sample composition and so does not affect the observed variation in <span class="math inline">\(\log z_j\)</span>.</p>
+<p>Most of the log-ratio transformations that are used in CoDA DA analysis can be understood as particular applications of the generalized ratio <a href="relative.html#eq:generalized-ratio">(B.15)</a> and thus lead to bias-invariant DA results under the deterministic MWC model.
+For example, the additive log-ratio (ALR) transformation consists of computing the log of the ratios obtained by dividing each taxon’s abundance by that of a particularly chosen reference taxon <span class="math inline">\(r\)</span>,
+<span class="math display" id="eq:alr">\[\begin{align}
+  \tag{B.17}
+  \operatorname{alr} A_{j} = \left[ \log \frac{A_{ij}}{A_{rj}}, \dots, \log \frac{A_{Ij}}{A_{rj}} \right],
+\end{align}\]</span>
+while the centered log-ratio (CLR) transformation instead sets the denominator to the geometric mean <span class="math inline">\(g(A_j) = \left(\prod_i A_{ij}\right)^{1/I}\)</span> of all taxa,
+<span class="math display" id="eq:clr">\[\begin{align}
+  \tag{B.18}
+  \operatorname{clr} A_{j} = \left[ \log \frac{A_{ij}}{g(A_{j})}, \dots, \log \frac{A_{Ij}}{g(A_{j})} \right].
+\end{align}\]</span>
+More generally, one might choose any set <span class="math inline">\(R\)</span> of reference taxa and use their geometric mean in the denominator;
+the ALR and CLR transformations then correspond to taking <span class="math inline">\(R=r\)</span> and <span class="math inline">\(R=I\)</span>, respectively.
+<span class="citation"><a href="#ref-quinn2019afie" role="doc-biblioref">Quinn et al.</a> (<a href="#ref-quinn2019afie" role="doc-biblioref">2019</a>)</span> call this transformation the <em>multiple additive log-ratio</em> (MALR) transformation,
+<span class="math display" id="eq:malr">\[\begin{align}
+  \tag{B.19}
+  \operatorname{malr} A_{j} = \left[ \log \frac{A_{ij}}{g(A_{R,j})}, \dots, \log \frac{A_{Ij}}{g(A_{R,j})} \right].
+\end{align}\]</span>
+The actual and observed MALR-transformed abundance associated with a specific numerator taxon <span class="math inline">\(i\)</span> is
+<span class="math display" id="eq:malr-error">\[\begin{align}
+  \tag{B.20}
+  \operatorname{malr}(M_{j})_i = \operatorname{malr}(A_{j})_i + \operatorname{malr}(B)_i;
+\end{align}\]</span>
+hence the error due to bias is constant and does not factor into the inferred changes in a DA analysis.
+Note: Unlike <span class="citation"><a href="#ref-quinn2019afie" role="doc-biblioref">Quinn et al.</a> (<a href="#ref-quinn2019afie" role="doc-biblioref">2019</a>)</span> we do not include the “robust centered log-ratio transformation” of <span class="citation"><a href="#ref-martino2019anov" role="doc-biblioref">Martino et al.</a> (<a href="#ref-martino2019anov" role="doc-biblioref">2019</a>)</span> as an example of an MALR; this transformation chooses a distinct set of reference taxa for each sample and so does not have bias invariance under the MWC model.</p>
+<p>Other generalized log-ratios commonly used in microbiome data analysis include <em>balances</em>.
+A balance is defined by two sets of taxa, <span class="math inline">\(Q\)</span> and <span class="math inline">\(R\)</span>, and equals the log of the ratio of the geometric mean of <span class="math inline">\(Q\)</span> taxa to the geometric mean of <span class="math inline">\(R\)</span> taxa, multiplied by a scaling factor,
+<span class="math display" id="eq:balance">\[\begin{align}
+  \tag{B.21}
+  \sqrt{\frac{|Q| |R|}{|Q| + |R|}} \log \frac{g(A_{Q,j})}{g(A_{R,j})}.
+\end{align}\]</span>
+Balances have become a popular tool for identifying biomarkers or groups of taxa associated with an environmental or health condition while operating within the CoDA framework (<span class="citation"><a href="#ref-washburne2017phyl" role="doc-biblioref">Washburne et al.</a> (<a href="#ref-washburne2017phyl" role="doc-biblioref">2017</a>)</span>, <span class="citation"><a href="#ref-riverapinto2018bala" role="doc-biblioref">Rivera-Pinto et al.</a> (<a href="#ref-riverapinto2018bala" role="doc-biblioref">2018</a>)</span>, <span class="citation"><a href="#ref-quinn2020inte" role="doc-biblioref">Quinn and Erb</a> (<a href="#ref-quinn2020inte" role="doc-biblioref">2020</a>)</span>).
+The exponential of a balance is an example of the generalized ratio in <a href="relative.html#eq:generalized-ratio">(B.15)</a> and so regression of balances is again invariant to bias.</p>
+<p>The products in the numerators and denominators in <a href="relative.html#eq:generalized-ratio">(B.15)</a> can be seen as a way to multiplicatively aggregate abundances of different taxa, as opposed to the additive aggregation that is commonly used when relative abundances are viewed as proportions.
+Multiplicative aggregation preserves the property of perturbation invariance that is the source of bias invariance under the MWC model.
+In contrast, additive aggregation (known as “amalgamation” in the CoDA literature) violates perturbation invariance and can lead to regression results that depend on bias even when they are ostensibly based on the ratios of two (non-atomic) taxa, as we now explain.</p>
+</div>
+<div id="higher-order-taxa-formed-by-additive-aggregation" class="section level2" number="7.3">
+<h2><span class="header-section-number">B.3</span> Higher-order taxa formed by additive aggregation</h2>
+<p>Microbiome researchers often combine lower-order taxa into higher-order taxa prior to conducting a DA analysis.
+For instance, Amplicon Sequence Variants (ASVs), Operational Taxonomic Units (OTUs), or species-level counts may be aggregated into genus- or family-level counts by simply summing the counts within each group of lower-level taxa.
+Such aggregation can increase statistical power by reducing noise, sparsity, and the number of tests conducted.
+It also simplifies the task of interpretation by limiting the number of taxa considered.
+In addition, some degree of uncontrolled aggregation is inevitable due to the inherent limitations of our sequencing and bioinformatics protocols to distinguish sufficiently similar organisms (<span class="citation"><a href="#ref-mclaren2019cons" role="doc-biblioref">McLaren, Willis, and Callahan</a> (<a href="#ref-mclaren2019cons" role="doc-biblioref">2019</a>)</span>), which may be lumped together into an OTU or species-level feature.
+Finally, though our focus is on analysis of taxa, we note that taxonomic aggregation also occurs (at least implicitly) in gene or function analyses, where counts are combined from different taxa that share the same genes or predicted functions.
+Hence, to understand the effects of bias on DA analysis as it is actually practiced, we must understand the effects of such taxonomic aggregation on differential abundance.</p>
+<p>Consider a set of atomic taxa given by the set <span class="math inline">\(Q \subset \{1, \dots, I\}\)</span> and let <span class="math inline">\(A_{Qj}\)</span> be the vector of abundances in sample <span class="math inline">\(j\)</span> of the taxa in <span class="math inline">\(Q\)</span>.
+The actual absolute abundance of the synthetic taxon <span class="math inline">\(Q\)</span> is simply the sum of abundances of its component taxa, <span class="math inline">\(\operatorname{sum}\left(A_{Q,j}\right) = \sum_{q \in Q} A_{qj}\)</span>.
+<!-- where $\operatorname{sum}$ so that -->
+Similarly, the actual proportion of <span class="math inline">\(Q\)</span> is given by the sum of proportions, <span class="math inline">\(\operatorname{sum}\left(a_{Q,j}\right) = \sum_{q \in Q} a_{qj} = \operatorname{sum}\left(A_{Q,j}\right) / A_{Tj}\)</span>.
+The abundance of <span class="math inline">\(Q\)</span> in the metagenomics measurement is <span class="math inline">\(\operatorname{sum}\left(M_{Q,j}\right)\)</span>, and its proportion <span class="math inline">\(\operatorname{sum}\left(m_{Q,j}\right)\)</span>.</p>
+<p>Such a synthetic taxon has a consistent, composition-independent measurement efficiency only if its component taxa have equal efficiencies.
+Let <span class="math inline">\(\bar B_{Q,j}\)</span> denote the mean efficiency of the taxa in <span class="math inline">\(Q\)</span> in sample <span class="math inline">\(j\)</span>,
+<span class="math display" id="eq:subset-mean-efficiency">\[\begin{align}
+  \tag{B.22}
+  \bar B_{Q,j} = \frac{\sum_{q \in Q} B_q A_{qj}}{\sum_{q \in Q} A_{qj}}.
+\end{align}\]</span>
+Unless all the taxa in <span class="math inline">\(Q\)</span> have the same efficiency, the mean efficiency of <span class="math inline">\(Q\)</span> varies with the relative abundances among these taxa.
+Summing over Equation <a href="models.html#eq:m">(A.3)</a> and performing some rearranging shows that the observed proportion of <span class="math inline">\(Q\)</span> is
+<span class="math display" id="eq:sum-m">\[\begin{align}
+  \tag{B.23}
+  \operatorname{sum}\left(m_{Q,j}\right) 
+  &amp;= \frac{1}{\bar B_j} \sum_{q\in Q} a_{qj} B_q \sum_{q\in Q} m_{qj} \\
+  &amp;= \operatorname{sum}\left(a_{Q,j}\right) \cdot \frac{\bar B_{Q,j}}{\bar B_j}.
+\end{align}\]</span>
+In words, the error in the proportion of the aggregate taxon <span class="math inline">\(Q\)</span> is given by the mean efficiency of taxa in <span class="math inline">\(Q\)</span> relative to the sample mean.
+Hence only if the atomic taxa that make up <span class="math inline">\(Q\)</span> all have the same efficiencies or always appear in the same ratios to each other will the efficiency of <span class="math inline">\(Q\)</span> be constant across samples.
+This observation was first made in <span class="citation"><a href="#ref-mclaren2019cons" role="doc-biblioref">McLaren, Willis, and Callahan</a> (<a href="#ref-mclaren2019cons" role="doc-biblioref">2019</a>)</span> (Discussion and Appendix 1) and is here extended to its general form.</p>
+<p>The lack of consistency in the efficiency of the synthetic taxon <span class="math inline">\(Q\)</span> complicates the form of the error in both proportion- and ratio-based DA analyses.
+The equivalent of the regression equation <a href="relative.html#eq:m-log-regression">(B.4)</a> for the log proportion of <span class="math inline">\(Q\)</span> is
+<span class="math display" id="eq:sum-m-log-regression">\[\begin{align}
+  \tag{B.24}
+  E \left[ \log \sum_{q\in Q} m_{q} \mid X \right] 
+  = E \left[ \log \sum_{q\in Q} a_{q} \mid X \right] + E\left[\log \bar B_{Q} - \log \bar B \mid X\right];
+\end{align}\]</span>
+we can no longer move the log efficiency of the focal taxon out of the expectation operator and so must consider the variation in the mean efficiency of <span class="math inline">\(Q\)</span> as well as of the sample as a whole.
+To consider the effect on ratio-based analyses, we define another synthetic taxon <span class="math inline">\(R\subset \{1, \dots, I\}\)</span> and consider the ratio of <span class="math inline">\(Q\)</span> to <span class="math inline">\(R\)</span>.
+The observed ratio,
+<span class="math display" id="eq:M-ratio-u-v">\[\begin{align}
+  \tag{B.25}
+  \frac{M_{Q,j}}{M_{R,j}}
+  &amp;= \frac{A_{Q,j}}{A_{R,j}} \cdot \frac{\bar B_{Q,j}}{\bar B_{R,j}},
+\end{align}\]</span>
+has an error equal to the ratio in mean efficiency of <span class="math inline">\(Q\)</span> to <span class="math inline">\(R\)</span>, both of which can vary with the relative abundances of the component taxa.
+As the ratio no longer as a consistent error, it is possible for bias to lead to spurious inferences in the fold change in the ratio.</p>
+
+</div>
+</div>
+<h3>References</h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-martino2019anov" class="csl-entry">
+Martino, Cameron, James T. Morton, Clarisse A. Marotz, Luke R. Thompson, Anupriya Tripathi, Rob Knight, and Karsten Zengler. 2019. <span>“<span>A Novel Sparse Compositional Technique Reveals Microbial Perturbations</span>.”</span> <em>mSystems</em> 4 (1): e00016–19. <a href="https://doi.org/10.1128/mSystems.00016-19">https://doi.org/10.1128/mSystems.00016-19</a>.
+</div>
+<div id="ref-mclaren2019cons" class="csl-entry">
+McLaren, Michael R, Amy D Willis, and Benjamin J Callahan. 2019. <span>“<span class="nocase">Consistent and correctable bias in metagenomic sequencing experiments</span>.”</span> <em>Elife</em> 8 (September): 46923. <a href="https://doi.org/10.7554/eLife.46923">https://doi.org/10.7554/eLife.46923</a>.
+</div>
+<div id="ref-quinn2020inte" class="csl-entry">
+Quinn, Thomas P., and Ionas Erb. 2020. <span>“<span class="nocase">Interpretable Log Contrasts for the Classification of Health Biomarkers: a New Approach to Balance Selection</span>.”</span> Edited by Robert G. Beiko. <em>mSystems</em> 5 (2): 1–11. <a href="https://doi.org/10.1128/mSystems.00230-19">https://doi.org/10.1128/mSystems.00230-19</a>.
+</div>
+<div id="ref-quinn2019afie" class="csl-entry">
+Quinn, Thomas P., Ionas Erb, Greg Gloor, Cedric Notredame, Mark F. Richardson, and Tamsyn M. Crowley. 2019. <span>“<span class="nocase">A field guide for the compositional analysis of any-omics data</span>.”</span> <em>Gigascience</em> 8 (9): 1–14. <a href="https://doi.org/10.1093/gigascience/giz107">https://doi.org/10.1093/gigascience/giz107</a>.
+</div>
+<div id="ref-riverapinto2018bala" class="csl-entry">
+Rivera-Pinto, J., J. J. Egozcue, V. Pawlowsky-Glahn, R. Paredes, M. Noguera-Julian, and M. L. Calle. 2018. <span>“<span class="nocase">Balances: a New Perspective for Microbiome Analysis</span>.”</span> Edited by Catherine Lozupone. <em>mSystems</em> 3 (4): e00053–18. <a href="https://doi.org/10.1128/mSystems.00053-18">https://doi.org/10.1128/mSystems.00053-18</a>.
+</div>
+<div id="ref-washburne2017phyl" class="csl-entry">
+Washburne, Alex D., Justin D. Silverman, Jonathan W. Leff, Dominic J. Bennett, John L. Darcy, Sayan Mukherjee, Noah Fierer, and Lawrence A. David. 2017. <span>“<span class="nocase">Phylogenetic factorization of compositional data yields lineage-level associations in microbiome datasets</span>.”</span> <em>PeerJ</em> 5 (February): e2969. <a href="https://doi.org/10.7717/peerj.2969">https://doi.org/10.7717/peerj.2969</a>.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="models.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="absolute.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": true,
+"facebook": false,
+"twitter": false,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/mikemc/differential-abundance-theory/edit/main/relative-abundance.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": "https://github.com/mikemc/differential-abundance-theory/commits/main/relative-abundance.Rmd",
+"text": null
+},
+"view": {
+"link": "https://github.com/mikemc/differential-abundance-theory/blob/main/relative-abundance.Rmd",
+"text": null
+},
+"download": ["_main.pdf"],
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

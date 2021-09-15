@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>2 How taxonomic bias affects abundance measurements | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements</title>
+  <meta name="description" content="2 How taxonomic bias affects abundance measurements | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements" />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="2 How taxonomic bias affects abundance measurements | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="2 How taxonomic bias affects abundance measurements | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements" />
+  
+  
+  
+
+<meta name="author" content="Michael R. McLaren" />
+<meta name="author" content="Karen G. Lloyd" />
+<meta name="author" content="Benjamin J. Callahan" />
+
+
+<meta name="date" content="2021-09-15" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="introduction.html"/>
+<link rel="next" href="differential-abundance.html"/>
+<script src="libs/header-attrs-2.9/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+TeX: {extensions: ["cancel.js"]}
+});
+</script>
+
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
+<li class="chapter" data-level="1" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>1</b> Introduction</a></li>
+<li class="chapter" data-level="2" data-path="abundance-measurement.html"><a href="abundance-measurement.html"><i class="fa fa-check"></i><b>2</b> How taxonomic bias affects abundance measurements</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="abundance-measurement.html"><a href="abundance-measurement.html#relative-abundances-proportions-and-ratios"><i class="fa fa-check"></i><b>2.1</b> Relative abundances (proportions and ratios)</a></li>
+<li class="chapter" data-level="2.2" data-path="abundance-measurement.html"><a href="abundance-measurement.html#absolute-abundances-cell-densities"><i class="fa fa-check"></i><b>2.2</b> Absolute abundances (cell densities)</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="differential-abundance.html"><a href="differential-abundance.html"><i class="fa fa-check"></i><b>3</b> How taxonomic bias affects differential-abundance analysis</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="differential-abundance.html"><a href="differential-abundance.html#change-between-a-pair-of-samples"><i class="fa fa-check"></i><b>3.1</b> Change between a pair of samples</a></li>
+<li class="chapter" data-level="3.2" data-path="differential-abundance.html"><a href="differential-abundance.html#regression-analysis-of-many-samples"><i class="fa fa-check"></i><b>3.2</b> Regression analysis of many samples</a></li>
+<li class="chapter" data-level="3.3" data-path="differential-abundance.html"><a href="differential-abundance.html#regression-error"><i class="fa fa-check"></i><b>3.3</b> Box: Error in estimated regression coefficients and standard errors</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="implications.html"><a href="implications.html"><i class="fa fa-check"></i><b>4</b> Implications for real-world inference </a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="implications.html"><a href="implications.html#systematic-error-in-slope-or-lfc-estimates"><i class="fa fa-check"></i><b>4.1</b> Systematic error in slope or LFC estimates</a></li>
+<li class="chapter" data-level="4.2" data-path="implications.html"><a href="implications.html#loss-of-power-and-precision-stub"><i class="fa fa-check"></i><b>4.2</b> Loss of power and precision (stub)</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="solutions.html"><a href="solutions.html"><i class="fa fa-check"></i><b>5</b> Potential solutions</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="solutions.html"><a href="solutions.html#calibrate-compositions"><i class="fa fa-check"></i><b>5.1</b> Calibrate compositions using community controls</a></li>
+<li class="chapter" data-level="5.2" data-path="solutions.html"><a href="solutions.html#use-ratio-based-abundance-measurement"><i class="fa fa-check"></i><b>5.2</b> Use ratio-based abundance measurement</a></li>
+<li class="chapter" data-level="5.3" data-path="solutions.html"><a href="solutions.html#calibrate-fold-changes-using-measurements-of-targeted-taxa"><i class="fa fa-check"></i><b>5.3</b> Calibrate fold changes using measurements of targeted taxa</a></li>
+<li class="chapter" data-level="5.4" data-path="solutions.html"><a href="solutions.html#perform-a-bias-sensitivity-analysis"><i class="fa fa-check"></i><b>5.4</b> Perform a bias sensitivity analysis</a></li>
+<li class="chapter" data-level="5.5" data-path="solutions.html"><a href="solutions.html#use-bias-aware-meta-analysis"><i class="fa fa-check"></i><b>5.5</b> Use bias-aware meta-analysis</a></li>
+</ul></li>
+<li class="appendix"><span><b>Appendix</b></span></li>
+<li class="chapter" data-level="A" data-path="models.html"><a href="models.html"><i class="fa fa-check"></i><b>A</b> Measurement models</a>
+<ul>
+<li class="chapter" data-level="A.1" data-path="models.html"><a href="models.html#actual-abundances-and-general-notation"><i class="fa fa-check"></i><b>A.1</b> Actual abundances and general notation</a></li>
+<li class="chapter" data-level="A.2" data-path="models.html"><a href="models.html#metagenomics-measurement"><i class="fa fa-check"></i><b>A.2</b> Metagenomics measurement</a></li>
+<li class="chapter" data-level="A.3" data-path="models.html"><a href="models.html#bulk-absolute-abundance-measurement"><i class="fa fa-check"></i><b>A.3</b> Bulk absolute abundance measurement</a></li>
+<li class="chapter" data-level="A.4" data-path="models.html"><a href="models.html#targeted-absolute-abundance-measurement"><i class="fa fa-check"></i><b>A.4</b> Targeted absolute abundance measurement</a></li>
+<li class="chapter" data-level="A.5" data-path="models.html"><a href="models.html#spike-ins"><i class="fa fa-check"></i><b>A.5</b> Spike-ins</a></li>
+<li class="chapter" data-level="A.6" data-path="models.html"><a href="models.html#complications"><i class="fa fa-check"></i><b>A.6</b> Complications</a>
+<ul>
+<li class="chapter" data-level="A.6.1" data-path="models.html"><a href="models.html#abundances-units-and-protocol-stages"><i class="fa fa-check"></i><b>A.6.1</b> Abundances units and protocol stages</a></li>
+<li class="chapter" data-level="A.6.2" data-path="models.html"><a href="models.html#saturation-in-dna-extraction-yields"><i class="fa fa-check"></i><b>A.6.2</b> Saturation in DNA extraction yields</a></li>
+<li class="chapter" data-level="A.6.3" data-path="models.html"><a href="models.html#taxonomic-resolution-of-measurements"><i class="fa fa-check"></i><b>A.6.3</b> Taxonomic resolution of measurements</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="B" data-path="relative.html"><a href="relative.html"><i class="fa fa-check"></i><b>B</b> Differential relative abundance</a>
+<ul>
+<li class="chapter" data-level="B.1" data-path="relative.html"><a href="relative.html#proportion-based-analyses"><i class="fa fa-check"></i><b>B.1</b> Proportion-based analyses</a>
+<ul>
+<li class="chapter" data-level="B.1.1" data-path="relative.html"><a href="relative.html#log-proportion"><i class="fa fa-check"></i><b>B.1.1</b> Log proportion</a></li>
+<li class="chapter" data-level="B.1.2" data-path="relative.html"><a href="relative.html#log-odds-logit"><i class="fa fa-check"></i><b>B.1.2</b> Log odds (logit)</a></li>
+</ul></li>
+<li class="chapter" data-level="B.2" data-path="relative.html"><a href="relative.html#ratio-based-analyses"><i class="fa fa-check"></i><b>B.2</b> Ratio-based analyses</a></li>
+<li class="chapter" data-level="B.3" data-path="relative.html"><a href="relative.html#higher-order-taxa-formed-by-additive-aggregation"><i class="fa fa-check"></i><b>B.3</b> Higher-order taxa formed by additive aggregation</a></li>
+</ul></li>
+<li class="chapter" data-level="C" data-path="absolute.html"><a href="absolute.html"><i class="fa fa-check"></i><b>C</b> Differential absolute abundance</a>
+<ul>
+<li class="chapter" data-level="C.1" data-path="absolute.html"><a href="absolute.html#using-bulk-abundance-measurements"><i class="fa fa-check"></i><b>C.1</b> Using bulk abundance measurements</a>
+<ul>
+<li class="chapter" data-level="C.1.1" data-path="absolute.html"><a href="absolute.html#shared-bias-components"><i class="fa fa-check"></i><b>C.1.1</b> Shared bias components</a></li>
+</ul></li>
+<li class="chapter" data-level="C.2" data-path="absolute.html"><a href="absolute.html#using-reference-taxa"><i class="fa fa-check"></i><b>C.2</b> Using reference taxa</a>
+<ul>
+<li class="chapter" data-level="C.2.1" data-path="absolute.html"><a href="absolute.html#taxa-with-targeted-abundance-measurements"><i class="fa fa-check"></i><b>C.2.1</b> Taxa with targeted abundance measurements</a></li>
+<li class="chapter" data-level="C.2.2" data-path="absolute.html"><a href="absolute.html#cellular-spike-ins"><i class="fa fa-check"></i><b>C.2.2</b> Cellular spike-ins</a></li>
+<li class="chapter" data-level="C.2.3" data-path="absolute.html"><a href="absolute.html#dna-spike-ins"><i class="fa fa-check"></i><b>C.2.3</b> DNA spike-ins</a></li>
+<li class="chapter" data-level="C.2.4" data-path="absolute.html"><a href="absolute.html#taxa-assumed-to-have-a-constant-abundance"><i class="fa fa-check"></i><b>C.2.4</b> Taxa assumed to have a constant abundance</a></li>
+<li class="chapter" data-level="C.2.5" data-path="absolute.html"><a href="absolute.html#multiple-reference-taxa"><i class="fa fa-check"></i><b>C.2.5</b> Multiple reference taxa</a></li>
+</ul></li>
+<li class="chapter" data-level="C.3" data-path="absolute.html"><a href="absolute.html#using-an-equivolumetric-protocol"><i class="fa fa-check"></i><b>C.3</b> Using an equivolumetric protocol</a></li>
+<li class="chapter" data-level="C.4" data-path="absolute.html"><a href="absolute.html#computational-methods"><i class="fa fa-check"></i><b>C.4</b> Computational methods</a></li>
+</ul></li>
+<li class="chapter" data-level="D" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html"><i class="fa fa-check"></i><b>D</b> Proofs of regression results</a>
+<ul>
+<li class="chapter" data-level="D.1" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#general-regression"><i class="fa fa-check"></i><b>D.1</b> General regression</a></li>
+<li class="chapter" data-level="D.2" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#linear-least-squares-regression"><i class="fa fa-check"></i><b>D.2</b> Linear least-squares regression</a>
+<ul>
+<li class="chapter" data-level="D.2.1" data-path="proofs-of-regression-results.html"><a href="proofs-of-regression-results.html#linear-regression-of-microbiome-abundances"><i class="fa fa-check"></i><b>D.2.1</b> Linear regression of microbiome abundances</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="E" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html"><i class="fa fa-check"></i><b>E</b> DNA measurement and spike-ins</a>
+<ul>
+<li class="chapter" data-level="E.1" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#expanded-model-and-notation"><i class="fa fa-check"></i><b>E.1</b> Expanded model and notation</a></li>
+<li class="chapter" data-level="E.2" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#targeted-dna-measurement"><i class="fa fa-check"></i><b>E.2</b> Targeted DNA measurement</a></li>
+<li class="chapter" data-level="E.3" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#dna-spike-ins-1"><i class="fa fa-check"></i><b>E.3</b> DNA spike-ins</a></li>
+<li class="chapter" data-level="E.4" data-path="dna-measurement-and-spike-ins.html"><a href="dna-measurement-and-spike-ins.html#implications-1"><i class="fa fa-check"></i><b>E.4</b> Implications</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="abundance-measurement" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> How taxonomic bias affects abundance measurements</h1>
+<p>To understand how bias affects the measured differential abundance between samples, we first consider how it affects measurements of individual samples.</p>
+<p>Our primary tool for understanding the impact of taxonomic bias MGS measurement is the theoretical model of MGS measurement developed and empirically validated by <span class="citation"><a href="#ref-mclaren2019cons" role="doc-biblioref">McLaren, Willis, and Callahan</a> (<a href="#ref-mclaren2019cons" role="doc-biblioref">2019</a>)</span>.
+This model is the simplest model of MGS measurement that includes multiplicative taxonomic bias while respecting the <em>compositional</em> nature of sequencing measurements, in which the total read count for a sample is unrelated to its total cell number or density (<span class="citation"><a href="#ref-gloor2017micr" role="doc-biblioref">Gloor et al.</a> (<a href="#ref-gloor2017micr" role="doc-biblioref">2017</a>)</span>).
+In this model, we suppose there are a set of <em>atomic taxa</em>, that differ in how efficiently they are measured but within which all cells behave similarly.
+For concreteness, we equate atomic taxa with species.
+We ignore the possibility of contamination or false-positive taxonomic assignments—reads assigned to a given species and sample really do come from that species and sample.</p>
+<p>Our model stipulates that the assigned read count of species <span class="math inline">\(i\)</span> in sample <span class="math inline">\(a\)</span> equal equals its cell density multiplied by a species-specific, sample-independent factor and a species-independent, sample-specific factor,
+<span class="math display" id="eq:measurement-model">\[\begin{align}
+  \tag{2.1}
+  \text{reads}_{i}(a)
+  = \text{density}_{i}(a) \quad \cdot
+    \underbrace{\text{efficiency}_{i}}_{\substack{\text{species specific,} \\  \text{sample independent}}}
+    \cdot \quad
+    \underbrace{\text{sequencing effort}(a)}_{\substack{\text{species independent,} \\  \text{sample specific}}}.
+\end{align}\]</span>
+The species-specific factor is the <em>relative measurement efficiency</em> (or <em>efficiency</em> for short) of the species, which represents how much more easily that species is measured (converted from cells to assigned reads) relative to an abitrarily chosen reference species (<span class="citation"><a href="#ref-mclaren2019cons" role="doc-biblioref">McLaren, Willis, and Callahan</a> (<a href="#ref-mclaren2019cons" role="doc-biblioref">2019</a>)</span>).
+The sample-specific factor, which we call the <em>sequencing effort</em> of the sample, reflects the fact that the number of reads per unit cell density varies among samples even in the absence of taxonomic bias due to variation in total density, library normalization, and total sequencing-run output.
+Equation <a href="abundance-measurement.html#eq:measurement-model">(2.1)</a> implies that the total reads from all species in the sample equal
+<span class="math display" id="eq:total-reads">\[\begin{align}
+  \tag{2.2}
+  \text{total reads}(a)
+    = \text{total density}(a) \cdot \text{mean efficiency}(a) \cdot \text{sequencing effort}(a),
+\end{align}\]</span>
+where
+<span class="math display" id="eq:mean-efficiency">\[\begin{align}
+  \tag{2.3}
+  \text{mean efficiency}(a) 
+  \equiv \frac{\sum_{j}\text{density}_j(a)\cdot \text{efficiency}_j}{\text{total density}(a)}
+\end{align}\]</span>
+is the average or mean efficiency of cells in the sample.</p>
+<div id="relative-abundances-proportions-and-ratios" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> Relative abundances (proportions and ratios)</h2>
+<p>The term <em>relative abundance</em> carries multiple meanings in microbiome science.
+Microbiome researchers often use the relative abundance of a species in a sample to refer to its <em>proportion</em>, or number of cells from that species divided by the total number of cells from the taxonomic domain of interest (e.g. Prokaryotes).
+A second view, drawn from the statistical framework of Compositional Data Analysis, equates the relative abundances of species within a sample with the <em>ratios</em> of cell densities among two or more species (e.g. a ratio of 5:4:2 among three species).
+By this view, it is meaningless to refer to the relative abundance of an individual species.
+Although other interpretations exist<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a>, we focus on the proportion and ratio views as they underly most DA analysis methods (and microbiome analysis in general), for both relative and absolute abundances, and the differences between them help to clarify the issue over when and why the effects of bias cancel in an analysis.</p>
+<p>The standard estimate of the proportion of species <span class="math inline">\(i\)</span> in sample <span class="math inline">\(a\)</span> given by the ratio of its read count to the total,
+<span class="math display">\[\begin{align*}
+  \hat{\text{prop}}_{i}(a) = \frac{\text{reads}_i(a)}{\text{total reads(a)}}.
+\end{align*}\]</span>
+The effect of taxonomic bias on this estimate is to create a multipliative error equal to the ratio of the species’ efficiency to the mean efficiency in the sample,
+<span class="math display" id="eq:prop-error">\[\begin{align}
+  \tag{2.4}
+  \hat{\text{prop}}_{i}(a)
+  &amp;= \text{prop}_{i}(a) \cdot \frac{\text{efficiency}_{i}}{\text{mean efficiency}(a)}.
+\end{align}\]</span>
+Intuitively, Equation <a href="abundance-measurement.html#eq:prop-error">(2.4)</a> says that a species is measured as having a larger-than-actual proportion in direct relation to how much more more efficiently its cells are measured than the average cell in the sample (Figure <a href="abundance-measurement.html#fig:error-proportions">2.1</a>).
+Consequently, the same species can be over or under measured in terms of its proportion.
+For instance, in samples from two hypothetical communities in Figure <a href="abundance-measurement.html#fig:error-proportions">2.1</a>, Species 3 has an efficiency of 6 and is under-estimated in Sample 1 (which has a mean efficiency of 8.33) but over-estimated in Sample 2 (which has a mean efficiency of 3.15).</p>
+<p>The estimated ratio between species <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span>, given by the ratio of read counts,
+<span class="math display">\[\begin{align*}
+  \hat{\text{ratio}}_{i/j}(a) = \frac{\text{reads}_i(a)}{\text{reads}_j(a)},
+\end{align*}\]</span>
+has a multiplicative error equal to the ratio in the species’ efficiencies,
+<span class="math display" id="eq:ratio-error">\[\begin{align}
+  \tag{2.5}
+  \hat{\text{ratio}}_{i/j}(a)
+%  \frac{\text{reads}_{i}(a)}{\text{reads}_{j}(a)}
+  &amp;= \frac{\text{density}_{i}(a)}{\text{density}_{j}(a)} \cdot \frac{\text{efficiency}_{i}}{\text{efficiency}_{j}}.
+\end{align}\]</span>
+Equation <a href="abundance-measurement.html#eq:ratio-error">(2.5)</a> says that the ratio between two species is over-estimated in direct relation to how much more efficiently cells of the first species is measured relative to the second.
+In contrast to estimates of proportions, estimates of species ratios have a consistent multiplicative error across samples.
+For instance, in the example of Figure <a href="abundance-measurement.html#fig:error-proportions">2.1</a>, the ratio of Species 3 (with an efficiency of 6) to Species 1 (with an efficiency of 1) is over-estimated by a factor of 6 in both communities despite their varying compositions.</p>
+<!-- begin figure -->
+<pre><code>#&gt; Warning in rm(svg_path, pdf_path): object &#39;pdf_path&#39; not found</code></pre>
+<div class="figure"><span id="fig:error-proportions"></span>
+<img src="figures/illustrations/error-proportions.svg" alt="Taxonomic bias creates sample-dependent multiplicative errors in species proportions, which can lead to inaccurate fold changes between samples. Top row: Error in proportions measured by MGS in two microbiome samples that contain different relative abundances of three species. Bottom row: Error in the estimated fold-change in the third species that is derived from these measurements." width="90%" />
+<p class="caption">
+Figure 2.1: <strong>Taxonomic bias creates sample-dependent multiplicative errors in species proportions, which can lead to inaccurate fold changes between samples.</strong> Top row: Error in proportions measured by MGS in two microbiome samples that contain different relative abundances of three species. Bottom row: Error in the estimated fold-change in the third species that is derived from these measurements.
+</p>
+</div>
+
+<!-- end figure -->
+</div>
+<div id="absolute-abundances-cell-densities" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> Absolute abundances (cell densities)</h2>
+<p>Various experimental and computational methods have or can be used to supplement MGS measurements so as to convert the relative-abundance information in the read counts into estimates of (absolute) cell densities;
+however, these methods can largely be partitioned conceptually into those that use the estimated proportions or the estimated ratios provided by MGS.
+The error in density estimates due to taxonomic bias therefore follows that of the proportion and ratio estimates described above.</p>
+<p>Proportion-based density estimation is based on the idea that if we know the (true) proportion of a species and the (true) total density of all species, we can multiply these numbers obtain the species’ density.
+This method therefore involves multiplying the proportion of a species estimated from MGS with an estimate of total microbial density obtain through other means (e.g., through direct cell counting or qPCR of a universal marker gene) to estimate
+its density,
+<span class="math display" id="eq:density-prop-est">\[\begin{align}
+  \tag{2.6}
+  \hat{\text{density}}_{i}(a) 
+  = \hat{\text{prop}}_{i}(a) \cdot \hat{\text{total density}}(a).
+\end{align}\]</span>
+The error in this proportion-based density estimate is
+<span class="math display" id="eq:density-prop-error">\[\begin{align}
+  \tag{2.7}
+  \hat{\text{density}}_{i}(a) 
+  = \text{density}_{i}(a) \cdot \frac{\text{efficiency}_{i}}{\text{mean efficiency}(a)} 
+  \cdot \substack{\text{fold error in} \\ \hat{\text{total density}}(a)}.
+\end{align}\]</span>
+The multiplicative error consists of two factors: the error in the estimated proportion (due to taxonomic bias in the MGS measurement), and any error in the estimated total density.
+In the case of perfect knowledge of the total density, the fold error in proportion-based density estimates varies across samples inversely with the mean efficiency.</p>
+<p>Ratio-based density estimation follows from the fact that, in the absence of taxonomic bias, the conversion rate from reads to density is just the sequencing effort of the sample and is thus the same for all species (Equation <a href="abundance-measurement.html#eq:measurement-model">(2.1)</a>).
+Knowing the density of at least one <em>reference</em> species therefore enables us to convert from reads to density for all species.
+One approach to obtaining such reference species is to add one or more extraneous species in known (typically constant) abundance (a “spike-in”) to each sample prior to sequencing (REFs).
+A second approach is to determine a set of naturally occurring species that are thought to have a constant, though typically unknown, abundance across samples; in this case we can only estimate species’ densities relative to these “housekeeping species” (REFs).
+A third (seemingly untried) possibility is to measure the density of one or more naturally occurring species using a method such as targeted CFU counting, fluorescence flow cytometry or ddPCR directly on cells, or ddPCR or qPCR on extracted DNA.
+Given the estimate of the density of reference taxon <span class="math inline">\(r\)</span>, we estimate the density of taxon <span class="math inline">\(i\)</span> by multipling the ratio of <span class="math inline">\(i\)</span> to <span class="math inline">\(r\)</span> in the reads by the density of <span class="math inline">\(r\)</span>,
+<span class="math display" id="eq:density-ratio-est">\[\begin{align}
+  \tag{2.8}
+  \hat{\text{density}}_{i}(a) = \frac{\text{reads}_{i}(a)}{\text{reads}_{r}(a)} \cdot \hat{\text{density}}_{r}(a)
+\end{align}\]</span>
+(Appendix ??? describes how this equation can be extended to multiple reference species.)
+For a constant reference species with unknown density, we can set <span class="math inline">\(\hat{\text{density}}_{r}(a)\)</span> equal to 1 to estimate density in units of the density of the reference species.
+The error in this ratio-based density estimate is
+<span class="math display" id="eq:density-ratio-error">\[\begin{align}
+  \tag{2.9}
+  \hat{\text{density}}_{i}(a) 
+  = \text{density}_{i}(a) \cdot \frac{\text{efficiency}_{i}}{\text{efficiency}_{r}} 
+  \cdot \substack{\text{fold error in} \\ \hat{\text{density}}_{r}(a)}.
+\end{align}\]</span>
+Again, the multiplicative error consists of two factors: the error in the estimated ratio (due to taxonomic bias in the MGS measurement), and error in the estimated density of the reference taxa.
+So long as the fold error in the reference density is constant across samples, so will be the error in the estimated density of the focal species <span class="math inline">\(i\)</span>.</p>
+<ul>
+<li>Note: The current distinction between proportion- and ratio-based density estimation is incomplete, as the example of spike-in normalization shows: Whether the density of species <span class="math inline">\(i\)</span> is estimated by Equation <a href="abundance-measurement.html#eq:density-ratio-est">(2.8)</a>, or by first estimating total density from the ratio of non-spike-in to spike-in reads and then using Equation <a href="abundance-measurement.html#eq:density-prop-est">(2.6)</a>, the results are mathematically identical. Future revisions should clarify this point.</li>
+</ul>
+
+</div>
+</div>
+<h3>References</h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-gloor2017micr" class="csl-entry">
+Gloor, Gregory B., Jean M. Macklaim, Vera Pawlowsky-Glahn, and Juan J. Egozcue. 2017. <span>“<span>Microbiome Datasets Are Compositional: And This Is Not Optional</span>.”</span> <em>Front. Microbiol.</em> 8 (November): 2224. <a href="https://doi.org/10.3389/fmicb.2017.02224">https://doi.org/10.3389/fmicb.2017.02224</a>.
+</div>
+<div id="ref-mclaren2019cons" class="csl-entry">
+McLaren, Michael R, Amy D Willis, and Benjamin J Callahan. 2019. <span>“<span class="nocase">Consistent and correctable bias in metagenomic sequencing experiments</span>.”</span> <em>Elife</em> 8 (September): 46923. <a href="https://doi.org/10.7554/eLife.46923">https://doi.org/10.7554/eLife.46923</a>.
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol start="4">
+<li id="fn4"><p>e.g. the rank order within a sample, or value associated with a species after a centered-log-ratio transform<a href="abundance-measurement.html#fnref4" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="introduction.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="differential-abundance.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": true,
+"facebook": false,
+"twitter": false,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/mikemc/differential-abundance-theory/edit/main/abundance-measurement.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": "https://github.com/mikemc/differential-abundance-theory/commits/main/abundance-measurement.Rmd",
+"text": null
+},
+"view": {
+"link": "https://github.com/mikemc/differential-abundance-theory/blob/main/abundance-measurement.Rmd",
+"text": null
+},
+"download": ["_main.pdf"],
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
