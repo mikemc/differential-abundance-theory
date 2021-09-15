@@ -46,6 +46,13 @@ output:
 
 # Preface {-}
 
+```{r}
+repo <- git2r::repository(".")
+sha <- repo %>% git2r::commits(n = 1) %>% .[[1]] %>% git2r::sha()
+```
+
+_This manuscript was rendered from commit `r sha`._
+
 ::: {#preface-warning .rmdnote}
 
 **This in-progress manuscript is not intended for general scientific use.**
