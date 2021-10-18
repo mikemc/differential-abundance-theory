@@ -1,0 +1,189 @@
+---
+title: "Evaluate robustness example"
+description: |
+  Evaluate the robustness of an estimate and inference to bias.
+author:
+  - name: Amy D. Willis
+date: 10-18-2021
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: true
+    dev: svg
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  comment = "#>",
+  collapse = TRUE,
+  cache = TRUE,
+  autodep = TRUE,
+  echo = TRUE
+)
+```
+
+# Robustness of an analysis to bias
+
+We can investigate the sensitivity of any analysis to taxonomic bias by simulating possible efficiency vectors, calibrating our observed MGS measurements by these efficiencies, and rerunning our analysis on the simulated and calibrated data. Specifically, we can take the observed proportion of each species in our dataset $\hat{\text{prop}}_{i}(a)$, and "undo" the efficiencies to obtain the calibrated proportions
+\begin{align}
+  (\#eq:calibrate-props)
+  \text{calibrated prop}_{i}(a)
+  &= \left( \frac{\hat{\text{prop}}_{i}(a)}{\text{efficiency}_{i}} \right) \bigg / \sum_{i'} \left( \frac{\hat{\text{prop}}_{i'}(a)}{\text{efficiency}_{i'}} \right),
+\end{align}
+and the calibrated read counts
+\begin{align}
+  (\#eq:calibrate-reads)
+  \text{reads}_{i}(a)
+  &= \text{total reads}(a) \times \text{calibrated prop}_{i}(a).
+\end{align}
+We can then rerun our data analysis using the calibrated read counts in place of our original data. If we do this repeatedly, each time using different realizations of the efficiency vector, we can investigate how the results of our analysis change. If the change is minimal, this suggests that our results are robust to unequal detection efficiencies in the different species. The converse would suggest that we need to be careful interpreting our results.
+
+## Example: relative abundance of Gardnerella
+
+For example, suppose we are interested in investigating if the genus Gardnerella is more abundant in the vaginal microbiome of women who give birth preterm, and we investigate this model by running `corncob` using preterm birth as a covariate in the mean and dispersion model. We could investigate the robustness of our findings using the following structure:
+
+```{r, eval = FALSE}
+our_sim <- new_simulation("UndoGardnerella", "Undo Gardnerella relative abundance") %>%
+  generate_model(undo_efficiencies,
+                 ps = cal %>%
+                   filter_sample_data(cohort == "Stanford") %>%
+                   tax_glom("genus") %>%
+                   as_tibble,
+                 sig_sq_e = as.list(seq(0, 5, length.out = 6)),
+                 vary_along = "sig_sq_e") %>%
+  simulate_from_model(nsim = 25, index = 1:4) %>%
+  run_method(list(corncob_Gardnerella),
+             parallel = list(socket_names = 4, libraries = c("corncob", "speedyseq"))) %>%
+  evaluate(list(betahat_fit, pvalue_fit))
+```
+
+In brief, this approach uses the library `simulator` to generate random efficiencies and "undo" them as described above, then runs `corncob` on these generated datasets before finally obtaining the estimated coefficients on preterm birth and the p-value for the hypothesis test that the coefficient on preterm birth is zero. Let's take a look at the components of the code.
+
+First, we load the relevant libraries and our data
+
+```{r}
+# library(here)
+library(tidyverse)
+library(magrittr)
+library(speedyseq)
+library(corncob)
+# devtools::install_github("jacobbien/simulator")
+library(simulator)
+cal <- readRDS("callahan2017repl_phyloseq_clean.rds")
+```
+
+Then we can create the function that generates random efficiencies and accordingly alters the observed counts:
+
+```{r}
+undo_efficiencies <- function(ps, sig_sq_e) {
+
+  ps_ms <- ps %>% group_by(.sample) %>% mutate(mm = sum(.abundance)) %>% ungroup
+  ps_tax <- ps %>% select(`.otu`, `kingdom`:`species`) %>% distinct %>% tax_table
+  ps_sample <- ps %>% select(`.sample`, `subject_id`:`outcome`) %>% distinct %>% sample_data
+
+  new_model(name = "eff_undo", label = sprintf("sig_sq_e = %s", sig_sq_e),
+            params = list(ps_ms = ps_ms, ps_tax = ps_tax, ps_sample = ps_sample, sig_sq_e = sig_sq_e),
+            simulate = function(ps_ms, ps_tax, ps_sample, sig_sq_e, nsim) {
+              replicate(nsim,
+                        {
+                          effs_tib <- ps_ms %>%
+                            select(genus) %>% distinct %>%
+                            mutate("efficiency" = rnorm(nrow(.), mean = 0, sd = sqrt(sig_sq_e)) %>% exp)
+
+                          ps_tib <- ps_ms %>%
+                            full_join(effs_tib) %>%
+                            group_by(.sample) %>%
+                            mutate(p_ijs = (.abundance / efficiency) / sum(.abundance / efficiency)) %>%
+                            mutate(w_ij = round(mm * p_ijs)) %>%
+                            ungroup
+
+                          phyloseq(ps_tib %>%
+                                     select(`.otu`, `.sample`, `w_ij`) %>%
+                                     pivot_wider(names_from=`.otu`, values_from=`w_ij`) %>%
+                                     otu_table(taxa_are_rows = F),
+                                   ps_tax,
+                                   ps_sample) %>%
+                            tax_glom("genus")
+                        },
+                        simplify=F)
+            })
+}
+```
+
+Next, we specify how we use our data to construct our estimates. We are using `bbdml` from the library `corncob` to model the relative abundance of ASV 8 (Gardnerella) using preterm birth as a covariate to model the mean and dispersion, but this is only one type of analysis that we might be interested in.
+
+```{r}
+corncob_Gardnerella <- new_method("corncob", "Corncob",
+                               method = function(model, draw) {
+
+                                 fit <- bbdml(formula = ASV8 ~ preterm,
+                                              formula_null= ~1,
+                                              phi.formula= ~ preterm,
+                                              phi.formula_null= ~1,
+                                              data = draw %>%
+                                                merge_samples2("subject_id", fun_otu = sum))
+
+                                 list(fit = fit,
+                                      summary = summary(fit))
+                               })
+```
+
+Finally, we construct methods to obtain the estimated coefficient on preterm birth in the mean relative abundance model, and its p-value.
+
+```{r}
+betahat_fit <- new_metric("betahat", "beta-hat",
+ metric = function(model, out) {
+   out$summary$coefficients[2,1]
+ })
+pvalue_fit <- new_metric("pvalue", "p-value",
+                         metric = function(model, out) {
+                           out$summary$coefficients[2,4]
+                         })
+```
+
+Now that we have all of the pieces, we can run them together as follows. Note that we are only going to run 4 iterations for now, but we have commented out code below showing you how to run 100 draws across 4 cores:
+
+```{r}
+our_sim <- new_simulation("UndoGardnerella", "Undo Gardnerella relative abundance") %>%
+  generate_model(undo_efficiencies,
+                 ps = cal %>%
+                   filter_sample_data(cohort == "Stanford") %>%
+                   tax_glom("genus") %>%
+                   as_tibble,
+                 sig_sq_e = as.list(seq(0, 5, length.out = 6)),
+                 vary_along = "sig_sq_e") %>%
+  simulate_from_model(nsim = 4, index = 1) %>%
+  # simulate_from_model(nsim = 25, index = 1:4) %>%
+  run_method(list(corncob_Gardnerella)) %>%
+  # run_method(list(corncob_Gardnerella),
+  #            parallel = list(socket_names = 4, libraries = c("corncob", "speedyseq"))) %>%
+  evaluate(list(betahat_fit, pvalue_fit))
+```
+
+Here's how the estimated coefficient on preterm birth changes under different draws from a distribution given by $\text{efficiency}_{i}} \overset{iid}{\sim} LogNormal(0, \sigma^2_e)$, and how the p-value for testing the null hypothesis that the coefficient on preterm birth is zero:
+
+```{r}
+ev_df <- our_sim %>% evals %>% as.data.frame
+model_df <- our_sim %>% model %>% as.data.frame
+ev_with_model_params <- dplyr::right_join(model_df, ev_df, by = c("name" = "Model")) %>% tibble
+f_names <- list('p-value' = "p-value",
+                'beta-hat' = expression(hat(beta)))
+f_labeller <- function(variable, value){return(f_names[value])}
+ev_with_model_params %>%
+  pivot_longer(cols = betahat:pvalue, names_to="eval") %>%
+  mutate(eval = ifelse(eval == "pvalue", "p-value", "beta-hat")) %>%
+  ggplot(aes(x = sig_sq_e, group = sig_sq_e, y = value)) +
+  geom_boxplot() +
+  geom_abline(aes(slope = slope, intercept = intercept), color = "blue",
+              tibble(eval = c("p-value", "beta-hat"), slope = c(0,0), intercept = c(0.05, 0))) +
+  theme_bw() +
+  xlab(expression(sigma[e]^2)) +
+  ggtitle("Corncob results for testing\nH0: Mean Gardnerella relative abundance is equal for preterm & full-term") +
+  facet_wrap(~eval, scales="free_y", nrow = 2, labeller = f_labeller) +
+  ylab("")
+```
+
+While the estimate of the coefficient does not change on average, we see more variation in its estimate as the variation in the efficiencies increases. For some realizations from a model with large variation in the efficiencies, we even see a change in the sign of $\hat{\beta}$ from positive to negative. Furthermore, we see a corresponding increase in the range of p-values, suggesting that more variation in the efficiencies can lead to either deattenuated estimates (larger p-values) or more precise non-zero estimates (smaller p-values).
+
+A major advantage of this approach is that any distribution of efficiency vectors can be investigated. For example, we could specifically investigate how Gardnerella being low- or high-efficiency impacts our results. We could also investigate more sophisticated distributions for the efficiencies, such as correlated efficiencies across phylogeny.
