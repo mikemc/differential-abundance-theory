@@ -1,8 +1,7 @@
 # Implications for real-world inference {#implications}
 
-Partial but not full canceling of the effect of bias in proportion-based analyses, such that possible to have spurious results in principle; but what about in practice?
-Predicting how frequently or which results are likely to be majorly affected is difficult because it depends on the joint variation in efficiencies of species and species abundance dynamics, both of which are poorly understood in most to all biological systems. 
-However, through a combination of theoretical considerations, hypothetical scenarios, and real case studies we can begin to develop an understanding or the relevant considerations and build framework for improving our understanding as our knowledge of these dynamics improves.
+Are biologically significant errors in DA analyses likely in practice?
+We can begin to answer this question using a combination of theoretical analysis, consideration of hypothetical scenarios, and analysis of case studies for which some information about taxonomic bias is available.
 
 ## Systematic error in slope or LFC estimates
 
@@ -13,7 +12,7 @@ Hence when considering whether taxonomic bias creates large error, it can be use
 One approach to studying the mean efficiency empirically is to analyze data from studies for which control measurements allow direct measurement of species' efficiencies.
 @brooks2015thet performed 16S rRNA gene sequencing of mock communities of seven bacterial species thought to play a critical role in the human vaginal microbiome with the MGS protocol developed for the Vaginal Human Microbiome Project (VaHMP). @mclaren2019cons later used this data to estimate the efficiencies of these seven species and develop a method to use these estimates to infer the true compositions of natural samples (see Section \@ref(#calibrate-compositions)).
 SI Analysis (MOMS-PI) uses these estimated efficiencies to correct the compositions and explore the implied variation in mean efficiency in the VaHMP's Multi-Omic Microbiome Study: Pregnancy Initiative (MOMS-PI) @fettweis2019thev.
-The vaginal microbiome during pregnancy is characterized by relatively low diversity, often with a single _Lactobacillus_ species often forming a majority of reads (considered to be the healthy state) but with occasional shifts to high proportions of other species, such as _Gardnerella vaginalis_, _Atopobium vaginae_, and _Streptococcus agalactiae_, which are thought to cause or indicate poor vaginal health and increased risk of preterm birth.
+The vaginal microbiome during pregnancy is characterized by relatively low diversity, with a single _Lactobacillus_ species often forming a majority of reads (considered to be the healthy state) but with occasional shifts to high proportions of other species, such as _Gardnerella vaginalis_, _Atopobium vaginae_, and _Streptococcus agalactiae_, which are thought to cause or indicate poor vaginal health and increased risk of preterm birth.
 The analysis of @mclaren2019cons showed that the efficiencies of two common _Lactobacillus_ species, _L. crispatus_ and _L. iners_, were 20-30X greater than that of _G. vaginalis_, _A. vaginae_, and _S. agalactiae_.
 Analysis of microbiome trajectories of a single patient across visits indicates that the mean efficiency typically decreases by a factor of 3-10X when the community shifts from a high to low-_Lactobacillus_ state.
 (NOTE: This is a super preliminary claim based on looking at just one woman, and is just a placeholder)
@@ -49,7 +48,7 @@ The ratio of Bacteroidetes to Firmicutes has been linked to several host traits 
 Are there general mechanisms by which we might expect associations to arise between mean efficiency and the covariates commonly of interest in microbiome studies?
 One possibility is that the ecology and measurement efficiency of species may become correlated simply due to shared evolutionary history.
 A species' efficiency is heavily influenced by genetically determined traits such as cell-wall structure, ribosomal-operon copy number, sequence in a primer-targeted region, GC content, and even whether the species is present in a given taxonomic database.
-Shared evolutionary history among phylogenetically-close species is expected and has been observed to create positive associations in these traits among more closely related species, such that we should expect a significant degree of phylogenetic conservation in efficiency.
+Shared evolutionary history creates positive trait associations among more closely related species, such that we should expect a significant degree of phylogenetic conservation in efficiency.
 Meanwhile, the same shared evolutionary history creates phylogenetic conservation in ecological traits that drives species abundance dynamics.
 In this way, we may expect evolution to lead to a situation in which groups of species with similar efficiencies have similar shifts in abundance between conditions, creating the potential for commensurate shifts in mean efficiency.
 For example, a change in diet that favors Bacteroidetes species relative to Firmicutes based on the resulting gut conditions will also increase the relative abundance of easy-to-lyse species.
@@ -58,16 +57,16 @@ Associations between efficiency and abundance can also arise more directly when 
 For example, microbes at the ocean floor are slowly buried, sinking into a low nutrient, low oxygen environment.
 @lloyd2020evid estimate the log fold change in the estimated absolute abundance of various taxa with sediment depth (as a proxy for time) to determine which taxa are able to persist and even grow in this difficult environment.
 It is plausible that microbes with tougher cell walls would tend to persist longer (alive or dead) in the sediment, while at the same time being more difficult to extract DNA from than microbes with weaker cell walls.
-As the relative abundance of tougher species increases with depth, the mean extraction efficiency decreases.
+As the relative abundance of tougher species increases with depth, the mean extraction efficiency might therefore decrease.
 This decrease would increase the inferred log fold changes and could lead to inferred growth of taxa that are actually just persisting or even slowly dying off.
 Another example of a trait that might simultaneously affect efficiency and relative abundance is ribosomal copy number, which increases the measurement efficiency in ribosomal amplicon experiments and is also linked to differences in ecology and population dynamics among species.
 
 <!-- P: relative magnitude of species and mean efficiency changes -->
 The biological significance of the error in $\hat \beta$ depends on the relative magnitude of the LFC (or covariance with the covariate $x$) in the focal species vs in the mean efficiency.
 It may generally be true that the largest species LFCs in a DA analysis, which are often of primary interest in a microbiome study, will tend to be larger than the LFC of the mean efficiency, at least in high-diversity settings.
-(This seems intuitively likely and true in examples, but I haven't analyzed it much mathematically and don't have a firm handle on this question.)
+_(This seems intuitively likely and true in examples, but I haven't analyzed it much mathematically and don't have a firm handle on this question.)_
 Further investigation into this question may improve our confidence in the top hits identified in published DA analyses meeting certain conditions.
-However, we must remain weary of cases (as in the vaginal-microbiome and plant-fungal-interactions examples above) in which a shift in a single species can drive large changes in mean efficiency and lead to significant errors for all other species.
+However, we must remain weary of cases (as in the vaginal-microbiome and plant-fungal-interactions examples above) in which a shift in a single species can drive large changes in mean efficiency and lead to significant errors for other species.
 The experimental and computational methods discussed in Section \@ref(solutions) can mitigate taxonomic bias in these clearly-problematic cases while also helping to amass empirical evidence on the conditions in which bias is unlikely to cause major inferential errors.
 
 - Todo: Address DA analysis of aggregate (or synthetic) taxa, such as phyla, which may be prone to errors due to changes in the species-level make-up of the taxon.

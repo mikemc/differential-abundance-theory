@@ -1,16 +1,15 @@
 # Introduction {#introduction}
 
 <!-- First paragraph: DA analysis -->
-
-The most basic question we can ask about microbial communities after which taxa are found in an ecosystem is, how do the abundances of these taxa vary in their abundance—across space, time, and host or environmental conditions?
-Advances in sequencing technology allow us to now simultaneously measure the abundances of 100s to 1000s of species using marker-gene and shotgun-metagenomic sequencing (jointly, MGS).
+One of the most basic questions we can ask about microbial communities is: How do different microbial taxa vary in abundance—across space, time, and host or environmental conditions?
+Advances in sequencing technology allow us to simultaneously measure the abundances of 100s to 1000s of species using marker-gene and shotgun metagenomic sequencing (jointly, MGS).
 Although standard MGS measurements lose information about total microbial density—and so are typically used to analyze the abundances of taxa relative to each other or their total—new studies are increasingly employing strategies to enable the analysis of cell density or other measures of "absolute abundance."
 These relative and absolute abundances serve as the basis for a _differential-abundance (DA) analysis_, in which the change in abundance of a microbial taxon across samples or conditions is used to learn about the biology of the taxon and its impact on the host and other microbes as well as to detect predictive biomarkers of host and environmental health and disease.
 
 <!-- P: Taxonomic bias -->
 Although MGS-based DA analysis has been widely deployed and achieved many notable successes, it faces serious concerns over accuracy and reproducibility due to the inherent technical limitations of MGS measurements.
-In particular, MGS measurements are _taxonomically biased_: Taxa vary dramatically (e.g. 10-1000X) in how efficiently they are measured—that is, converted from cells into taxonomically classified sequencing reads—by a given MGS protocol.
-As a result, the abundance measurements obtained by MGS are inaccurate representations of the actual abundances and also tend to differ across protocols (@mclaren2019cons), studies, and even experimental batches (@yeh2018taxo). 
+In particular, MGS measurements are _taxonomically biased_: Taxa vary dramatically (e.g. 10-1000X) in how efficiently they are measured—that is, converted from cells into taxonomically classified sequencing reads—by a given MGS protocol (@mclaren2019cons).
+As a result, the abundance measurements obtained by MGS are inaccurate representations of the actual abundances and also tend to differ across protocols, studies, and even experimental batches (@yeh2018taxo,@mclaren2019cons).
 This bias arises from variation in how taxa respond to each step in an MGS protocol, from sample collection to bioinformatic classification.
 Although often associated with variation in primer binding and amplification rates and marker-gene copy-number, large variation in DNA extraction efficiency and in the ability to correctly classify reads make taxonomic bias a feature of both shotgun and marker-gene measurements.
 The error it causes have been found to in some cases to supersede sizable biological differences (e.g. @lozupone2013meta) and has plausibly caused replication failures for prominent findings such as the association of decreased Bacteroides and increased Firmicutes in stool with obesity (@finucane2014atax) and the association of certain taxa in the vagina of pregnant women with preterm birth (@callahan2017repl).
@@ -21,10 +20,10 @@ The error it causes have been found to in some cases to supersede sizable biolog
 
 The typical approach to countering taxonomic bias in DA analysis is to standardize the measurement protocol used within a given study.
 In broad strokes, the thinking is that the measurements of samples measured by the same protocol will be affected by bias in the same way and so the inferred differences between samples (the focus of DA analysis) will be unaffected.
-For example, if taxonomic bias consistently causes the measured proportion of a given species to be 10X too high, we can still accurately infer its fold changes across samples.
-@kevorkian2018esti and @lloyd2020evid were the first (to our knowledge) to make this argument explicit mathematically; however, @mclaren2019cons used a theoretical model (supported by measurements of defined bacterial communities) to show that consistent taxonomic bias can lead to variable fold errors in measured proportions.
+For example, if taxonomic bias consistently causes the measured proportion of a given species to be 10X too high, we can still accurately infer its fold changes across samples (@kevorkian2018esti,@lloyd2020evid).
+However, @mclaren2019cons used a theoretical model (supported by measurements of defined bacterial communities) to show that consistent taxonomic bias can lead to variable fold errors in measured proportions.
 These varying errors can lead to spurious conclusions for how the proportion of a taxon varies across samples, even in the direction of change (for example, causing a taxon that decreases appear to increase).
-Yet @mclaren2019cons also found that certain changes in relative abundance---in particular, fold changes in the ratios among species---are robust to the effects of bias.
+Yet @mclaren2019cons also found that the fold error in the ratios among species was constant, making fold changes in ratios robust to bias.
 The implications of these findings for changes in absolute abundance---which remain subject to taxonomic bias in the underlying MGS measurement---and for DA analysis across many species and many samples---as commonly done in microbiome association testing---have yet to be investigated.
 
 <!-- P: Objective and summary of the present article -->
@@ -32,6 +31,6 @@ The implications of these findings for changes in absolute abundance---which rem
 Here we use a combination of theoretical analysis, simulation, and re-analysis of published experiments to consider when and why taxonomic bias in MGS measurements leads to spurious results in DA analysis of relative and absolute abundance.
 Our analysis clarifies how the folk wisdom that taxonomic bias does not affect the analysis of change across samples is only partially correct and can give a false sense of security in the accuracy of DA results.
 Yet we also present several potential solutions---methods for quantifying, correcting, or otherwise accounting for the effect of taxonomic bias in DA analyses that can be deployed today with only modest changes to existing experimental and analytical workflows.
-Over time, application of these methods to past and future experiments will provide crucial quantitative information about taxonomic bias and the conditions under which spurious results arise for various DA methodologies.
+Over time, application of these methods to past and future experiments will provide crucial quantitative information about the conditions under which taxonomic bias creates spurious results for various DA methodologies.
 Collectively, these methods and insights may provide practical solutions to taxonomic bias in DA analysis and the confidence that is necessary to codify the statistical findings of microbiome studies into readily-translatable scientific knowledge.
 

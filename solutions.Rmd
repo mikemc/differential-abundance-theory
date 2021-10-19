@@ -2,19 +2,20 @@
 
 The theoretical results from Section \@ref(differential-abundance) suggest a number of potential methods to avoid, correct, or otherwise mitigate the errors created by taxonomic bias.
 We present five that seem particularly promising:
-The first three are method for correcting or otherwise account for the effects of taxonomic bias to obtain more accurate DA results, whereas the second two treat the measurement efficiencies as unknown parameters and seek to understand the additional uncertainty they create, either in the results of individual studies or in joint analysis of multiple studies that used different MGS protocols.
+The first three are methods to correct or otherwise account for the effects of taxonomic bias to obtain more accurate DA results, whereas the second two treat the measurement efficiencies as unknown parameters and seek to understand the additional uncertainty they create, either in the results of individual studies or in joint analysis of multiple studies that used different MGS protocols.
 
 ## Calibrate compositions using community controls {#calibrate-compositions}
 
 The most complete but experimentally challenging approach to mitigating taxonomic bias involves directly measuring the efficiencies of individual species using control samples (@mclaren2019cons).
-Suitable controls are any community sample whose composition (species identity and relative abundances) has been previously characterized, either by construction (in the case of constructed 'mock' communities) or by measurement with a _reference protocol_ chosen to serve as a measurement standard.
+Suitable controls are any community sample whose composition (species identities and relative abundances) has been previously characterized, either by construction (in the case of constructed 'mock' communities) or by measurement with a _reference protocol_ chosen to serve as a measurement standard.
 These controls, when measured alongside the target experimental samples, can be used to estimate the relative efficiencies among the superset of species across the control samples.
-The estimated efficiencies can then be used to calibrate the measured relative abundances among the control species in the target samples to the chosen measurement standard, by simply dividing the species' read counts by their corresponding efficiencies or using a more sophisticated statistical modeling framework.
+The estimated efficiencies can then be used to calibrate the measured relative abundances among the control species in the target samples to the chosen measurement standard, by simply dividing the species' read counts by their corresponding efficiencies (@mclaren2019cons) or using a more sophisticated statistical modeling framework.
 These calibrated compositions can then be used for arbitrary downstream microbiome analyses, including DA analysis.
 Calibration of species not in the controls requires first imputing their efficiencies from the control measurements, for example using phylogenetic relationships, genetic characteristics (such as 16S copy number), and/or phenotypic properties (such as cell-wall structure).
-Though such imputation is conceptually straightforward to implement, its reliability and utility remain untested.
+Though such imputation is conceptually straightforward, its accuracy and ultimate utility remain untested.
 
 - The above states the approach; can add description/discussion of application to the MOMS-PI and @leopold2020host cases and developments and challenges in availability of control communities
+- 'more sophisticated modeling framework' - cite @williamson2021amul and https://microbiomemeasurement.org/posts/bias-estimation-from-mocks-with-fido/
 
 ## Use ratio-based abundance measurement
 
