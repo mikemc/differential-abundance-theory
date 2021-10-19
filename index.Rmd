@@ -2,6 +2,8 @@
 title: "Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements"
 author:
   - Michael R. McLaren^[North Carolina State University; send correspondence to m.mclaren42@gmail.com]
+  - Jacob T. Nearing^[Dalhousie University]
+  - Amy D. Willis^[University of Washington]
   - Karen G. Lloyd^[University of Tennessee]
   - Benjamin J. Callahan^[North Carolina State University]
 date: "`r Sys.Date()`"
@@ -49,6 +51,12 @@ output:
 ```{r}
 repo <- git2r::repository(".")
 sha <- repo %>% git2r::commits(n = 1) %>% .[[1]] %>% git2r::sha()
+status <- repo %>% git2r::status()
+```
+
+```{r}
+if (length(status$unstaged) > 0)
+  print(status$unstaged)
 ```
 
 _This manuscript was rendered from commit `r sha`._
