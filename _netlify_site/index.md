@@ -2,5 +2,5 @@
 
 * [Latest from 'main' branch](https://mikemc.github.io/differential-abundance-theory)
 
-* [Latest from 'revision' branch](https://da.mikemc.cc/revision/)
+* [Analysis notebook](https://mikemc.github.io/differential-abundance-theory/notebook)
 
