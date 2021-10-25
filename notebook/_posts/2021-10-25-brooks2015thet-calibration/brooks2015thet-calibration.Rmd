@@ -1,0 +1,228 @@
+---
+title: "Illustrate calibration types in the mock communities from Brooks et al (2015)"
+description: |
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - ref:brooks2015thet
+date: 2021-10-25
+draft: false
+output:
+  distill::distill_article:
+    self_contained: false
+    dev: png
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  cache = TRUE,
+  autodep = TRUE,
+  cache.comments = FALSE,
+  dpi = 300
+)
+```
+
+# Setup
+
+```{r libraries}
+# Tools for microbiome data
+library(speedyseq)
+# Tools for general purpose data manipulation and plotting
+library(tidyverse)
+library(fs)
+# ggplot helpers
+library(ggbeeswarm)
+library(cowplot)
+library(patchwork)
+library(scales)
+theme_set(theme_cowplot())
+# stats helpers
+# library(broom)
+
+library(metacal); packageVersion("metacal")
+```
+
+```{r}
+colors_brooks <- c(
+  "Atopobium_vaginae" = "#009E73",
+  "Gardnerella_vaginalis" = "#56B4E9",
+  "Lactobacillus_crispatus" = "#D55E00",
+  "Lactobacillus_iners" = "#505050",
+  "Prevotella_bivia" = "#0072B2",
+  "Sneathia_amnii" = "#CC79A7",
+  "Streptococcus_agalactiae" = "#E69F00")
+
+scale_y_custom <- scale_y_continuous(
+    trans = 'log10',
+    breaks = trans_breaks('log10', function(x) 10^x),
+    labels = trans_format('log10', math_format(10^.x))
+  )
+```
+
+
+```{r}
+# Load data from the cellular mock communities of Brooks et al 2015
+dr <- system.file("extdata", package = "metacal")
+list.files(dr)
+actual <- file.path(dr, "brooks2015-actual.csv") |>
+  read.csv(row.names = "Sample") |>
+  otu_table(taxa_are_rows = FALSE)
+observed <- file.path(dr, "brooks2015-observed.csv") |>
+  read.csv(row.names = "Sample") |>
+  subset(select = - Other) |>
+  otu_table(taxa_are_rows = FALSE)
+
+# Estimate bias with bootstrapping for error estimation
+mc_fit <- estimate_bias(observed, actual, boot = TRUE)
+control_species <- mc_fit %>% coef %>% names
+summary(mc_fit)
+```
+
+are the single-species samples present?
+
+```{r}
+actual %>% 
+  as_tibble %>%
+  filter(.abundance == 1) %>%
+  count(.otu)
+```
+
+Yes.
+
+# Calibration
+
+## Calibration from community control
+
+Demonstrate that calibration using a single mock community can create a substantial improvement.
+
+```{r}
+smpls <- actual %>%
+  as_tibble %>%
+  with_groups(.sample, summarize, n_species = sum(.abundance > 0)) %>%
+  filter(n_species == 7) %>%
+  pull(.sample)
+```
+
+```{r}
+control_samples <- smpls[1]
+bias_from_control <- estimate_bias(
+  observed %>% prune_samples(control_samples, .),
+  actual %>% prune_samples(control_samples, .),
+  ) %>%
+  coef
+calibrated <- calibrate(observed, bias_from_control)
+```
+
+## Calibration using a reference species
+
+One way to do this is to get the correction for each pair of samples, then join it with the table from previous.
+Another is to make the calibrated OTU table, then redo the pairwise ratio stuff.
+
+Basic Idea: Multiply the ratio of focal to ref species by the true proportion of the ref.
+One way to achieve this with phyloseq objects is to construct the correction matrix, then multiply this by the observed proportions
+
+```{r}
+ref_species <- 'Lactobacillus_crispatus'
+
+ref_actual <- actual %>% prune_taxa(ref_species, .) %>% c
+ref_observed <- observed %>% prune_taxa(ref_species, .) %>% c
+
+correction_matrix <- matrix(
+  ref_actual / ref_observed, 
+  nrow = nsamples(observed), ncol= ntaxa(observed),
+  byrow = FALSE
+)
+
+calibrated_ref <- otu_table(observed * correction_matrix, taxa_are_rows = FALSE)
+```
+
+## Plot comparing calibrated and uncalibrated fold changes
+
+```{r}
+x <- list(
+  Actual = actual, 
+  Uncalibrated = observed %>% transform_sample_counts(close_elts),
+  Calibrated_community = calibrated,
+  Calibrated_reference = calibrated_ref
+  ) %>%
+  map(pairwise_ratios, margin = 'samples', filter = FALSE) %>%
+  map_dfr(as_tibble, .id = 'type')
+```
+
+```{r}
+lvls <- mc_fit %>% coef %>% sort %>% names
+
+brooks2015_fcs <- x %>%
+  pivot_wider(names_from = type, values_from = .abundance) %>%
+  pivot_longer(contains('calibrated'), 
+    names_to = 'type', values_to = 'Measured'
+  ) %>%
+  separate(.sample, c('sample1', 'sample2'), sep = ':') %>%
+  # Filter to remove cases where Actual is 0 in one or both samples, or where
+  # the numerator and denominator sample are equal
+  filter(is.finite(Actual), Actual != 0, sample1 != sample2) %>%
+  mutate(
+    across(type, fct_relevel, 'Uncalibrated'),
+    across(
+      type, fct_recode,
+      'Calibrated (community)' = 'Calibrated_community',
+      'Calibrated (reference)' = 'Calibrated_reference'
+      ),
+    across(.otu, factor, levels = rev(lvls)),
+    # across(.otu, fct_relabel, adjust_species_names)
+  )
+```
+
+Check on number of rows in these data frames,
+
+```{r}
+# expected in 'x'
+n1 <- observed %>% nsamples %>% print
+n2 <- observed %>% ntaxa
+all.equal(n1 * n1 * n2 * 4, x %>% nrow)
+x %>% nrow
+brooks2015_fcs %>% nrow
+```
+
+Let's plot just the sample-pairs with L. crispatus present, so that the same samples are shown in all panels.
+
+```{r brooks2015thet_fc_calibration, fig.dim = c(7, 5.5), dev = 'png'}
+# Find subset of pairs to plot
+sample_pairs <- brooks2015_fcs %>%
+  filter(is.finite(Actual), Actual > 0, is.finite(Measured), Measured > 0) %>%
+  select(sample1, sample2) %>%
+  unite(pair, sample1, sample2) %>%
+  distinct %>%
+  pull(pair)
+
+# Species labels
+species_label <- function(species) {
+  species %>%
+    str_replace('(?<=^[A-Z])[a-z]+_', '. ')
+}
+species_label(lvls)
+
+p <- brooks2015_fcs %>%
+  unite(pair, sample1, sample2) %>%
+  filter(pair %in% sample_pairs, is.finite(Actual), Actual > 0, is.finite(Measured), Measured > 0) %>%
+  ggplot(aes(Actual, Measured, color = .otu)) +
+  scale_color_manual(
+    values = colors_brooks, 
+    labels = species_label(colors_brooks %>% names)
+  ) +
+  facet_wrap(~type) +
+  scale_x_log10() +
+  scale_y_custom +
+  geom_abline(color = 'grey', size = 1) +
+  geom_point(position = position_jitter(), alpha = 0.5) +
+  coord_fixed() +
+  labs(x = 'Actual fold change', y = 'Measured fold change', color = 'Species') +
+  theme(legend.position = 'bottom')
+p
+```
+
+
+
