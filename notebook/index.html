@@ -452,7 +452,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 
   </style>
 
-  <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+  <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
   <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet"/>
   <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet"/>
   <script src="site_libs/headroom-0.9.4/headroom.min.js"></script>
@@ -2030,7 +2030,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </script>
 
   <!--/radix_placeholder_distill-->
-  <script src="site_libs/header-attrs-2.9/header-attrs.js"></script>
+  <script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
   <script src="site_libs/popper-2.6.0/popper.min.js"></script>
   <link href="site_libs/tippy-6.2.7/tippy.css" rel="stylesheet" />
   <link href="site_libs/tippy-6.2.7/tippy-light-border.css" rel="stylesheet" />
@@ -2082,7 +2082,7 @@ function init_posts_list() {
     var src = $(img).attr('data-src');
     if (src) {
       $(img).attr('src', src);
-      $(img).load(function() {
+      $(img).on("load", function() {
         img.removeAttribute('data-src');
       });
     }
@@ -2128,6 +2128,7 @@ function init_posts_list() {
 
       // mark posts that match the category visible
       var page_category = window.location.hash.replace(/^#category:/, "");
+      page_category = decodeURIComponent(page_category)
       var posts = $('.post-metadata').map(function(idx, script) {
         var metadata = $.parseJSON($(script).html());
         var post = null;
@@ -2143,7 +2144,7 @@ function init_posts_list() {
       set_posts_visible(posts, true);
 
       // mark the hash active
-      $('.categories li>a[href="' + window.location.hash + '"]').addClass('active');
+      $('.categories li>a[href="' + decodeURIComponent(window.location.hash) + '"]').addClass('active');
 
       // update the list_caption
       var list_caption = $('.posts-list-caption');
@@ -2206,6 +2207,65 @@ function init_posts_list() {
 <div class="posts-container posts-with-sidebar posts-apply-limit l-screen-inset">
 <div class="posts-list">
 <h1 class="posts-list-caption" data-caption="Research notebook for manuscript on taxonomic bias and differential-abundance methods">Research notebook for manuscript on taxonomic bias and differential-abundance methods</h1>
+<a href="posts/2021-10-27-illustrate-the-problem/" class="post-preview">
+<script class="post-metadata" type="text/json">{"categories":["ref:brooks2015thet","ref:leopold2020host"]}</script>
+<div class="metadata">
+<div class="publishedDate">Oct. 27, 2021</div>
+<div class="dt-authors">
+<div class="dt-author">Michael R. McLaren</div>
+</div>
+</div>
+<div class="thumbnail">
+<img src="posts/2021-10-27-illustrate-the-problem/illustrate-the-problem_files/figure-html5/brooks_lcrisp_prop_and_fc-1.svg"/>
+</div>
+<div class="description">
+<h2>Illustrate the basic problem</h2>
+<div class="dt-tags">
+<div class="dt-tag">ref:brooks2015thet</div>
+<div class="dt-tag">ref:leopold2020host</div>
+</div>
+<p></p>
+</div>
+</a>
+<a href="posts/2021-10-25-brooks2015thet-calibration/" class="post-preview">
+<script class="post-metadata" type="text/json">{"categories":["ref:brooks2015thet"]}</script>
+<div class="metadata">
+<div class="publishedDate">Oct. 25, 2021</div>
+<div class="dt-authors">
+<div class="dt-author">Michael R. McLaren</div>
+</div>
+</div>
+<div class="thumbnail">
+<img src="posts/2021-10-25-brooks2015thet-calibration/brooks2015thet-calibration_files/figure-html5/brooks2015thet_fc_calibration-1.png"/>
+</div>
+<div class="description">
+<h2>Illustrate calibration types in the mock communities from Brooks et al (2015)</h2>
+<div class="dt-tags">
+<div class="dt-tag">ref:brooks2015thet</div>
+</div>
+<p></p>
+</div>
+</a>
+<a href="posts/2021-10-18-evaluate-robustness-example/" class="post-preview">
+<script class="post-metadata" type="text/json">{"categories":["bias sensitivity","ref:callahan2017repl"]}</script>
+<div class="metadata">
+<div class="publishedDate">Oct. 18, 2021</div>
+<div class="dt-authors">
+<div class="dt-author">Amy D. Willis</div>
+</div>
+</div>
+<div class="thumbnail">
+<img src="posts/2021-10-18-evaluate-robustness-example/evaluate-robustness-example_files/figure-html5/summary_plot-1.svg"/>
+</div>
+<div class="description">
+<h2>Evaluate robustness example</h2>
+<div class="dt-tags">
+<div class="dt-tag">bias sensitivity</div>
+<div class="dt-tag">ref:callahan2017repl</div>
+</div>
+<p>Evaluate the robustness of an estimate and inference to bias.</p>
+</div>
+</a>
 <a href="posts/2021-08-03-simulate-regression-example/" class="post-preview">
 <script class="post-metadata" type="text/json">{"categories":[]}</script>
 <div class="metadata">
@@ -2249,7 +2309,7 @@ function init_posts_list() {
 </div>
 </div>
 <div class="thumbnail">
-<img src="posts/2021-04-26-illustration-of-a-spurious-differential-abundance-result-due-to-bias/index_files/figure-html5/unnamed-chunk-2-1.svg"/>
+<img data-src="posts/2021-04-26-illustration-of-a-spurious-differential-abundance-result-due-to-bias/index_files/figure-html5/unnamed-chunk-2-1.svg"/>
 </div>
 <div class="description">
 <h2>Illustration of a spurious differential abundance result due to bias</h2>
@@ -2271,7 +2331,7 @@ function init_posts_list() {
 </div>
 </div>
 <div class="thumbnail">
-<img src="posts/2020-11-12-leopold2020host-bias-sensitivity/index_files/figure-html5/unnamed-chunk-3-1.svg"/>
+<img data-src="posts/2020-11-12-leopold2020host-bias-sensitivity/index_files/figure-html5/unnamed-chunk-3-1.svg"/>
 </div>
 <div class="description">
 <h2>Exploring the effect of bias in Leopold and Busby (2020)
@@ -2291,11 +2351,11 @@ function init_posts_list() {
 <ul>
 <li>
 <a href="#category:Articles">Articles</a>
-<span class="category-count">(4)</span>
+<span class="category-count">(7)</span>
 </li>
 <li>
 <a href="#category:bias_sensitivity">bias sensitivity</a>
-<span class="category-count">(2)</span>
+<span class="category-count">(3)</span>
 </li>
 <li>
 <a href="#category:differential_abundance">differential abundance</a>
@@ -2306,8 +2366,16 @@ function init_posts_list() {
 <span class="category-count">(2)</span>
 </li>
 <li>
-<a href="#category:ref:leopold2020host">ref:leopold2020host</a>
+<a href="#category:ref:brooks2015thet">ref:brooks2015thet</a>
 <span class="category-count">(2)</span>
+</li>
+<li>
+<a href="#category:ref:callahan2017repl">ref:callahan2017repl</a>
+<span class="category-count">(1)</span>
+</li>
+<li>
+<a href="#category:ref:leopold2020host">ref:leopold2020host</a>
+<span class="category-count">(3)</span>
 </li>
 </ul>
 </div>
