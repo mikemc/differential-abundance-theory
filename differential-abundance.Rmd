@@ -32,7 +32,7 @@ The bottom row of Figure \@ref(fig:error-proportions) illustrates how variation 
 The mean efficiency decreases by a factor of 2.6 (FC: 0.4X) from Sample 1 to Sample 2.
 Consequently, the FC of each species is measured to be 2.6X larger than the true value.
 Though the fold error for all species is the same, the implications depend on the actual FC and correspond to three distinct types of error: an increase in magnitude, a decrease in magnitude, and a change in direction (or sign).
-We can see each type of error in Figure 2.
+We can see each type of error in Figure \@ref(fig:error-proportions).
 For Species 1, which increases and thus moves in the opposite direction of the mean efficiency, we see an increase in magnitude of the measured FC (actual FC: 2.3X, measured FC: 6.5X).
 For Species 2, which decreases and thus moves in the same direction as the mean efficiency but by a larger factor, we see an decrease in magnitude (actual FC: 0.15X, measured FC: 0.44X).
 For Species 2, which decreases by a smaller factor than the mean efficiency, we see a change in direction (actual FC: 0.6X, measured FC: 1.8X), such that the species actually appears to increase!
