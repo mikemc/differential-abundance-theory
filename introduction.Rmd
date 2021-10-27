@@ -21,7 +21,7 @@ The error it causes have been found to in some cases to supersede sizable biolog
 The typical approach to countering taxonomic bias in DA analysis is to standardize the measurement protocol used within a given study.
 In broad strokes, the thinking is that the measurements of samples measured by the same protocol will be affected by bias in the same way and so the inferred differences between samples (the focus of DA analysis) will be unaffected.
 For example, if taxonomic bias consistently causes the measured proportion of a given species to be 10X too high, we can still accurately infer its fold changes across samples (@kevorkian2018esti,@lloyd2020evid).
-However, @mclaren2019cons used a theoretical model (supported by measurements of defined bacterial communities) to show that consistent taxonomic bias can lead to variable fold errors in measured proportions.
+However, @mclaren2019cons used theoretical arguments and sequencing measurements of defined bacterial (or 'mock') communities to show that consistent taxonomic bias can lead to variable fold errors in measured proportions (Figure \@ref(fig:basic-problem)).
 These varying errors can lead to spurious conclusions for how the proportion of a taxon varies across samples, even in the direction of change (for example, causing a taxon that decreases appear to increase).
 Yet @mclaren2019cons also found that the fold error in the ratios among species was constant, making fold changes in ratios robust to bias.
 The implications of these findings for changes in absolute abundance---which remain subject to taxonomic bias in the underlying MGS measurement---and for DA analysis across many species and many samples---as commonly done in microbiome association testing---have yet to be investigated.
@@ -34,3 +34,31 @@ Yet we also present several potential solutions---methods for quantifying, corre
 Over time, application of these methods to past and future experiments will provide crucial quantitative information about the conditions under which taxonomic bias creates spurious results for various DA methodologies.
 Collectively, these methods and insights may provide practical solutions to taxonomic bias in DA analysis and the confidence that is necessary to codify the statistical findings of microbiome studies into readily-translatable scientific knowledge.
 
+<!-- begin figure -->
+
+```{r basic-problem, fig.cap = '(ref:cap-basic-problem)'}
+svg_path <- here::here(
+  "notebook/_posts/2021-10-27-illustrate-the-problem/illustrate-the-problem_files", "figure-html5/brooks_lcrisp_prop_and_fc-1.svg"
+)
+if (knitr::is_html_output()) {
+  knitr::include_graphics(svg_path)
+} else if (knitr::is_latex_output()) {
+  # cowplot::ggdraw() + cowplot::draw_image(svg_path)
+  pdf_path <- file.path("/tmp", "bookdown-differential-abundance-theory",
+    "error-proportions.pdf")
+  args <- c(
+    "--export-area-page", 
+    "--export-type=pdf", 
+    str_c("--export-filename=", pdf_path),
+    svg_path
+  )
+  system2("inkscape", args = args)
+  knitr::include_graphics(pdf_path)
+  rm(pdf_path)
+}
+rm(svg_path)
+```
+
+(ref:cap-basic-problem) **Mock community experiments show that taxonomic bias can distort the measured fold change in an individual species' proportion across samples.** The figure shows the measured vs. actual proportions for a single bacterial species, _Lactobacillus crispatus_, in a set of bacterial cellular mock communities, and the resulting fold changes between community samples. The inconsistent error in the measured proportions of individual samples (Panel A) leads to inaccurate measurements of fold changes (Panel B). Mock communities were constructed and measured with 16S sequencing by @brooks2015thet. The data was re-analyzed by @mclaren2019cons, who showed that despite the inconsistency of the errors in Panel A, taxonomic bias acted consistently across samples.
+
+<!-- end figure -->
