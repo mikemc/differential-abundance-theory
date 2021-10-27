@@ -1,0 +1,69 @@
+---
+title: "Theory for taxonomic bias and differential abundance"
+author:
+  - Michael R. McLaren^[North Carolina State University; send correspondence to m.mclaren42@gmail.com]
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+bibliography: [../main.bib, ../packages.bib]
+biblio-style: apalike
+link-citations: yes
+# description:
+# For pandoc latex processing
+documentclass: article
+geometry:
+  - top=1in
+  - bottom=1in
+  - left=1.5in
+  - right=1.5in
+output:
+  bookdown::gitbook:
+    css: ../style.css
+    number_sections: true
+    includes:
+      in_header: ../header.html
+    config:
+      sharing:
+        facebook: no
+        github: yes
+        twitter: no
+        linkedin: no
+        weibo: no
+        instapaper: no
+        vk: no
+        all: ['facebook', 'twitter', 'linkedin', 'weibo', 'instapaper']
+  bookdown::pdf_book:
+    includes:
+      in_header: ../latex/preamble.tex
+    keep_tex: true
+    dev: "pdf"
+    papersize: letter
+    toc_depth: 2
+    toc_unnumbered: yes
+    toc_appendix: yes
+---
+
+# Preface {-}
+
+```{r}
+repo <- git2r::repository(".")
+sha <- repo %>% git2r::commits(n = 1) %>% .[[1]] %>% git2r::sha()
+status <- repo %>% git2r::status()
+```
+
+```{r}
+if (length(status$unstaged) > 0)
+  print(status$unstaged)
+```
+
+_This manuscript was rendered from commit `r sha`._
+
+::: {#preface-warning .rmdnote}
+
+**This in-progress manuscript is not intended for general scientific use.**
+It is incomplete, has not been carefully reviewed, and may contain mistakes or other inaccuracies.
+Please post comments or questions on the [GitHub Issues page](https://github.com/mikemc/differential-abundance-theory/issues) or [email Mike](m.mclaren42@gmail.com).
+
+:::
+
+This Bookdown document contains theoretical calculations which supported the development of the manuscript.
+

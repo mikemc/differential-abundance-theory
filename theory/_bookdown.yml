@@ -1,0 +1,15 @@
+repo: https://github.com/mikemc/differential-abundance-theory
+delete_merged_file: true
+new_session: false
+
+rmd_files: [
+  "index.Rmd",
+  "models.Rmd",
+  "relative-abundance.Rmd",
+  "absolute-abundance.Rmd",
+  "derivations-regression.Rmd",
+  "derivations-dna.Rmd",
+  # "references.Rmd",
+]
+
+before_chapter_script: "../_common.R"
