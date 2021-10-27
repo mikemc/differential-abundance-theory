@@ -1,0 +1,374 @@
+---
+title: "Illustrate the basic problem"
+description: |
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - ref:brooks2015thet
+  - ref:leopold2020host
+date: 2021-10-27
+draft: false
+output:
+  distill::distill_article:
+    self_contained: false
+    dev: svg
+    toc: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  cache = TRUE,
+  autodep = TRUE,
+  cache.comments = FALSE,
+  dpi = 300
+)
+```
+
+# R setup
+
+```{r libraries}
+# Tools for microbiome data
+library(speedyseq)
+# Tools for general purpose data manipulation and plotting
+library(tidyverse)
+library(fs)
+# ggplot helpers
+library(ggbeeswarm)
+library(cowplot)
+library(patchwork)
+library(scales)
+theme_set(theme_cowplot())
+# stats helpers
+# library(broom)
+
+library(metacal); packageVersion("metacal")
+```
+
+# Brooks et al 
+
+## Setup
+
+```{r}
+colors_brooks <- c(
+  "Atopobium_vaginae" = "#009E73",
+  "Gardnerella_vaginalis" = "#56B4E9",
+  "Lactobacillus_crispatus" = "#D55E00",
+  "Lactobacillus_iners" = "#505050",
+  "Prevotella_bivia" = "#0072B2",
+  "Sneathia_amnii" = "#CC79A7",
+  "Streptococcus_agalactiae" = "#E69F00")
+
+scale_y_custom <- scale_y_continuous(
+    trans = 'log10',
+    breaks = trans_breaks('log10', function(x) 10^x),
+    labels = trans_format('log10', math_format(10^.x))
+  )
+```
+
+
+Load data from the cellular mock communities of Brooks et al 2015 from metacal,
+
+```{r}
+dr <- system.file("extdata", package = "metacal")
+list.files(dr)
+actual <- file.path(dr, "brooks2015-actual.csv") |>
+  read.csv(row.names = "Sample") |>
+  otu_table(taxa_are_rows = FALSE)
+observed <- file.path(dr, "brooks2015-observed.csv") |>
+  read.csv(row.names = "Sample") |>
+  subset(select = - Other) |>
+  otu_table(taxa_are_rows = FALSE)
+```
+
+Note that the single-species samples present.
+
+```{r}
+actual %>% 
+  as_tibble %>%
+  filter(.abundance == 1) %>%
+  count(.otu)
+```
+
+## Plots
+
+Idea is to focus on a single species and show that the error in log proportions is inconsistent, and therefore there is error in the fold changes.
+_L. crispatus_ is a species MM and BC commonly use to illustrate the inconsistent error, as since it has an intermediate efficiency, we see its error varying in sign/direction.
+However, the errors in fold changes don't depend on this aspect, but only the variation in mean efficiency, and is therefore the same for all species.
+
+
+Data frame for comparing measured and actual proportions:
+
+```{r}
+brooks_prop <- list(
+  Actual = actual, 
+  Measured = observed
+) %>%
+  map(transform_sample_counts, close_elts) %>%
+  map_dfr(as_tibble, .id = 'type') %>%
+  pivot_wider(names_from = type, values_from = .abundance)
+
+brooks_fc <- list(
+  Actual = actual, 
+  Measured = observed
+) %>%
+  map(transform_sample_counts, close_elts) %>%
+  map(pairwise_ratios, margin = 'samples', filter = FALSE) %>%
+  map_dfr(as_tibble, .id = 'type') %>%
+  pivot_wider(names_from = type, values_from = .abundance) %>%
+  separate(.sample, c('sample1', 'sample2'), sep = ':') %>%
+  # Filter to remove cases where Actual is 0 in one or both samples, or where
+  # the numerator and denominator sample are equal
+  filter(is.finite(Actual), Actual != 0, sample1 != sample2)
+```
+
+```{r}
+set.seed(42)
+species <- 'Lactobacillus_crispatus'
+
+samples <- actual %>%
+  as_tibble %>%
+  filter(.otu == species, .abundance > 0) %>%
+  pull(.sample)
+
+p1 <- brooks_prop %>%
+  filter(.otu == species, Actual > 0) %>%
+  ggplot(aes(Actual, Measured, color = .otu)) +
+  scale_color_manual(values = colors_brooks) +
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_abline(color = 'grey', size = 1) +
+  geom_point(position = position_jitter(width = 0.02, height = 0.02), alpha = 0.5) +
+  # geom_quasirandom() +
+  coord_fixed() +
+  expand_limits(x = 0.1, y = 0.1) +
+  labs(x = 'Actual proportion', y = 'Measured proportion', color = 'Species') +
+  theme(legend.position = 'none')
+p2 <- brooks_fc %>%
+  filter(.otu == species, sample1 %in% samples, sample2 %in% samples) %>%
+  ggplot(aes(Actual, Measured, color = .otu)) +
+  scale_color_manual(values = colors_brooks) +
+  scale_x_log10() +
+  # scale_y_custom +
+  scale_y_log10() +
+  geom_abline(color = 'grey', size = 1) +
+  geom_point(position = position_jitter(width = 0.02, height = 0.02), alpha = 0.5) +
+  # geom_quasirandom() +
+  coord_fixed() +
+  labs(x = 'Actual fold change', y = 'Measured fold change', color = 'Species') +
+  theme(legend.position = 'none')
+# p2
+```
+
+
+```{r brooks_lcrisp_prop_and_fc, fig.dim = c(7, 3.7), dev = 'svg'}
+(p1 + labs(x = 'Actual', y = 'Measured', title = 'Proportion')) + 
+  (p2 + labs(x = 'Actual', y = 'Measured', title = 'Fold change')) + 
+  plot_annotation(tag_levels = 'A')
+```
+
+
+# Leopold and Busby 2020
+
+This dataset is for DNA mocks rather than cellular mocks; however the magnitude of bias is similar.
+This dataset has a couple advantages for illustration purposes:
+
+- Each species has a wider range of actual proportions than in the Brooks dataset.
+- The ratios between species varies, whereas in the Brooks dataset it is always 1:1.
+<!--  -->
+
+## Setup
+
+```{r leopold2020host-data, include = TRUE}
+## From the metacal 2.0 tutorial
+# Download data from https://zenodo.org/record/3872145
+data_path <- here::here("notebook/_data", "leopold2020host")
+# To use a temporary directory:
+# data_path <- file.path(tempdir(), "leopold2020")
+if (!dir.exists(data_path)) {
+  dir.create(data_path, recursive = TRUE)
+  download.file(
+    "https://zenodo.org/record/3872145/files/dleopold/Populus_priorityEffects-v1.2.zip",
+    file.path(data_path, "Populus_priorityEffects-v1.2.zip")
+  )
+  unzip(
+    file.path(data_path, "Populus_priorityEffects-v1.2.zip"), 
+    exdir = data_path
+  )
+}
+#> The microbiome data is stored in a phyloseq object,
+ps <- file.path(data_path, 
+  "dleopold-Populus_priorityEffects-8594f7c/output/compiled/phy.rds") %>%
+  readRDS
+
+sample_data(ps) <- sample_data(ps) %>%
+  transform(
+    Timepoint = factor(Timepoint)
+  )
+
+mock_actual <- file.path(data_path, 
+  "dleopold-Populus_priorityEffects-8594f7c/data/MockCommunities.csv") %>%
+  read.csv(row.names = 1) %>%
+  select(-Sym4) %>%
+  as("matrix") %>%
+  otu_table(taxa_are_rows = FALSE) %>%
+  transform_sample_counts(function(x) close_elts(1 / x))
+mock_taxa <- taxa_names(mock_actual)
+sam <- sample_data(ps) %>% as("data.frame") %>% as_tibble(rownames = "Sample")
+tax <- tax_table(ps) %>% as("matrix") %>% as_tibble(rownames = "Taxon")
+ps.mock <- ps %>% 
+  subset_samples(Samp_type == "Mock") %>%
+  prune_taxa(mock_taxa, .)
+leopold_actual <- mock_actual
+leopold_observed <- ps.mock %>% otu_table
+rm(mock_actual, mock_taxa, sam, tax, ps.mock)
+```
+
+## Plots
+
+
+```{r}
+leopold_prop <- list(
+  Actual = leopold_actual, 
+  Measured = leopold_observed
+) %>%
+  map(transform_sample_counts, close_elts) %>%
+  map_dfr(as_tibble, .id = 'type') %>%
+  pivot_wider(names_from = type, values_from = .abundance)
+
+leopold_fc <- list(
+  Actual = leopold_actual, 
+  Measured = leopold_observed
+) %>%
+  map(transform_sample_counts, close_elts) %>%
+  map(pairwise_ratios, margin = 'samples', filter = FALSE) %>%
+  map_dfr(as_tibble, .id = 'type') %>%
+  pivot_wider(names_from = type, values_from = .abundance) %>%
+  separate(.sample, c('sample1', 'sample2'), sep = ':') %>%
+  # Filter to remove cases where Actual is 0 in one or both samples, or where
+  # the numerator and denominator sample are equal
+  filter(is.finite(Actual), Actual != 0, sample1 != sample2)
+```
+
+Note, in this case all species are (nominally) in all samples, but that Epicoccum is observed in 0 reads in one sample.
+
+```{r}
+species <- 'Cladosporium'
+# species <- 'Alternaria'
+# species <- 'Trichoderma'
+
+p1 <- leopold_prop %>%
+  filter(.otu == species, Actual > 0) %>%
+  ggplot(aes(Actual, Measured, color = .otu)) +
+  # scale_color_manual(values = colors_brooks) +
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_abline(color = 'grey', size = 1) +
+  geom_point(position = position_jitter(width = 0.02, height = 0.02), alpha = 0.5) +
+  # geom_quasirandom() +
+  coord_fixed() +
+  expand_limits(x = 0.1, y = 0.1) +
+  labs(x = 'Actual proportion', y = 'Measured proportion', color = 'Species') +
+  theme(legend.position = 'none')
+p2 <- leopold_fc %>%
+  filter(.otu == species) %>%
+  ggplot(aes(Actual, Measured, color = .otu)) +
+  # scale_color_manual(values = colors_brooks) +
+  scale_x_log10() +
+  # scale_y_custom +
+  scale_y_log10() +
+  geom_abline(color = 'grey', size = 1) +
+  geom_point(position = position_jitter(width = 0.02, height = 0.02), alpha = 0.5) +
+  # geom_quasirandom() +
+  coord_fixed() +
+  labs(x = 'Actual fold change', y = 'Measured fold change', color = 'Species') +
+  theme(legend.position = 'none')
+```
+
+
+```{r, fig.dim = c(7, 4), dev = 'svg'}
+p1 + p2
+```
+
+
+Same but for the ratios between two species:
+
+```{r}
+x <- list(
+  Actual = leopold_actual, 
+  Measured = leopold_observed
+) %>%
+  map(transform_sample_counts, close_elts) %>%
+  map(pairwise_ratios, margin = 'taxa', filter = FALSE)
+
+leopold_ratio <- x %>%
+  map_dfr(as_tibble, .id = 'type') %>%
+  pivot_wider(names_from = type, values_from = .abundance) %>%
+  separate(.otu, c('otu1', 'otu2'), sep = ':') %>%
+  filter(otu1 != otu2)
+
+leopold_ratio_fc <- x %>%
+  map(pairwise_ratios, margin = 'samples', filter = FALSE) %>%
+  map_dfr(as_tibble, .id = 'type') %>%
+  pivot_wider(names_from = type, values_from = .abundance) %>%
+  separate(.otu, c('otu1', 'otu2'), sep = ':') %>%
+  separate(.sample, c('sample1', 'sample2'), sep = ':') %>%
+  # Filter to remove cases where Actual is 0 in one or both samples, or where
+  # the numerator and denominator sample are equal
+  filter(otu1 != otu2, sample1 != sample2)
+```
+
+```{r}
+species1 <- 'Cladosporium'
+species2 <- 'Fusarium'
+# species2 <- 'Melampsora'
+# species <- 'Trichoderma'
+
+p3 <- leopold_ratio %>%
+  filter(otu1 == species1, otu2 == species2) %>%
+  ggplot(aes(Actual, Measured)) +
+  # scale_color_manual(values = colors_brooks) +
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_abline(color = 'grey', size = 1) +
+  geom_point(position = position_jitter(width = 0.02, height = 0.02), alpha = 0.5) +
+  # geom_quasirandom() +
+  coord_fixed() +
+  expand_limits(x = 0.1, y = 0.1) +
+  labs(x = 'Actual ratio', y = 'Measured ratio', color = 'Species') +
+  theme(legend.position = 'none')
+p4 <- leopold_ratio_fc %>%
+  filter(otu1 == species1, otu2 == species2) %>%
+  ggplot(aes(Actual, Measured)) +
+  # scale_color_manual(values = colors_brooks) +
+  scale_x_log10() +
+  # scale_y_custom +
+  scale_y_log10() +
+  geom_abline(color = 'grey', size = 1) +
+  geom_point(position = position_jitter(width = 0.02, height = 0.02), alpha = 0.5) +
+  # geom_quasirandom() +
+  coord_fixed() +
+  labs(x = 'Actual fold change', y = 'Measured fold change', color = 'Species') +
+  theme(legend.position = 'none')
+```
+
+
+```{r, fig.dim = c(7, 7)}
+(p1 + p2) / (p3 + p4)
+```
+
+
+Note, the ratio-view isn't always _obviously_ better; e.g. when Mel is involved; perhaps because of noise?
+
+
+To make things more directly comparable, it might be best to use faceting and to fix the axes to have the same span.
+
+# Session info {.appendix}
+
+<details><summary>Click for session info</summary>
+```{r, R.options = list(width = 83)}
+sessioninfo::session_info()
+```
+</details>
