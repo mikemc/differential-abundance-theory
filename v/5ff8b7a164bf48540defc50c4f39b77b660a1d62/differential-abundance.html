@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>3 How taxonomic bias affects differential-abundance analysis | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements</title>
+  <meta name="description" content="3 How taxonomic bias affects differential-abundance analysis | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements" />
+  <meta name="generator" content="bookdown 0.24 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="3 How taxonomic bias affects differential-abundance analysis | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="3 How taxonomic bias affects differential-abundance analysis | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements" />
+  
+  
+  
+
+<meta name="author" content="Michael R. McLaren" />
+<meta name="author" content="Jacob T. Nearing" />
+<meta name="author" content="Amy D. Willis" />
+<meta name="author" content="Karen G. Lloyd" />
+<meta name="author" content="Benjamin J. Callahan" />
+
+
+<meta name="date" content="2021-10-27" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="abundance-measurement.html"/>
+<link rel="next" href="implications.html"/>
+<script src="libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+TeX: {extensions: ["cancel.js"]}
+});
+</script>
+
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
+<li class="chapter" data-level="1" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>1</b> Introduction</a></li>
+<li class="chapter" data-level="2" data-path="abundance-measurement.html"><a href="abundance-measurement.html"><i class="fa fa-check"></i><b>2</b> How taxonomic bias affects abundance measurements</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="abundance-measurement.html"><a href="abundance-measurement.html#model-of-mgs-measurement"><i class="fa fa-check"></i><b>2.1</b> Model of MGS measurement</a></li>
+<li class="chapter" data-level="2.2" data-path="abundance-measurement.html"><a href="abundance-measurement.html#relative-abundances-proportions-and-ratios"><i class="fa fa-check"></i><b>2.2</b> Relative abundances (proportions and ratios)</a></li>
+<li class="chapter" data-level="2.3" data-path="abundance-measurement.html"><a href="abundance-measurement.html#absolute-abundances-cell-densities"><i class="fa fa-check"></i><b>2.3</b> Absolute abundances (cell densities)</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="differential-abundance.html"><a href="differential-abundance.html"><i class="fa fa-check"></i><b>3</b> How taxonomic bias affects differential-abundance analysis</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="differential-abundance.html"><a href="differential-abundance.html#change-between-a-pair-of-samples"><i class="fa fa-check"></i><b>3.1</b> Change between a pair of samples</a></li>
+<li class="chapter" data-level="3.2" data-path="differential-abundance.html"><a href="differential-abundance.html#regression-analysis-of-many-samples"><i class="fa fa-check"></i><b>3.2</b> Regression analysis of many samples</a></li>
+<li class="chapter" data-level="3.3" data-path="differential-abundance.html"><a href="differential-abundance.html#regression-error"><i class="fa fa-check"></i><b>3.3</b> Box: Error in estimated regression coefficients and standard errors</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="implications.html"><a href="implications.html"><i class="fa fa-check"></i><b>4</b> Implications for real-world inference </a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="implications.html"><a href="implications.html#systematic-error-in-slope-or-lfc-estimates"><i class="fa fa-check"></i><b>4.1</b> Systematic error in slope or LFC estimates</a></li>
+<li class="chapter" data-level="4.2" data-path="implications.html"><a href="implications.html#loss-of-power-and-precision-stub"><i class="fa fa-check"></i><b>4.2</b> Loss of power and precision (stub)</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="solutions.html"><a href="solutions.html"><i class="fa fa-check"></i><b>5</b> Potential solutions</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="solutions.html"><a href="solutions.html#calibrate-compositions"><i class="fa fa-check"></i><b>5.1</b> Calibrate compositions using community controls</a></li>
+<li class="chapter" data-level="5.2" data-path="solutions.html"><a href="solutions.html#use-ratio-based-abundance-measurement"><i class="fa fa-check"></i><b>5.2</b> Use ratio-based abundance measurement</a></li>
+<li class="chapter" data-level="5.3" data-path="solutions.html"><a href="solutions.html#calibrate-fold-changes-using-measurements-of-targeted-taxa"><i class="fa fa-check"></i><b>5.3</b> Calibrate fold changes using measurements of targeted taxa</a></li>
+<li class="chapter" data-level="5.4" data-path="solutions.html"><a href="solutions.html#perform-a-bias-sensitivity-analysis"><i class="fa fa-check"></i><b>5.4</b> Perform a bias sensitivity analysis</a></li>
+<li class="chapter" data-level="5.5" data-path="solutions.html"><a href="solutions.html#use-bias-aware-meta-analysis"><i class="fa fa-check"></i><b>5.5</b> Use bias-aware meta-analysis</a></li>
+<li class="chapter" data-level="5.6" data-path="solutions.html"><a href="solutions.html#supplemental-figures"><i class="fa fa-check"></i><b>5.6</b> Supplemental figures</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="differential-abundance" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> How taxonomic bias affects differential-abundance analysis</h1>
+<p>How do the measurement errors described in the previous section impact our ability to estimate the changes in microbial abundances across samples or between different host and environmental conditions?
+Though there are many ways to quantitatively define such change, here we restrict our attention to inferring the multiplicative or (equivalently) log fold change in proportions, ratios, and cell densities, which have direct ecological interpretations (via the processes of exponential growth and death) and are ubiquitous in microbiome DA analysis.</p>
+<div id="change-between-a-pair-of-samples" class="section level2" number="3.1">
+<h2><span class="header-section-number">3.1</span> Change between a pair of samples</h2>
+<p>Before considering the stereotypical many-sample DA analysis, it is instructive to
+consider simplest analysis of differential abundance: the measurement of fold changes in abundance between a pair of samples.
+This case is relevant for understanding common visualizations for comparing abundances across individual samples, such as the ubiquitous proportion bar plot and abundances-through-time trajectories within a single host or environment, and conceptually bridges the single-sample results of the previous section to the many-sample case.</p>
+<!-- P: error in FC proportions -->
+<p>The composition-dependent effect of bias on fold error in proportions leads to error in fold-change measurements that is proportional to the inverse change in mean efficiency.
+From the error in an individual sample (Equation <a href="abundance-measurement.html#eq:prop-error">(2.5)</a>), it follows that the measured fold change in proportion of taxon <span class="math inline">\(i\)</span> from sample <span class="math inline">\(a\)</span> to sample <span class="math inline">\(b\)</span> is
+<span class="math display" id="eq:prop-fc-error">\[\begin{align}
+  \tag{3.1}
+% \tag*{Fold change in proportion}
+\underbrace{\frac{\widehat{\text{prop}}_{i}(b)}{\widehat{\text{prop}}_{i}(a)}} _\text{measured FC}
+  &amp;= \frac
+    {\text{prop}_{i}(b) \cdot \cancel{\text{efficiency}_{i}} / {\text{mean efficiency}(b)}}
+    {\text{prop}_{i}(a) \cdot \cancel{\text{efficiency}_{i}} / {\text{mean efficiency}(a)}}
+\\[0.5ex]
+  &amp;=
+  \underbrace{\frac{\text{prop}_{i}(b)}{\text{prop}_{i}(a)}}_\text{actual FC}
+  \cdot
+  \underbrace{\left[\frac{\text{mean efficiency}(b)}{\text{mean efficiency}(a)}\right]^{-1}}_\text{fold error}
+  .
+\end{align}\]</span>
+The sample-independent efficiency factor of the error cancels, but the sample-dependent mean efficiency does not, leaving an error equal to the inverse of the change in the mean efficiency from <span class="math inline">\(s\)</span> to <span class="math inline">\(t\)</span>.</p>
+<p>The bottom row of Figure <a href="abundance-measurement.html#fig:error-proportions">2.1</a> illustrates how variation in mean efficiency leads to error in the inferred fold changes between a pair of samples.
+The mean efficiency decreases by a factor of 2.6 (FC: 0.4X) from Sample 1 to Sample 2.
+Consequently, the FC of each species is measured to be 2.6X larger than the true value.
+Though the fold error for all species is the same, the implications depend on the actual FC and correspond to three distinct types of error: an increase in magnitude, a decrease in magnitude, and a change in direction (or sign).
+We can see each type of error in Figure <a href="abundance-measurement.html#fig:error-proportions">2.1</a>.
+For Species 1, which increases and thus moves in the opposite direction of the mean efficiency, we see an increase in magnitude of the measured FC (actual FC: 2.3X, measured FC: 6.5X).
+For Species 2, which decreases and thus moves in the same direction as the mean efficiency but by a larger factor, we see an decrease in magnitude (actual FC: 0.15X, measured FC: 0.44X).
+For Species 2, which decreases by a smaller factor than the mean efficiency, we see a change in direction (actual FC: 0.6X, measured FC: 1.8X), such that the species actually appears to increase!</p>
+<p>In contrast, because species ratios are distorted by a constant factor, their measured fold changes remain accurate.
+The fold error in Equation <a href="abundance-measurement.html#eq:ratio-error">(2.7)</a> completely cancels when we divide the ratio measured for one sample <span class="math inline">\(a\)</span> by another sample <span class="math inline">\(b\)</span>.</p>
+<p>If other error sources remain negligible (or constant across samples), than this dichotomy continues to apply to proportion- and ratio-based density measurements.
+The inferred FCs in proportion-based density measurements will be incorrect by a factor equal to the inverse fold change in the mean efficiency, creating magnitude and/or directional errors.
+Moreover, any species with a constant density will appear to vary inversely with the mean efficiency.
+In contrast, fold changes in ratio-based density measurements will remain accurate.</p>
+</div>
+<div id="regression-analysis-of-many-samples" class="section level2" number="3.2">
+<h2><span class="header-section-number">3.2</span> Regression analysis of many samples</h2>
+<p>DA analysis of many samples across host or environmental conditions can typically be framed as a regression problem, in which we analyze the relationship between a microbial <em>response variable</em>, such as log density of some focal species <span class="math inline">\(i\)</span>, and one or more <em>covariates</em>, such the pH or temperature of the sampled environment or whether the sample is from a healthy or sick person.
+A large fraction of DA analyses use elaborations on the simple linear regression model, which for a response of log species density can be written
+<span class="math display" id="eq:regression">\[\begin{align}
+  \tag{3.2}
+  \log \text{density}_i(a) = \alpha + \beta x(a) + \varepsilon_i(a).
+\end{align}\]</span>
+Here <span class="math inline">\(x\)</span> is a continuous covariate (e.g. pH) or a binary covariate (e.g. <span class="math inline">\(x=1\)</span> for treated patients and <span class="math inline">\(x=0\)</span> for controls), <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> are regression coefficients, and <span class="math inline">\(\varepsilon_i(a)\)</span> is a mean-zero random variable that reflects the residual (unexplained) variation in the response (log density of species <span class="math inline">\(i\)</span>).
+Our interest is usually in the coefficient <span class="math inline">\(\beta\)</span> (slope or average difference between conditions) that describes how the species’ abundance changes with <span class="math inline">\(x\)</span>, while the intercept <span class="math inline">\(\alpha\)</span> captures differences in the baseline abundance and—we hope—measurement efficiency among species.
+How does taxonomic bias under our measurement model affect estimates of <span class="math inline">\(\beta\)</span> in the simple linear regression?</p>
+<p>Consider the case where the response is log density that has been estimated using proportion-based density estimation (Equation <a href="abundance-measurement.html#eq:density-prop-meas">(2.8)</a>) with error-free estimates of the total density.
+If the true log density follows the regression Equation <a href="differential-abundance.html#eq:regression">(3.2)</a>, then it follows from Equation <a href="abundance-measurement.html#eq:density-prop-error">(2.9)</a> the estimated log density equals
+<span class="math display" id="eq:regression-error">\[\begin{align}
+  \tag{3.3}
+  \log \widehat{\text{density}}_i(a)
+%  &amp;= \alpha + \beta x(a) + \varepsilon_i(a) + \log \text{efficiency}_i - \log \text{mean efficiency}(a)
+  = [\alpha + \log \text{efficiency}_i] + [\beta - \log \text{mean efficiency}(a)] x(a) + \varepsilon_i(a).
+\end{align}\]</span>
+This equation shows that the species-specific portion of the error affects the intercept term while the sample-specific portion (log mean efficiency) affects the slope term.
+Thus, as in the case of fold changes between two samples (Equation <a href="differential-abundance.html#eq:prop-fc-error">(3.1)</a>), it is the variation in the (log) mean efficiency across samples that we must worry about distorting our DA results.</p>
+<p>The variation in measurement error created by the log mean efficiency impacts the point estimate and precision of the regression coefficient <span class="math inline">\(\beta\)</span>.
+Box <a href="differential-abundance.html#regression-error">3.3</a> mathematically describes this effect for estimation via Ordinary Least Squares (OLS) or Maximum Likelihood Estimation (MLE), which Figure <a href="differential-abundance.html#fig:regression-example">3.1</a> illustrates using simulated data.
+Variation in the log mean efficiency that is associated with the covariate <span class="math inline">\(x\)</span> creates a systematic error in the estimated slope <span class="math inline">\(\hat \beta\)</span> equal to the negative of the (scaled) covariance of log mean efficiency with <span class="math inline">\(x\)</span>.
+The absolute error is the same for all species; however, its relative value depends on the magnitude of the covariance of the log mean efficiency with <span class="math inline">\(x\)</span> relative to that of the response (here, <span class="math inline">\(\log \text{density}_{i}\)</span>) with <span class="math inline">\(x\)</span> or, equivalently, the relative magnitudes of their slopes.
+As in the case of fold changes between pairs of samples, the net effect can be decreases in magnitude (Species 9, 10, and 1 in Figure <a href="differential-abundance.html#fig:regression-example">3.1</a>), changes in sign (Species 5), or increases in magnitude (remaining species) depending on these relative values.
+Variation in the log mean efficiency that is uncorrelated with <span class="math inline">\(x\)</span> does not systematically distort <span class="math inline">\(\hat \beta\)</span> but does affect its precision, typically leading to increased standard errors as the variation in log mean efficiency effectively acts as an additional source of noise in measured abundance (Figure <a href="differential-abundance.html#fig:regression-example">3.1</a> D).
+The exception is for species whose residual variation is strongly positively correlated with that of log mean efficiency (here, Species 9), which can appear to have less random variation and receive standard errors that are too small.
+Decreased magnitudes and increased standard errors can both cause associations to be missed that would otherwise have been detected (Species 10 and 1), while increased magnitudes can turn weak or statistically insignificant associations into strong and statistically significant ones (Species 7, 6 and 4).</p>
+<p>With this understanding in place, we briefly summarize how taxonomic bias affects estimation of the simple linear model in other abundance types.
+The results for proportion-based density estimates with accurate total densities also apply to LFC analysis of proportions.
+Similar results apply to microbiome regression tools (such as corncob; <span class="citation">Martin, Witten, and Willis (<a href="#ref-martin2020mode" role="doc-biblioref">2020</a>)</span>) that perform regression on the logit (instead of log) proportion of a species; however,
+the mean efficiency of the entire sample must instead be replaced with the mean efficiency among all species excluding the focal species, which causes the absolute error in regression coefficients to vary somewhat across species.
+Because ratios and ratio-based densities are subject to consistent multiplicative error, in analysis of log ratios and the log densities derived from them, only the estimated intercept <span class="math inline">\(\hat \alpha\)</span> is affected by taxonomic bias, while the point estimate and standard error of the estimated slope <span class="math inline">\(\hat \beta\)</span> remain unaffected.</p>
+<!-- Figure: Regression example -->
+<div class="figure"><span style="display:block;" id="fig:regression-example"></span>
+<img src="notebook/_posts/2021-08-03-simulate-regression-example/simulate-regression-example_files/figure-html5/main-figure-1.svg" alt="Taxonomic bias distorts multi-sample differential abundance inference when the mean efficiency of samples is associated with the covariate of interest. This figure shows the results of a regression analysis of simulated microbiomes consisting of 50 samples and 10 species from two environmental conditions indexed by \(x=0\) and \(x=1\). In this simulation, the species with the largest efficiency (Species 9) also has the largest positive LFC, which drives the positive association of the log mean efficiency with the condition (shown in Panels A and B). This positive LFC in the log mean efficiency induces a systematic negative shift in the estimated LFCs of all species (Panels C and D). Panel D shows the mean LFC (points) with 95% confidence intervals (CIs), for each species estimated from either the actual or the measured densities. The error (difference in LFC estimates on measured and actual) equals the negative LFC of the mean efficiency (shown in Panel B)."  />
+<p class="caption">
+Figure 3.1: <strong>Taxonomic bias distorts multi-sample differential abundance inference when the mean efficiency of samples is associated with the covariate of interest.</strong> This figure shows the results of a regression analysis of simulated microbiomes consisting of 50 samples and 10 species from two environmental conditions indexed by <span class="math inline">\(x=0\)</span> and <span class="math inline">\(x=1\)</span>. In this simulation, the species with the largest efficiency (Species 9) also has the largest positive LFC, which drives the positive association of the log mean efficiency with the condition (shown in Panels A and B). This positive LFC in the log mean efficiency induces a systematic negative shift in the estimated LFCs of all species (Panels C and D). Panel D shows the mean LFC (points) with 95% confidence intervals (CIs), for each species estimated from either the actual or the measured densities. The error (difference in LFC estimates on measured and actual) equals the negative LFC of the mean efficiency (shown in Panel B).
+</p>
+</div>
+
+<!-- end Figure -->
+</div>
+<div id="regression-error" class="section level2 rmdnote" number="3.3">
+<h2><span class="header-section-number">3.3</span> Box: Error in estimated regression coefficients and standard errors</h2>
+<p>Results from statistics on regression under measurement error can help us understand the effect of bias on DA regression analysis.</p>
+<p>Consider Equation <a href="differential-abundance.html#eq:regression">(3.2)</a> for the simple linear regression of log density of a species <span class="math inline">\(i\)</span> on covariate <span class="math inline">\(x\)</span>.
+Let <span class="math inline">\(y\)</span> stand for the actual log density of a focal species <span class="math inline">\(i\)</span>, <span class="math inline">\(z\)</span> stand for the log density that we’ve measured, and <span class="math inline">\(d = z - y\)</span> equal the difference between the two, which here is the log efficiency of species <span class="math inline">\(i\)</span> minus the log mean efficiency of the sample.
+Let <span class="math inline">\(s_{xy}\)</span> denote the sample covariance between variables <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span>, <span class="math inline">\(s^{2}_{x} = s_{xx}\)</span> and <span class="math inline">\(s_{x}\)</span> denote the sample variance and standard deviation, and <span class="math inline">\(r_{xy} = s_{xy}/(s_{x}s_{y})\)</span> denote the sample correlation.</p>
+<p>The ordinary least squares (OLS) and maximum likelihood (MLE) estimates of the slope of <span class="math inline">\(z\)</span> equals the sample covariance of <span class="math inline">\(z\)</span> and <span class="math inline">\(x\)</span> divided by the sample variance in <span class="math inline">\(x\)</span> or, equivalently, the sample correlation of <span class="math inline">\(z\)</span> and <span class="math inline">\(x\)</span> multiplied by the ratio of their sample standard deviations,
+<span class="math display">\[\begin{align}
+  \hat \beta_z = \frac{s_{zx}}{s^2_x} = r_{zx} \cdot \frac{s_y}{s_x}.
+\end{align}\]</span>
+From the (bi)linearity of sample covariances it follows that
+<span class="math display">\[\begin{align}
+  \hat \beta_z 
+  = \frac{s_{yx}}{s^2_x} + \frac{s_{dx}}{s^2_x} 
+  = \frac{r_{yx} s_y}{s_x} + \frac{r_{dx} s_d}{s_x} 
+  = \hat \beta_y + \hat \beta_d,
+\end{align}\]</span>
+where <span class="math inline">\(\hat \beta_y\)</span> and <span class="math inline">\(\hat \beta_d\)</span> denote the slope estimates for <span class="math inline">\(y\)</span> and <span class="math inline">\(d\)</span> (were these values to be known).
+The absolute error in the estimate <span class="math inline">\(\hat \beta_{z}\)</span> of <span class="math inline">\(\hat \beta_{y}\)</span> is therefore <span class="math inline">\(\hat \beta_{d}\)</span>; it is large in a practical sense when <span class="math inline">\(\hat \beta_{d}\)</span> is large (in absolute value) compared to <span class="math inline">\(\hat \beta_{y}\)</span>, which corresponds to the covariance of <span class="math inline">\(d\)</span> with <span class="math inline">\(x\)</span> being large compared to the covariance of <span class="math inline">\(y\)</span> with <span class="math inline">\(x\)</span>.</p>
+<p>In our case, the covariance of <span class="math inline">\(d\)</span> equals the negative of the covariance of log mean efficiency with <span class="math inline">\(x\)</span>.
+The absolute error (i.e., the <em>bias</em> in a statistical sense) in <span class="math inline">\(\hat \beta\)</span> is equals the negative covariance of log mean efficiency scaled by the variance in <span class="math inline">\(x\)</span>.
+This absolute error is the same for all species; however, its practical significance varies depending on its magnitude relative to that of the slope of the actual log densities.
+For species that covary with <span class="math inline">\(x\)</span> more strongly than the log mean efficiency, the error will be relatively small.
+This situation might occur either because the mean efficiency varies relatively little across samples or because its variation is relatively less correlated with <span class="math inline">\(x\)</span> compared to the log density of the focal species.</p>
+<p>We can similarly understand the impact of measurement error on the precision of our slope estimates.
+The OLS and MLE estimated standard error in <span class="math inline">\(\hat \beta\)</span> are both approximately
+<span class="math display">\[\begin{align}
+  \hat{\text{se}}(\hat \beta)
+  \approx \frac{s_{\hat \varepsilon}}{s_x \sqrt{n}},
+\end{align}\]</span>
+where <span class="math inline">\(s_{\hat \varepsilon}\)</span> is the sample standard deviation of the residuals
+(<span class="citation">Wasserman (<a href="#ref-wasserman2004allo" role="doc-biblioref">2004</a>)</span> Chapter 13).
+The sample residuals of <span class="math inline">\(z\)</span>, <span class="math inline">\(y\)</span>, and <span class="math inline">\(d\)</span> have a similar relationship to the regression coefficient estimates,
+<span class="math display">\[\begin{align}
+  \hat \varepsilon_z 
+    &amp;\equiv z - \hat \beta_z x
+  \\&amp;= (y + d) - (\hat \beta_y + \hat \beta_d) x
+  \\&amp;= (y - \hat \beta_y x) + (d - \hat \beta_d x)
+  \\&amp;= \hat \varepsilon_y + \hat \varepsilon_d.
+\end{align}\]</span>
+(Note, here I’ve omitted the subscript indicating the dependence on the sample.)
+It follows that the sample variances of the residuals of <span class="math inline">\(z\)</span>, <span class="math inline">\(y\)</span>, and <span class="math inline">\(d\)</span> are related through
+<span class="math display">\[\begin{align}
+  s^2_{\hat \varepsilon_{z}} 
+  = s^2_{\hat \varepsilon_{y} + \hat \varepsilon_{d}}
+  = s^2_{\hat \varepsilon_{y}} + s^2_{\hat \varepsilon_{d}} + 2 s_{\hat \varepsilon_{y} \hat \varepsilon_{d}}.
+\end{align}\]</span>
+The standard deviation of the <span class="math inline">\(z\)</span> residuals is increased above that of the <span class="math inline">\(y\)</span> residuals when the <span class="math inline">\(d\)</span> residuals are either uncorrelated or positively correlated with the <span class="math inline">\(y\)</span> residuals, but may be decreased when the <span class="math inline">\(y\)</span> and <span class="math inline">\(d\)</span> residuals are negatively correlated.</p>
+<p>In our case, the <span class="math inline">\(d\)</span> residuals equal the negative residuals of the log mean efficiency.
+It is plausible that for most species, their residual variation will have a small covariance with log mean efficiency and the net effect of variation in the mean efficiency will be to increase the estimated standard errors, as occurs with most species in Figure <a href="differential-abundance.html#fig:regression-example">3.1</a>.
+However, high-efficiency species that vary substantially in proportion across samples may be strongly positively correlated with log mean efficiency such that the estimated standard errors decrease, as we see with Species 9 in Figure <a href="differential-abundance.html#fig:regression-example">3.1</a>.</p>
+</div>
+<!-- </details> -->
+
+</div>
+<h3>References</h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-martin2020mode" class="csl-entry">
+Martin, Bryan D., Daniela Witten, and Amy D. Willis. 2020. <span>“<span class="nocase">Modeling microbial abundances and dysbiosis with beta-binomial regression</span>.”</span> <em>Ann. Appl. Stat.</em> 14 (1): 94–115. <a href="https://doi.org/10.1214/19-AOAS1283">https://doi.org/10.1214/19-AOAS1283</a>.
+</div>
+<div id="ref-wasserman2004allo" class="csl-entry">
+Wasserman, Larry. 2004. <em><span class="nocase">All of Statistics</span></em>. Springer Texts in Statistics. New York, NY: Springer New York. <a href="https://doi.org/10.1007/978-0-387-21736-9">https://doi.org/10.1007/978-0-387-21736-9</a>.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="abundance-measurement.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="implications.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": true,
+"facebook": false,
+"twitter": false,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/mikemc/differential-abundance-theory/edit/main/differential-abundance.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": "https://github.com/mikemc/differential-abundance-theory/commits/main/differential-abundance.Rmd",
+"text": null
+},
+"view": {
+"link": "https://github.com/mikemc/differential-abundance-theory/blob/main/differential-abundance.Rmd",
+"text": null
+},
+"download": null,
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

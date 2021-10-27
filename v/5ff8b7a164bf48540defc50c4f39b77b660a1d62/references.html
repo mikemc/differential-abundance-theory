@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>References | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements</title>
+  <meta name="description" content="References | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements" />
+  <meta name="generator" content="bookdown 0.24 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="References | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="References | Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements" />
+  
+  
+  
+
+<meta name="author" content="Michael R. McLaren" />
+<meta name="author" content="Jacob T. Nearing" />
+<meta name="author" content="Amy D. Willis" />
+<meta name="author" content="Karen G. Lloyd" />
+<meta name="author" content="Benjamin J. Callahan" />
+
+
+<meta name="date" content="2021-10-27" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="solutions.html"/>
+
+<script src="libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+TeX: {extensions: ["cancel.js"]}
+});
+</script>
+
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
+<li class="chapter" data-level="1" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>1</b> Introduction</a></li>
+<li class="chapter" data-level="2" data-path="abundance-measurement.html"><a href="abundance-measurement.html"><i class="fa fa-check"></i><b>2</b> How taxonomic bias affects abundance measurements</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="abundance-measurement.html"><a href="abundance-measurement.html#model-of-mgs-measurement"><i class="fa fa-check"></i><b>2.1</b> Model of MGS measurement</a></li>
+<li class="chapter" data-level="2.2" data-path="abundance-measurement.html"><a href="abundance-measurement.html#relative-abundances-proportions-and-ratios"><i class="fa fa-check"></i><b>2.2</b> Relative abundances (proportions and ratios)</a></li>
+<li class="chapter" data-level="2.3" data-path="abundance-measurement.html"><a href="abundance-measurement.html#absolute-abundances-cell-densities"><i class="fa fa-check"></i><b>2.3</b> Absolute abundances (cell densities)</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="differential-abundance.html"><a href="differential-abundance.html"><i class="fa fa-check"></i><b>3</b> How taxonomic bias affects differential-abundance analysis</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="differential-abundance.html"><a href="differential-abundance.html#change-between-a-pair-of-samples"><i class="fa fa-check"></i><b>3.1</b> Change between a pair of samples</a></li>
+<li class="chapter" data-level="3.2" data-path="differential-abundance.html"><a href="differential-abundance.html#regression-analysis-of-many-samples"><i class="fa fa-check"></i><b>3.2</b> Regression analysis of many samples</a></li>
+<li class="chapter" data-level="3.3" data-path="differential-abundance.html"><a href="differential-abundance.html#regression-error"><i class="fa fa-check"></i><b>3.3</b> Box: Error in estimated regression coefficients and standard errors</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="implications.html"><a href="implications.html"><i class="fa fa-check"></i><b>4</b> Implications for real-world inference </a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="implications.html"><a href="implications.html#systematic-error-in-slope-or-lfc-estimates"><i class="fa fa-check"></i><b>4.1</b> Systematic error in slope or LFC estimates</a></li>
+<li class="chapter" data-level="4.2" data-path="implications.html"><a href="implications.html#loss-of-power-and-precision-stub"><i class="fa fa-check"></i><b>4.2</b> Loss of power and precision (stub)</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="solutions.html"><a href="solutions.html"><i class="fa fa-check"></i><b>5</b> Potential solutions</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="solutions.html"><a href="solutions.html#calibrate-compositions"><i class="fa fa-check"></i><b>5.1</b> Calibrate compositions using community controls</a></li>
+<li class="chapter" data-level="5.2" data-path="solutions.html"><a href="solutions.html#use-ratio-based-abundance-measurement"><i class="fa fa-check"></i><b>5.2</b> Use ratio-based abundance measurement</a></li>
+<li class="chapter" data-level="5.3" data-path="solutions.html"><a href="solutions.html#calibrate-fold-changes-using-measurements-of-targeted-taxa"><i class="fa fa-check"></i><b>5.3</b> Calibrate fold changes using measurements of targeted taxa</a></li>
+<li class="chapter" data-level="5.4" data-path="solutions.html"><a href="solutions.html#perform-a-bias-sensitivity-analysis"><i class="fa fa-check"></i><b>5.4</b> Perform a bias sensitivity analysis</a></li>
+<li class="chapter" data-level="5.5" data-path="solutions.html"><a href="solutions.html#use-bias-aware-meta-analysis"><i class="fa fa-check"></i><b>5.5</b> Use bias-aware meta-analysis</a></li>
+<li class="chapter" data-level="5.6" data-path="solutions.html"><a href="solutions.html#supplemental-figures"><i class="fa fa-check"></i><b>5.6</b> Supplemental figures</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="references" class="section level1 unnumbered">
+<h1>References</h1>
+
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div class="csl-entry">
+Brooks, J Paul, David J Edwards, Michael D Harwich, Maria C Rivera, Jennifer M Fettweis, Myrna G Serrano, Robert A Reris, et al. 2015. <span>“<span class="nocase">The truth about metagenomics: quantifying and counteracting bias in 16S rRNA studies</span>.”</span> <em>BMC Microbiol.</em> 15 (1): 66. <a href="https://doi.org/10.1186/s12866-015-0351-6">https://doi.org/10.1186/s12866-015-0351-6</a>.
+</div>
+<div class="csl-entry">
+Callahan, Benjamin J, Daniel B DiGiulio, Daniela S Aliaga Goltsman, Christine L Sun, Elizabeth K Costello, Pratheepa Jeganathan, Joseph R Biggio, et al. 2017. <span>“<span class="nocase">Replication and refinement of a vaginal microbial signature of preterm birth in two racially distinct cohorts of US women</span>.”</span> <em>Proc. Natl. Acad. Sci. U. S. A.</em> 114 (37): 9966–71. <a href="https://doi.org/10.1073/pnas.1705899114">https://doi.org/10.1073/pnas.1705899114</a>.
+</div>
+<div class="csl-entry">
+Fettweis, Jennifer M., Myrna G. Serrano, Jamie Paul Brooks, David J. Edwards, Philippe H. Girerd, Hardik I. Parikh, Bernice Huang, et al. 2019. <span>“<span class="nocase">The vaginal microbiome and preterm birth</span>.”</span> <em>Nat. Med.</em> 25 (6): 1012–21. <a href="https://doi.org/10.1038/s41591-019-0450-2">https://doi.org/10.1038/s41591-019-0450-2</a>.
+</div>
+<div class="csl-entry">
+Finucane, Mariel M., Thomas J. Sharpton, Timothy J. Laurent, and Katherine S. Pollard. 2014. <span>“<span class="nocase">A Taxonomic Signature of Obesity in the Microbiome? Getting to the Guts of the Matter</span>.”</span> Edited by Markus M. Heimesaat. <em>PLoS One</em> 9 (1): e84689. <a href="https://doi.org/10.1371/journal.pone.0084689">https://doi.org/10.1371/journal.pone.0084689</a>.
+</div>
+<div class="csl-entry">
+Galazzo, Gianluca, Niels van Best, Birke J. Benedikter, Kevin Janssen, Liene Bervoets, Christel Driessen, Melissa Oomen, et al. 2020. <span>“<span class="nocase">How to Count Our Microbes? The Effect of Different Quantitative Microbiome Profiling Approaches</span>.”</span> <em>Front. Cell. Infect. Microbiol.</em> 10 (August). <a href="https://doi.org/10.3389/fcimb.2020.00403">https://doi.org/10.3389/fcimb.2020.00403</a>.
+</div>
+<div class="csl-entry">
+Gloor, Gregory B., Jean M. Macklaim, Vera Pawlowsky-Glahn, and Juan J. Egozcue. 2017. <span>“<span>Microbiome Datasets Are Compositional: And This Is Not Optional</span>.”</span> <em>Front. Microbiol.</em> 8 (November): 2224. <a href="https://doi.org/10.3389/fmicb.2017.02224">https://doi.org/10.3389/fmicb.2017.02224</a>.
+</div>
+<div class="csl-entry">
+Jian, Ching, Anne Salonen, and Katri Korpela. 2021. <span>“<span class="nocase">Commentary: How to Count Our Microbes? The Effect of Different Quantitative Microbiome Profiling Approaches</span>.”</span> <em>Front. Cell. Infect. Microbiol.</em> 11 (March): 10–12. <a href="https://doi.org/10.3389/fcimb.2021.627910">https://doi.org/10.3389/fcimb.2021.627910</a>.
+</div>
+<div class="csl-entry">
+Kevorkian, Richard, Jordan T Bird, Alexander Shumaker, and Karen G Lloyd. 2018. <span>“<span class="nocase">Estimating Population Turnover Rates by Relative Quantification Methods Reveals Microbial Dynamics in Marine Sediment</span>.”</span> <em>Appl. Environ. Microbiol.</em> 84 (1): e01443–17. <a href="https://doi.org/10.1128/AEM.01443-17">https://doi.org/10.1128/AEM.01443-17</a>.
+</div>
+<div class="csl-entry">
+Leopold, Devin R, and Posy E Busby. 2020. <span>“<span class="nocase">Host Genotype and Colonist Arrival Order Jointly Govern Plant Microbiome Composition and Function</span>.”</span> <em>Curr. Biol.</em> 30 (16): 3260–3266.e5. <a href="https://doi.org/10.1016/j.cub.2020.06.011">https://doi.org/10.1016/j.cub.2020.06.011</a>.
+</div>
+<div class="csl-entry">
+Lloyd, Karen G., Jordan T. Bird, Joy Buongiorno, Emily Deas, Richard Kevorkian, Talor Noordhoek, Jacob Rosalsky, and Taylor Roy. 2020. <span>“<span class="nocase">Evidence for a Growth Zone for Deep-Subsurface Microbial Clades in Near-Surface Anoxic Sediments</span>.”</span> <em>Appl. Environ. Microbiol.</em> 86 (19): 1–15. <a href="https://doi.org/10.1128/AEM.00877-20">https://doi.org/10.1128/AEM.00877-20</a>.
+</div>
+<div class="csl-entry">
+Lozupone, Catherine A, Jesse Stombaugh, Antonio Gonzalez, Gail Ackermann, Janet K Jansson, Jeffrey I Gordon, Doug Wendel, Yoshiki Va, and Rob Knight. 2013. <span>“<span class="nocase">Meta-analyses of studies of the human microbiota</span>.”</span> <em>Genome Res.</em>, 1704–14. <a href="https://doi.org/10.1101/gr.151803.112">https://doi.org/10.1101/gr.151803.112</a>.
+</div>
+<div class="csl-entry">
+Martin, Bryan D., Daniela Witten, and Amy D. Willis. 2020. <span>“<span class="nocase">Modeling microbial abundances and dysbiosis with beta-binomial regression</span>.”</span> <em>Ann. Appl. Stat.</em> 14 (1): 94–115. <a href="https://doi.org/10.1214/19-AOAS1283">https://doi.org/10.1214/19-AOAS1283</a>.
+</div>
+<div class="csl-entry">
+McLaren, Michael R, Amy D Willis, and Benjamin J Callahan. 2019. <span>“<span class="nocase">Consistent and correctable bias in metagenomic sequencing experiments</span>.”</span> <em>Elife</em> 8 (September): 46923. <a href="https://doi.org/10.7554/eLife.46923">https://doi.org/10.7554/eLife.46923</a>.
+</div>
+<div class="csl-entry">
+Wasserman, Larry. 2004. <em><span class="nocase">All of Statistics</span></em>. Springer Texts in Statistics. New York, NY: Springer New York. <a href="https://doi.org/10.1007/978-0-387-21736-9">https://doi.org/10.1007/978-0-387-21736-9</a>.
+</div>
+<div class="csl-entry">
+Williamson, Brian D, James P Hughes, and Amy D Willis. 2021. <span>“<span class="nocase">A multiview model for relative and absolute microbial abundances</span>.”</span> <em>Biometrics</em>, no. August 2019 (June): biom.13503. <a href="https://doi.org/10.1111/biom.13503">https://doi.org/10.1111/biom.13503</a>.
+</div>
+<div class="csl-entry">
+Yeh, Yi-Chun, David M. Needham, Ella T. Sieradzki, and Jed A. Fuhrman. 2018. <span>“<span class="nocase">Taxon Disappearance from Microbiome Analysis Reinforces the Value of Mock Communities as a Standard in Every Sequencing Run</span>.”</span> <em>mSystems</em> 3 (3): e00023–18. <a href="https://doi.org/10.1128/mSystems.00023-18">https://doi.org/10.1128/mSystems.00023-18</a>.
+</div>
+</div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="solutions.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": true,
+"facebook": false,
+"twitter": false,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/mikemc/differential-abundance-theory/edit/main/references.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": "https://github.com/mikemc/differential-abundance-theory/commits/main/references.Rmd",
+"text": null
+},
+"view": {
+"link": "https://github.com/mikemc/differential-abundance-theory/blob/main/references.Rmd",
+"text": null
+},
+"download": null,
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
