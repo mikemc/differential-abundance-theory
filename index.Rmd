@@ -55,8 +55,7 @@ status <- repo %>% git2r::status()
 ```
 
 ```{r}
-if (length(status$unstaged) > 0)
-  print(status$unstaged)
+print(status)
 ```
 
 _This manuscript was rendered from commit `r sha`._
