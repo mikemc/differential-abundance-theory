@@ -1,0 +1,503 @@
+---
+title: "MOMS-PI: Key dynamics"
+description: |
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - ref:brooks2015thet
+  - ref:fettweis2019thev
+date: 2021-11-01
+draft: false
+bibliography: ../../../main.bib
+output:
+  distill::distill_article:
+    self_contained: false
+    dev: svg
+    toc: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  cache = TRUE,
+  autodep = TRUE,
+  cache.comments = FALSE,
+  dpi = 300
+)
+```
+
+This document is part of a series of analyses of the impact of taxonomic bias on vaginal community dynamics in MOMSPI dataset (@fettweis2019thev), using the bias estimated from the @brooks2015thet mock community data.
+The purpose of this document is to demonstrate the key dynamics we want to highlight in the manuscript.
+
+# Setup
+
+## R setup
+
+```{r libraries}
+# Tools for microbiome data
+library(speedyseq)
+# Tools for general purpose data manipulation and plotting
+library(tidyverse)
+library(fs)
+# ggplot helpers
+library(ggbeeswarm)
+library(cowplot)
+library(patchwork)
+library(scales)
+# stats helpers
+# library(broom)
+
+library(metacal); packageVersion("metacal")
+```
+
+```{r ggplot}
+theme_set(theme_cowplot())
+
+colors_brooks <- c(
+  "Atopobium_vaginae" = "#009E73",
+  "Gardnerella_vaginalis" = "#56B4E9",
+  "Lactobacillus_crispatus" = "#D55E00",
+  "Lactobacillus_iners" = "#505050",
+  "Prevotella_bivia" = "#0072B2",
+  "Sneathia_amnii" = "#CC79A7",
+  "Streptococcus_agalactiae" = "#E69F00")
+
+scale_y_custom <- scale_y_continuous(
+    trans = 'log10',
+    breaks = trans_breaks('log10', function(x) 10^x),
+    labels = trans_format('log10', math_format(10^.x))
+  )
+```
+
+## Estimate bias from @brooks2015thet
+
+We can estimate the efficiencies for the control species used in the cellular mocks of @brooks2015thet by running the example code in the docs for `metacal::estimate_bias()`. 
+This code uses the observed and actual species-level abundance tables which were produced by @mclaren2019cons from the SI files of @brooks2015thet and are included in the metacal package.
+
+```{r}
+dr <- system.file("extdata", package = "metacal")
+list.files(dr)
+actual <- file.path(dr, "brooks2015-actual.csv") |>
+  read.csv(row.names = "Sample") |>
+  as("matrix")
+observed <- file.path(dr, "brooks2015-observed.csv") |>
+  read.csv(row.names = "Sample") |>
+  subset(select = - Other) |>
+  as("matrix")
+
+# Estimate bias with bootstrapping for error estimation
+mc_fit <- estimate_bias(observed, actual, margin = 1, boot = TRUE)
+summary(mc_fit)
+
+rm(actual, observed, dr)
+```
+
+```{r}
+control_species <- mc_fit %>% coef %>% names
+control_genera <- control_species %>% str_extract('^[^_]+')
+```
+
+
+## Load the MOMSPI data
+
+TODO: replace this code chunk with one that pulls data from the github repo into `_data/`
+
+Load the MOMSPI Stirrups profiles into phyloseq
+
+```{r}
+path_momspi <- '~/research/momspi'
+
+otu <- path(path_momspi, "output", "stirrups-profiles", "abundance-matrix.csv.bz2") %>%
+  read_csv(
+    col_types = cols(.default = col_double(), sample_name = col_character())
+  ) %>%
+  otu_table(taxa_are_rows = FALSE)
+sam <- path(path_momspi, "output", "stirrups-profiles", "sample-data.csv.bz2") %>%
+  read_csv(col_types = "ccccccic") %>%
+  mutate(across(host_visit_number, factor, ordered = TRUE)) %>%
+  sample_data
+tax <- path(path_momspi, "output", "stirrups-profiles", "taxonomy.csv.bz2") %>%
+  read_csv(col_types = cols(.default = col_character())) %>%
+  tax_table %>%
+  mutate_tax_table(
+    species = case_when(!is.na(genus) ~ .otu)
+  )
+momspi_raw <- phyloseq(otu, sam, tax) %>%
+  mutate_tax_table(across(.otu, str_replace, 
+      "(?<=Lactobacillus_crispatus)_cluster", "")) %>%
+  mutate_sample_data(., sample_sum = sample_sums(.))
+taxa_names(momspi_raw) %>% str_subset("crispatus")
+stopifnot(all(control_species %in% taxa_names(momspi_raw)))
+```
+
+L crisp type 1 is just a few reads so we can ignore it (check)
+
+```{r}
+p1 <- momspi_raw %>% sample_sums %>% qplot + scale_x_log10() +
+  labs(x = 'sample sum')
+p2 <- momspi_raw %>% taxa_sums %>% qplot + scale_x_log10() +
+  labs(x = 'otu sum')
+p1 + p2
+```
+
+Let's filter samples with fewer than 1000 reads (also requirement used by the authors)
+
+```{r}
+momspi <- momspi_raw %>% 
+  filter_sample_data(sample_sum >= 1e3)
+```
+
+Note, we might want to be conservative in terms of composition shifts by making the min prop of species 1e-3.
+However this might add up to a large effect if we apply it to all species.
+Could instead filter to 1e4 reads and threshold at 1e-4, or 3e-4
+
+Let's see if we can filter the super-low-count species without affecting any remaining samples too much:
+
+```{r}
+x <- (momspi %>% filter_taxa2(~sum(.) >= 2e2) %>% sample_sums) / (momspi %>% sample_sums)
+summary(x)
+```
+
+Dropping OTUs with less than 200 reads has a negligible impact on the samples, so let's do that.
+
+```{r}
+momspi <- momspi %>% filter_taxa2(~sum(.) >= 2e2)
+```
+
+# Calibrate the MOMSPI measurements
+
+Owing to the large sample size of the mock community experiment, the standard errors in the estimated bias for the control species are quite small, and
+our uncertainty in the true bias of the MOMSPI study is much larger than what these standard errors imply.
+Therefore I will use the point estimate of the bias for the control species as if it were known exactly, but we should consider this to just be a hypothesis of what the bias truly is in the MOMSPI study.
+This hypothetical nature applies even more strongly when we extrapolate to other species.
+
+Since don't have a way to directly estimate the efficiencies of the other OTUs, we'll impute them as follows.
+
+1. Set the efficiencies of the 7 control species to the directly estimated values
+2. Compute efficiencies for the 6 control genera to the efficiency of the control species (if only one) or the geometric mean efficiency (if more than one; here this is just _Lactobacillus_)
+3. Use these genera-level efficiencies for the efficiencies of OTUs that are not control species but are in the same genus as one
+4. For other OTUs, use the geometric mean of the genera efficiencies; this is similar to using the mean of the 7 control species but gives _Lactobacillus_ equal weight to the other genera.
+
+<!--  -->
+
+```{r}
+bias_species <- coef(mc_fit) %>% 
+  enframe("species", "efficiency") %>%
+  print
+bias_genus <- bias_species %>%
+  mutate(genus = str_extract(species, "^[^_]+"), .before = 1) %>%
+  with_groups(genus, summarize, across(efficiency, gm_mean)) %>%
+  print
+# Match on genus or species, depending on which is available; then set others
+# to average genus efficiency
+bias_all <- tax_table(momspi) %>% as_tibble %>%
+  left_join(bias_species, by = "species") %>%
+  left_join(bias_genus, by = "genus") %>%
+  mutate(
+    efficiency = case_when(
+      !is.na(efficiency.x) ~ efficiency.x,
+      !is.na(efficiency.y) ~ efficiency.y,
+      TRUE ~ gm_mean(bias_genus$efficiency)
+    )
+  ) %>%
+  select(-efficiency.x, -efficiency.y) %>%
+  # standardize to L. iners, the most efficiently measured
+  mutate(
+    across(efficiency, ~ . / max(.))
+  ) %>%
+  glimpse
+bias_all_vec <- bias_all %>% select(.otu, efficiency) %>% deframe 
+```
+
+## Observed and calibrated proportions
+
+Compute observed and calibrated proportions with all taxa.
+
+```{r}
+momspi_obs <- momspi %>% 
+  transform_sample_counts(close_elts)
+# note, calibrate() automatically subsets to just the focal taxa if we haven't
+# already
+momspi_cal <- momspi_obs %>% calibrate(bias_all_vec)
+```
+
+Note, I'm not using pseudo-props so the zeros are staying zero.
+TODO: Reconsider this choice.
+
+## Sample summary statistics
+
+- Mean efficiencies
+- Most abundant species
+- Proportion of Lactobacillus
+<!--  -->
+
+To compute the mean efficiencies, we can use `metacal::perturb()` to multiply efficiencies by the actual proportions for each sample (using `norm = "none"` to avoid renormalizing the results), then summing up the values from each sample with `phyloseq::sample_sums()`.
+It's also useful to get the mean efficiency among just the control species.
+
+```{r}
+tmp1 <- momspi_cal %>%
+  perturb(bias_all_vec, norm = "none") %>% 
+  sample_sums %>%
+  enframe('.sample', 'mean_efficiency')
+tmp2 <- momspi_cal %>%
+  filter_tax_table(.otu %in% control_species) %>%
+  transform_sample_counts(close_elts) %>%
+  perturb(bias_species %>% deframe, norm = "none") %>% 
+  sample_sums %>%
+  enframe('.sample', 'mean_efficiency_controls')
+mean_eff <- left_join(tmp1, tmp2, by = '.sample') %>%
+  left_join(sample_data(momspi_cal) %>% as_tibble, by = '.sample')
+```
+
+For each sample, let's get the most abundant species in the calibrated and uncalibrated profiles. 
+
+```{r}
+get_top_species <- function(ps) {
+  x <- ps %>%
+    otu_table %>%
+    as_tibble(pivot = TRUE) %>%
+    with_groups(.sample, slice_max, .abundance, n = 1) %>%
+    # add count to check for ties
+    add_count(.sample)
+  if (anyDuplicated(x$.sample))
+    stop('Ties present')
+  x %>% select(.sample, .otu, .abundance)
+}
+top_species <- list(
+  Uncalibrated = momspi_obs,
+  Calibrated = momspi_cal
+  ) %>%
+  map_dfr(get_top_species, .id = 'type')
+```
+
+Which species tend to be dominant?
+
+```{r}
+top_species %>%
+  filter(type == 'Uncalibrated') %>%
+  count(.otu) %>%
+  arrange(desc(n)) %>%
+  print(n=20)
+```
+
+```{r}
+top_species %>%
+  filter(type == 'Calibrated') %>%
+  count(.otu) %>%
+  arrange(desc(n)) %>%
+  print(n=20)
+```
+
+The most important species/OTU that we do not have direct bias information on at the species or genus level is Lachnospiraceae BVAB1.
+
+The proportion of Lactobacillus in each sample - will simply do all control genera.
+
+```{r}
+genus_prop <- momspi_cal %>%
+  subset_taxa(genus %in% control_genera) %>%
+  tax_glom('genus') %>%
+  as_tibble %>%
+  select(.sample, genus, .abundance) %>%
+  pivot_wider(names_from = genus, values_from = .abundance)
+```
+
+Let's join the most abundant species and key genera proportions to the mean efficiecies for further analysis.
+For plotting, we'll create a version of the top taxa that only colors the taxa that are most often dominant.
+
+```{r}
+tmp <- top_species %>% 
+  select(-.abundance) %>% 
+  pivot_wider(names_from = type, values_from = .otu, 
+    names_glue = 'top_{str_to_lower(type)}')
+mean_eff1 <- mean_eff %>%
+  left_join(genus_prop, by = '.sample') %>%
+  left_join(tmp, by = '.sample') %>%
+  mutate(
+    top_plot = fct_lump_n(top_calibrated, 7)
+  )
+rm(tmp)
+```
+
+
+# Visual analysis of mean efficiency distribution and role of key species
+
+We can make a plot similar to that used for the Leopold et al analysis.
+
+
+```{r}
+# First let's look at the distribution of mean efficiencies
+p1 <- mean_eff1 %>%
+  ggplot(aes(mean_efficiency, fill = top_plot)) +
+  geom_histogram() +
+  # annotate("point", y = 200, x = bias, color = "black", shape = "|", size = 7) +
+  scale_x_log10() +
+  expand_limits(x = range(bias_all_vec)) +
+  scale_fill_brewer(type = "qual") +
+  labs(
+    # x = "Sample mean relative efficiency (SMRE)",
+    x = "Mean efficiency", 
+    y = "Number of samples",
+    fill = 'Most abundant species'
+  )
+# Next let's plot Lactobacillus proportion against mean efficiency, as another
+  # look at the relationship between Lacto and mean efficiency.
+p2 <- mean_eff1 %>%
+  ggplot(aes(mean_efficiency, Lactobacillus, color = top_plot)) +
+  geom_point() +
+  scale_x_log10() +
+  expand_limits(x = range(bias_all_vec)) +
+  scale_y_continuous(
+    trans = scales::pseudo_log_trans(sigma = 1e-2),
+    breaks = c(0, 0.01, 0.03, 0.1, 0.3, 1)
+    ) +
+  scale_color_brewer(type = "qual") +
+  labs(
+    y = "Lactobacillus proportion",
+    x = "Mean efficiency",
+    color = 'Most abundant species'
+  )
+```
+
+```{r momspi-mean-efficiency-dist-and-lacto, fig.dim = c(6,5) *1.6}
+# The yellow makes the L crispatus points a bit hard to see, so let's swap it's
+# color with the rarer L. gasseri in the final figure.
+colors_top <- RColorBrewer::brewer.pal(8, 'Accent')[c(1,2,3,5,4,6,7,8)] 
+(p1 + ggtitle("Distribution of sample mean efficiencies")) / 
+  (p2 + 
+    ggtitle("Lactobacillus proportion vs. mean efficiency") + 
+    theme(legend.position = 'none')
+  ) +
+  plot_annotation(tag_levels = "A") +
+  plot_layout(guides = 'collect') &
+  scale_fill_manual(
+    values = colors_top,
+    labels = function(x) str_replace_all(x, '_', ' ')
+  ) &
+  scale_color_manual(
+    values = colors_top,
+    labels = function(x) str_replace_all(x, '_', ' ')
+  )
+# The x-axis is very close but not completely aligned; I think I need to
+# manually set the x limits to get perfect alignment, but that leads to some
+# samples being dropped in the histogram plot; some investigation is needed
+# to go that route.
+```
+
+This plot shows that Lactobacillus dominance drives a bimodal distribution in the mean efficiencies, and that Gardnerella dominance drives the low end.
+Note that the 'other' and 'BVAB1' dominated samples are lumped around the middle because of our assumption in imputing the efficiencies.
+
+For the caption/methods: Note that the most abundant species is that inferred from the calibrated data; could just say that the calibrated data is treated as the actual composition.
+
+The Lacto proportion doesn't seem that much more illuminating than the histogram colored by dominant species, so let's make a version with just that for the manuscript.
+
+```{r momspi-mean-efficiency-dist, fig.dim = c(7,3.5)}
+colors_top <- RColorBrewer::brewer.pal(8, 'Accent')[c(1,2,3,5,4,6,7,8)] 
+p1 + 
+#  ggtitle("Distribution of sample mean efficiencies") +
+  scale_fill_manual(
+    values = colors_top,
+    labels = function(x) str_replace_all(x, '_', ' ')
+  ) +
+  scale_color_manual(
+    values = colors_top,
+    labels = function(x) str_replace_all(x, '_', ' ')
+  )
+```
+
+# Fold changes in mean efficiency
+
+How often do shifts in the mean efficiency occur within a single subject?
+How often do shifts from Lacto to non-Lacto dominance occur within a single subject?
+How often do shifts from Lacto to Gardnerella dominance occur within a single subject?
+
+Let's start by computing the pairwise changes in the sample mean efficiency between consecutive samples within women, and between the first samples of different women (first samples only to limit the number of sample pairs).
+
+Since we may be missing some host visits, let's create a new host visit number that has no gaps:
+
+```{r}
+mean_eff2 <- mean_eff1 %>%
+  with_groups(host_subject_id, mutate, 
+    host_visit_rank = rank(host_visit_number))
+```
+
+```{r}
+tb <- crossing(
+  sample.1 = mean_eff2$.sample, 
+  sample.2 = mean_eff2$.sample
+  ) %>%
+  left_join(mean_eff2, by = c(sample.1 = '.sample')) %>%
+  left_join(mean_eff2, by = c(sample.2 = '.sample'), suffix = c('.1', '.2')) %>%
+  mutate(
+    comparison_type = case_when(
+      host_subject_id.1 == host_subject_id.2 & host_visit_rank.2 == host_visit_rank.1 + 1 ~ 
+        'Between consecutive visits',
+      host_subject_id.1 != host_subject_id.2 & host_visit_rank.2 == 1 & host_visit_rank.1 == 1 ~
+        "Between subjects' first visits"
+    )
+  ) %>%
+  filter(!is.na(comparison_type)) %>%
+  mutate(
+    switch_class = case_when(
+      top_plot.1 == top_plot.2 ~ 'No change',
+      str_detect(top_plot.1, 'Gardnerella') & str_detect(top_plot.2, 'Lactobacillus') ~ 'Gard. to Lacto.',
+      str_detect(top_plot.1, 'Lactobacillus') & str_detect(top_plot.2, 'Gardnerella') ~ 'Lacto. to Gard.',
+      str_detect(top_plot.1, 'Lactobacillus') & str_detect(top_plot.2, 'Lactobacillus') ~ 'Lacto. to Lacto.',
+      TRUE ~ 'Other',
+    )
+  )
+
+# tb_within <- tb %>%
+#   filter(host_subject_id.1 == host_subject_id.2, host_visit_rank.2 == host_visit_rank.1 + 1)
+# tb_between <- tb %>%
+#   filter(host_subject_id.1 != host_subject_id.2, host_visit_rank.2 == 1, host_visit_rank.1 == 1)
+```
+
+Let's look at the distribution of FCs in mean efficiency, coloring by whether there is a shift in dominant species.
+
+```{r momspi-mean-efficiency-fcs, fig.dim = c(6, 7.0)}
+tb %>%
+  ggplot(aes(mean_efficiency.2 / mean_efficiency.1, fill = switch_class)) +
+  facet_wrap(~comparison_type, ncol = 1, scales = 'free_y') +
+  geom_histogram() +
+  scale_x_log10() +
+  # expand_limits(x = range(bias_all_vec)) +
+  labs(
+    x = "Fold change in mean efficiency", 
+    y = "Number of sample pairs",
+    fill = 'Change in most\nabundant species'
+  ) +
+  scale_fill_brewer(type = 'qual', palette = 3)
+```
+
+Unsurprisingly, shifts in the mean efficiency tend to be larger between different subjects.
+Note, the between-subject panel is perfectly symmetric, but the consecutive-visits panel is not. 
+
+```{r}
+tb %>%
+  count(comparison_type, switch_class) %>%
+  with_groups(comparison_type, mutate, prop = close_elts(n)) %>%
+  knitr::kable(digits = 3)
+```
+
+# (TODO) Example community trajectory
+
+Pick a woman with multiple visits and a large change in mean efficiency
+
+```{r}
+tb %>%
+  filter(host_subject_id.1 == host_subject_id.2) %>%
+  mutate(fc = mean_efficiency.2 / mean_efficiency.1) %>%
+  arrange(desc(abs(log(fc)))) %>%
+  select(fc, host_subject_id.1, top_plot.1, top_plot.2, host_visit_rank.1)
+```
+
+
+# Session info {.appendix}
+
+<details><summary>Click for session info</summary>
+```{r, R.options = list(width = 83)}
+sessioninfo::session_info()
+```
+</details>
