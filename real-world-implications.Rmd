@@ -71,28 +71,6 @@ The experimental and computational methods discussed in Section \@ref(solutions)
 
 - Todo: Address DA analysis of aggregate (or synthetic) taxa, such as phyla, which may be prone to errors due to changes in the species-level make-up of the taxon.
 
-
-**Error in total-density measurements:**
-
-So far we have ignored error in total-density measurements that are used to convert estimated proportions to estimated densities;
-however, in reality these measurements are likely to contain substantial systematic error that can either worsen or improve the error in LFC estimates.
-
-- Todo: Add to previous section or Appendix with the relevant theory.
-
-To understand how, we can consider the question of whether bulk 16S qPCR or flow cytometry is a more appropriate method of measuring total bacterial density for use in proportion-based density measurement (@galazzo2020howt, @jian2021comm).
-16S rRNA-gene qPCR measures the concentration of 16S rRNA gene copies in the extracted DNA and is therefore affected by variation among species in DNA extraction efficiency, 16S copy number, and primer-binding and amplification efficiency.
-For example, @mclaren2019cons found that the product of extraction efficiency and 16S copy number for _Lactobacillus iners_ was 20X larger than _Gardnerella vaginalis_ (CHECK NUMBERS), such that we should expect samples dominated by _L. iners_ to result in qPCR estimates 10-20X higher than equally dense samples dominated by _G. vaginalis_.
-These observations suggest that 16S qPCR is a poor proxy for fold changes in total bacterial density.
-Yet, as recently suggested by @jian2021comm, this taxonomic bias in qPCR may simultaneously make it a good measure of total density for use with 16S amplicon sequencing for proportion-based density estimation.
-16S amplicon sequencing shares these same sources of bias and so is likely to have species efficiencies highly similar to those for the qPCR measurements, which we can predict to cause the mean 16S-qPCR efficiency to closely follow the mean 16S-sequencing efficiency, such that the error induced by one largely cancels the error induced by the other (Ref Appendix).
-In contrast, species-specific efficiencies in bulk cell counting are less likely to be strongly correlated with those from 16S sequencing.
-Even supposing cell counting were to provide perfectly accurate measures of total density, it may actually perform worse than qPCR for DA analysis of proportion-based density estimation precisely because the error does not mirror that in the 16S measurement.
-
-On the other hand, bulk or targeted measurement (or DNA spike-ins) that occurs post DNA-extraction is subject to other error that is not likely to counter that of the 16S-based proportion estimates.
-The yield of DNA extraction can show highly random variation and also be highly non-linear (as a function of cellular biomass) at high concentrations.
-This features create error that is unlikely to offset the variation in mean efficiency in the 16S sequencing (todo: clarify why).
-Targeted measurement of cells and cellular spike-ins, discussed in Section \@ref(solutions), can avoid this issue while also facilitating ratio-based analysis while (unlike bulk cell counting) remaining robust mean-efficiency variation.
-
 ## Loss of power and precision (stub)
 
 Variation in mean efficiency that is not associated with covariates can still majorly hinder the goals of microbiome studies by causing reductions in the precision of LFC estimates and the power to detect true associations of a given size.
