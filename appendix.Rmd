@@ -1,0 +1,107 @@
+# (APPENDIX) Appendix {-} 
+
+# Details of MGS model {#model-details}
+
+- Give the model in terms of arbitrary taxa
+- Consider effect of variation in efficiency within a taxon
+- Discuss assumption about efficiencies being constant at the species level
+
+# Methods for assaying absolute densities {#review-absolute-methods}
+
+# Taxonomic bias, counting noise, and zeros
+
+- Motivation/intro P
+
+Simplest model: deterministic bias model + multinomial sampling.
+Number of reads assigned to a species as multinomial with a given total read count for the sample, and a the biased proportions as input.
+(Can treat this as a heuristic model, or can give an actual justification as to why this makes sense even for bioinformatic bias.)
+\begin{align}
+\text{reads}_i(a)
+  &= \text{Multinomial}\left( \text{total reads}(a), \text{prop}_{i}(a) \times \frac{\text{efficiency}_{i}}{\text{mean efficiency}(a)} \right).
+\end{align}
+The expected read count (conditional on read total) is
+\begin{align}
+E\left[\text{reads}_i(a)\right] = \text{total reads}(a) \times \text{prop}_{i}(a) \times \frac{\text{efficiency}_{i}}{\text{mean efficiency}(a)}.
+\end{align}
+
+(Note, might be simpler to use a Poisson model, especially for overdispersion case.)
+
+Zero counts are likely when the expected read count is $\lesssim 1$. 
+The expected read count is lower and hence the likelihood of zeros is much higher for species with efficiencies substantially below the sample mean.
+Whereas in the absence of taxonomic bias, an observation of zero is taken as evidence that the actual proportion of a species is similar or less than the reciprocal of the total read count, with taxonomic bias, it instead implies only that
+\begin{align}
+  \text{prop}_{i}(a)
+  \lesssim \frac{1}{ \text{total reads}(a) } 
+  \times \frac{\text{mean efficiency}(a)}{ \text{efficiency}_{i}}.
+\end{align}
+
+The likelihood of a zero for a given taxon varies with the mean efficiency of a sample.
+For example, when the vaginal microbiome shifts from Lactobacillus to Gardnerella dominance and the mean efficiency drops by 10X in figure x, it becomes ...
+This becomes problematic for presence/absense analysis.
+But it is also an issue for analysis of log proportions, log ratios, or log densities, in a manner that depends on how the DA method handles zeros.
+A simple and common approach is to ignore the uncertainty from the counting process, and opt to replace zeros with some defined, small value (either in the counts or in the proportions).
+(TODO: implications)
+Some statistical packages (e.g. corncob, fido) take a more sophisticated approach and directly account for the uncertainty by modeling the counting process.
+For these methods, bias against an organism can cause reduced precision, in a sample-dependent manner.
+
+- Maybe: implications of overdispersion / multiplicative noise prior to counting noise.
+- Note, the above is for regression analysis, but looking at two-sample case is also illustrative. Can see a case where having a zero or very small proportion (if overdispersed) makes it very hard to 
+- Consider case of a zero observation; how to interpret, in the light of taxonomic bias?
+- Limit of zero efficiency -> a value of zero reveals no information about the taxon.
+- Maybe: Implications for presence/absense analysis
+
+# Taxonomic bias in total-density measurements {#appendix-total-density}
+
+A noted in the main text, we should expect species-specific efficiencies for total density estimates.
+State the model: Assume constant absolute measurement efficiencies, $\text{efficiency}^{\text{tot}}_i$, which denote the absolute efficiency with which a cell of species $i$ contributes to the measurement of total density in sample $a$.
+This implies consistent relative efficiencies and that density measurement is linear, in the sense that a doubling of the actual density when species composition is fixed always leads to a doubling in the measured density.
+Absolute because we're not considering a compositional measurement; the scale of the species' efficiencies does impact the measured density, though not the fold variation across samples.
+
+How do these species specific efficiencies impact the total density measurement?
+We can write the measured total density in terms of the species' efficiencies as
+\begin{align}
+  \widehat{\text{total density}}(a) 
+  &= \sum_i \text{density}_i(a) \cdot \text{efficiency}^{\text{tot}}_i
+\\&= \text{total density}(a) \cdot \text{mean efficiency}^{\text{tot}}(a)
+\end{align}
+where
+\begin{align}
+  (\#eq:app-total-mean-efficiency)
+  \text{mean efficiency}^{\text{tot}}(a) 
+  \equiv \frac{\sum_{j}\text{density}_j(a)\cdot \text{efficiency}^{\text{tot}}_j}{\text{total density}(a)}
+\end{align}
+is the mean efficiency in the sample with respect to the total-density measurement.
+The error in the total density depends on the species composition through the mean efficiency of the sample; hence spurious changes in measured density can occur simply due to shifts from high- to low-efficiency species (or vice versa).
+
+How does this error affect the measured densities of individual species when the total is used for normalization?
+Substituting the mean efficiency of the total measurement for the error term in Equation \@ref(eq:density-prop-error) gives
+\begin{align}
+  (\#eq:app-density-prop-error)
+  \widehat{\text{density}}_{i}(a) 
+  = \text{density}_{i}(a) \cdot \frac{\text{efficiency}_{i} \cdot \text{mean efficiency}^{\text{tot}}(a)}{\text{mean efficiency}(a)}.
+\end{align}
+<!-- \begin{align} -->
+<!--   \newcommand{\allspecies}{\boldsymbol{\cdot}} -->
+<!--   \widehat{\text{density}}_{i}(a)  -->
+<!--   = \text{density}_{i}(a) \cdot \frac{\text{efficiency}_{i} \cdot \text{efficiency}_{\allspecies}^{\text{tot}}(a)}{\text{efficiency}_{\allspecies}(a)}. -->
+<!-- \end{align} -->
+Note, having more similar efficiencies between MGS and total measurements does not necessarily improve the accuracy of the individual sample density estimates (possible misconception of other article?), since even if they perfectly cancel the species-specific error remains.
+Yet it does improve fold change estimates.
+Equation \@ref(eq:app-density-prop-error) shows that the variation in the fold error across samples is driven by the variation in the ratio of the mean efficiency of the total measurement and that of the sequencing measurement.
+To the extent that these two are positively associated (specifically, their logarithms are positively linearly correlated), then the variation across samples will be lower than if a perfectly accurate total density were used.
+
+Applications of these ideas: 
+
+- example: 16S sequencing may be better paired with 16S qPCR than flow cytometry
+- example: shotgun sequencing may be best paired with bulk DNA measurement (depending on bioinformatics protocol); can even handle a large fraction of unassigned reads _if_ total reads are used in the denominator of the proportion calculation (rather than assigned reads)
+- example: estimating total density from a spike-in; mathematically reduces to the reference-species measurement; here the error completely offsets.
+
+Extra assumptions in this section:
+- Linearity of DNA extraction
+- Thinking that log efficiencies between MGS and total are positively correlated comes from the idea that we can treat bias from different steps and/or sources as approximately independent 
+
+# Taxonomic bias in spike-ins and targeted measurements
+
+- Distinction between cellular vs DNA and  pre- vs post-extraction spike-ins and targeted measurements
+- Pull from Section 5 of the theory notebook
+

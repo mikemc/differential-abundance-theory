@@ -12,8 +12,9 @@ rmd_files: [
   "differential-abundance.Rmd",
   "real-world-implications.Rmd",
   "solutions.Rmd",
-  "references.Rmd",
+  "appendix.Rmd",
   "appendix-regression.Rmd",
+  "references.Rmd",
 ]
 
 before_chapter_script: "_common.R"
