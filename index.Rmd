@@ -1,5 +1,5 @@
 ---
-title: "Accurate inference of microbial differential abundance from taxonomically-biased microbiome measurements"
+title: "Inferring true changes in microbial abundance from taxonomically-biased microbiome measurements"
 author:
   - Michael R. McLaren^[North Carolina State University; send correspondence to m.mclaren42@gmail.com]
   - Jacob T. Nearing^[Dalhousie University]
