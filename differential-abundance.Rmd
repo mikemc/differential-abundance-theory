@@ -69,7 +69,7 @@ This equation shows that the species-specific portion of the error affects the i
 Thus, as in the case of fold changes between two samples (Equation \@ref(eq:prop-fc-error)), it is the variation in the (log) mean efficiency across samples that we must worry about distorting our DA results.
 
 The variation in measurement error created by the log mean efficiency impacts the point estimate and precision of the regression coefficient $\beta$.
-Box \@ref(regression-error) mathematically describes this effect for estimation via Ordinary Least Squares (OLS) or Maximum Likelihood Estimation (MLE), which Figure \@ref(fig:regression-example) illustrates using simulated data.
+Appendix \@ref(appendix-regression) mathematically describes this effect for estimation via Ordinary Least Squares (OLS) or Maximum Likelihood Estimation (MLE), which Figure \@ref(fig:regression-example) illustrates using simulated data.
 Variation in the log mean efficiency that is associated with the covariate $x$ creates a systematic error in the estimated slope $\hat \beta$ equal to the negative of the (scaled) covariance of log mean efficiency with $x$.
 The absolute error is the same for all species; however, its relative value depends on the magnitude of the covariance of the log mean efficiency with $x$ relative to that of the response (here, $\log \text{density}_{i}$) with $x$ or, equivalently, the relative magnitudes of their slopes.
 As in the case of fold changes between pairs of samples, the net effect can be decreases in magnitude (Species 9, 10, and 1 in Figure \@ref(fig:regression-example)), changes in sign (Species 5), or increases in magnitude (remaining species) depending on these relative values.
@@ -113,65 +113,3 @@ rm(svg_path)
 (ref:regression-example) **Taxonomic bias distorts multi-sample differential abundance inference when the mean efficiency of samples is associated with the covariate of interest.** This figure shows the results of a regression analysis of simulated microbiomes consisting of 50 samples and 10 species from two environmental conditions indexed by $x=0$ and $x=1$. In this simulation, the species with the largest efficiency (Species 9) also has the largest positive LFC, which drives the positive association of the log mean efficiency with the condition (shown in Panels A and B). This positive LFC in the log mean efficiency induces a systematic negative shift in the estimated LFCs of all species (Panels C and D). Panel D shows the mean LFC (points) with 95% confidence intervals (CIs), for each species estimated from either the actual or the measured densities. The error (difference in LFC estimates on measured and actual) equals the negative LFC of the mean efficiency (shown in Panel B).
 
 <!-- end Figure -->
-
-::: {.rmdnote}
-
-## Box: Error in estimated regression coefficients and standard errors {#regression-error}
-
-Results from statistics on regression under measurement error can help us understand the effect of bias on DA regression analysis.
-
-Consider Equation \@ref(eq:regression) for the simple linear regression of log density of a species $i$ on covariate $x$.
-Let $y$ stand for the actual log density of a focal species $i$, $z$ stand for the log density that we've measured, and $d = z - y$ equal the difference between the two, which here is the log efficiency of species $i$ minus the log mean efficiency of the sample.
-Let $s_{xy}$ denote the sample covariance between variables $x$ and $y$, $s^{2}_{x} = s_{xx}$ and $s_{x}$ denote the sample variance and standard deviation, and $r_{xy} = s_{xy}/(s_{x}s_{y})$ denote the sample correlation.
-
-The ordinary least squares (OLS) and maximum likelihood (MLE) estimates of the slope of $z$ equals the sample covariance of $z$ and $x$ divided by the sample variance in $x$ or, equivalently, the sample correlation of $z$ and $x$ multiplied by the ratio of their sample standard deviations,
-\begin{align}
-  \hat \beta_z = \frac{s_{zx}}{s^2_x} = r_{zx} \cdot \frac{s_y}{s_x}.
-\end{align}
-From the (bi)linearity of sample covariances it follows that
-\begin{align}
-  \hat \beta_z 
-  = \frac{s_{yx}}{s^2_x} + \frac{s_{dx}}{s^2_x} 
-  = \frac{r_{yx} s_y}{s_x} + \frac{r_{dx} s_d}{s_x} 
-  = \hat \beta_y + \hat \beta_d,
-\end{align}
-where $\hat \beta_y$ and $\hat \beta_d$ denote the slope estimates for $y$ and $d$ (were these values to be known).
-The absolute error in the estimate $\hat \beta_{z}$ of $\hat \beta_{y}$ is therefore $\hat \beta_{d}$; it is large in a practical sense when $\hat \beta_{d}$ is large (in absolute value) compared to $\hat \beta_{y}$, which corresponds to the covariance of $d$ with $x$ being large compared to the covariance of $y$ with $x$.
-
-In our case, the covariance of $d$ equals the negative of the covariance of log mean efficiency with $x$.
-The absolute error (i.e., the _bias_ in a statistical sense) in $\hat \beta$ is equals the negative covariance of log mean efficiency scaled by the variance in $x$.
-This absolute error is the same for all species; however, its practical significance varies depending on its magnitude relative to that of the slope of the actual log densities.
-For species that covary with $x$ more strongly than the log mean efficiency, the error will be relatively small.
-This situation might occur either because the mean efficiency varies relatively little across samples or because its variation is relatively less correlated with $x$ compared to the log density of the focal species.
-
-We can similarly understand the impact of measurement error on the precision of our slope estimates.
-The OLS and MLE estimated standard error in $\hat \beta$ are both approximately
-\begin{align}
-  \hat{\text{se}}(\hat \beta)
-  \approx \frac{s_{\hat \varepsilon}}{s_x \sqrt{n}},
-\end{align}
-where $s_{\hat \varepsilon}$ is the sample standard deviation of the residuals
-(@wasserman2004allo Chapter 13).
-The sample residuals of $z$, $y$, and $d$ have a similar relationship to the regression coefficient estimates,
-\begin{align}
-  \hat \varepsilon_z 
-    &\equiv z - \hat \beta_z x
-  \\&= (y + d) - (\hat \beta_y + \hat \beta_d) x
-  \\&= (y - \hat \beta_y x) + (d - \hat \beta_d x)
-  \\&= \hat \varepsilon_y + \hat \varepsilon_d.
-\end{align}
-(Note, here I've omitted the subscript indicating the dependence on the sample.)
-It follows that the sample variances of the residuals of $z$, $y$, and $d$ are related through
-\begin{align}
-  s^2_{\hat \varepsilon_{z}} 
-  = s^2_{\hat \varepsilon_{y} + \hat \varepsilon_{d}}
-  = s^2_{\hat \varepsilon_{y}} + s^2_{\hat \varepsilon_{d}} + 2 s_{\hat \varepsilon_{y} \hat \varepsilon_{d}}.
-\end{align}
-The standard deviation of the $z$ residuals is increased above that of the $y$ residuals when the $d$ residuals are either uncorrelated or positively correlated with the $y$ residuals, but may be decreased when the $y$ and $d$ residuals are negatively correlated.
-
-In our case, the $d$ residuals equal the negative residuals of the log mean efficiency.
-It is plausible that for most species, their residual variation will have a small covariance with log mean efficiency and the net effect of variation in the mean efficiency will be to increase the estimated standard errors, as occurs with most species in Figure \@ref(fig:regression-example).
-However, high-efficiency species that vary substantially in proportion across samples may be strongly positively correlated with log mean efficiency such that the estimated standard errors decrease, as we see with Species 9 in Figure \@ref(fig:regression-example).
-
-:::
-<!-- </details> -->

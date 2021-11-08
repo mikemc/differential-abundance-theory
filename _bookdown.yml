@@ -13,6 +13,7 @@ rmd_files: [
   "real-world-implications.Rmd",
   "solutions.Rmd",
   "references.Rmd",
+  "appendix-regression.Rmd",
 ]
 
 before_chapter_script: "_common.R"
