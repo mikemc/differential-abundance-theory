@@ -6,8 +6,10 @@ To understand how bias affects the measured differential abundance between sampl
 
 Our primary tool for understanding the impact of taxonomic bias MGS measurement is the theoretical model of MGS measurement developed and empirically validated by @mclaren2019cons.
 This model is the simplest model of MGS measurement that includes multiplicative taxonomic bias while respecting the *compositional* nature of sequencing measurements, in which the total read count for a sample is unrelated to its total cell number or density (@gloor2017micr).
-We consider a set of microbial species that are measured by a specific MGS protocol. The protocol assigns each sequencing read to at most one sample andsample and  species, and we ignore the possibility of contamination or false-positive taxonomic assignments---reads assigned to a given species and sample really do come from that species and sample.
-Our model stipulates that the assigned read count of species $i$ in sample $a$ equals its cell density multiplied by a species-specific, sample-independent factor and a species-independent, sample-specific factor,
+We consider a set of microbial species that are measured by a specific MGS protocol.
+The protocol assigns each sequencing read to at most one sample and species and we ignore the possibility of contamination or false-positive taxonomic assignments---we assume that reads assigned to a given species and sample really do come from that species and sample.
+Unless otherwise stated, we treat the sequencing measurement as deterministic, ignoring the random error due to the sampling of sequencing reads and aspects of the sequencing process.
+Our model stipulates that the assigned read count of species $i$ in sample $a$ equals its cell density multiplied by a species-specific factor and a sample-specific factor,
 \begin{align}
   (\#eq:measurement-model)
   \text{reads}_{i}(a)
@@ -35,10 +37,14 @@ is the average or mean efficiency of cells in the sample.
 ## Relative abundances (proportions and ratios)
 
 The term *relative abundance* carries multiple meanings in microbiome science.
-Microbiome researchers often use the relative abundance of a species in a sample to refer to its *proportion*, or number of cells from that species divided by the total number of cells from the taxonomic domain of interest (e.g. Prokaryotes).
-A second view, drawn from the statistical framework of Compositional Data Analysis, equates the relative abundances of species within a sample with the *ratios* of cell densities among two or more species (e.g. a ratio of 5:4:2 among three species).
-By this view, it is meaningless to refer to the relative abundance of an individual species.
-Although other interpretations exist^[e.g. the rank order within a sample, or value associated with a species after a centered-log-ratio transform], we focus on the proportion and ratio views as they underly most relative  and absolute DA methods and the differences between them clarify when and why the effects of bias cancel in a DA analysis.
+Often, relative abundance refers to the number of cells of a given species divided by the total number of cells from the taxonomic domain of interest (e.g. Prokaryotes).
+We use the term *proportion* for this type of relative abundance.
+A second view, drawn from the statistical framework of Compositional Data Analysis (CoDA), equates the relative abundances in a sample with the *ratios* among two or more species (e.g. a ratio of 5:4:2 among three species).
+By this view, it is meaningless to refer to the relative abundance of a species independently of one or more others.
+Confusingly, many microbiome papers use 'relative abundance' to mean proportion despite analysing these 'relative abundances' with CoDA-inspired ratio-based analyses.
+Additionally, as we will see, DA analyses based on proportions and ratios are differently affected by bias.
+For these reasons, we distinguish between proportions and ratios throughout.
+Although other interpretations exist^[e.g. the rank order within a sample, or value associated with a species after a centered-log-ratio transform], we focus on the proportion and ratio views as they underly most relative and absolute DA methods and the differences between them clarify when and why the effects of bias cancel in a DA analysis.
 
 The standard measurement of the proportion of species $i$ in sample $a$ is given by the ratio of its read count to the total,
 \begin{align}
@@ -100,47 +106,56 @@ rm(svg_path)
 
 ## Absolute abundances (cell densities)
 
-A range of experimental and computational methods can be used to convert the relative-abundance information in the read counts into measurements of (absolute) cell densities;
-however, these methods can largely be partitioned into those that use the measured proportions or the measured ratios provided by MGS.
-The error in density measurements due to taxonomic bias therefore follows that of the proportion and ratio measurements described above.
+A wide range of experimental methods exist for converting the relative-abundance information in MGS measurements into measurements of (absolute) cell densities;
+however, these methods can be generally partitioned into two types, based on whether the absolute-abundance information derives from knowing the density of the total community or knowing the density of one or more individual species.
 
-Proportion-based density measurement is based on the idea that if we know the (true) proportion of a species and the (true) total density of all species, we can multiply these numbers obtain the species' density.
-This method therefore involves multiplying the proportion of a species measured from MGS with a measurement of total microbial density obtain through other means (e.g., through direct cell counting or qPCR of a universal marker gene) to measure its density,
+**Methods using the density of the total community:**
+The total microbial density of a community can be assayed by a variety of methods (reviewed in Appendix \@ref(review-absolute-methods)).
+Once the total density is known, the density of individual species can be estimated by multiplying the total density by the species' proportions (as measured by MGS),
 \begin{align}
   (\#eq:density-prop-meas)
   \widehat{\text{density}}_{i}(a) 
-  = \widehat{\text{prop}}_{i}(a) \cdot \widehat{\text{total density}}(a).
+  &= \widehat{\text{prop}}_{i}(a) \cdot \widehat{\text{total density}}(a)
+\\&= \text{reads}_{i}(a) \cdot \frac{\widehat{\text{total density}}(a)}{\text{total reads}(a)}.
 \end{align}
-Substituting the expression \@ref(eq:prop-error) for the measured proportion and allowing for error in the total density measurement, leads to the expression
+We can rewrite the species' density measurements to account for the effect of taxonomic bias on the MGS proportions (Equation \@ref(eq:prop-error)) and any error in the total density measurement, 
 \begin{align}
   (\#eq:density-prop-error)
   \widehat{\text{density}}_{i}(a) 
   = \text{density}_{i}(a) \cdot \frac{\text{efficiency}_{i}}{\text{mean efficiency}(a)} 
+%  \cdot \frac{\widehat{\text{total density}}(a)}{\text{total density}(a)}.
   \cdot \begin{array}{c} \text{fold error in} \\ \widehat{\text{total density}}(a) \end{array}.
 \end{align}
-The multiplicative error consists of two factors: the error in the estimated proportion (due to taxonomic bias in the MGS measurement), and any error in the estimated total density.
-In the case of perfect knowledge of the total density, the fold error in proportion-based density estimates varies across samples inversely with the mean efficiency.
+The variable fold error that bias creates in the measured proportions directly transfers to the density measurements.
 
-Ratio-based density estimation follows from the fact that, in the absence of taxonomic bias, the conversion rate from reads to density is just the sequencing effort of the sample and is thus the same for all species (Equation \@ref(eq:measurement-model)).
-Knowing the density of at least one _reference_ species therefore enables us to convert from reads to density for all species.
-One approach to obtaining such reference species is to add one or more extraneous species in known (typically constant) abundance (a "spike-in") to each sample prior to sequencing (REFs).
-A second approach is to determine a set of naturally occurring species that are thought to have a constant, though typically unknown, abundance across samples; in this case we can only estimate species' densities relative to these "housekeeping species" (REFs).
-A third (seemingly untried) possibility is to measure the density of one or more naturally occurring species using a method such as targeted CFU counting, fluorescence flow cytometry or ddPCR directly on cells, or ddPCR or qPCR on extracted DNA.
-Given the estimate of the density of reference taxon $r$, we estimate the density of taxon $i$ by multipling the ratio of $i$ to $r$ in the reads by the density of $r$,
+Taxonomic bias can also create systematic error in the total-density measurements (Appendix \@ref(appendix-total-density)).
+For now, we suppose that the total density can be measured accurately; 
+later, Section \@ref(solutions) describes how experiments might be designed such that taxonomic bias in the total density measurement offsets that in the MGS proportions, leading to a (more) consistent fold error in the measured densities.
+
+**Methods using the density of one or more reference species:**
+The density of one or more species can be directly measured using targeted measurement methods like species-specific qPCR; alternatively, the densities of one or more species may be thought to be constant across samples either from background knowledge or because they have been spiked in at a fixed density (these situations are reviewed in Appendix \@ref(review-absolute-methods)).
+These _reference species_ with known or constant density can be used to convert read counts to densities for all species.
+For instance, given the density of a reference species $r$, we can estimate the density of a focal species $i$ by 
 \begin{align}
   (\#eq:density-ratio-meas)
-  \widehat{\text{density}}_{i}(a) = \frac{\text{reads}_{i}(a)}{\text{reads}_{r}(a)} \cdot \widehat{\text{density}}_{r}(a)
+%  \widehat{\text{density}}_{i}(a) = \frac{\text{reads}_{i}(a)}{\text{reads}_{r}(a)} \cdot \widehat{\text{density}}_{r}(a).
+  \widehat{\text{density}}_{i}(a) = \text{reads}_{i}(a) \cdot \frac{\widehat{\text{density}}_{r}(a)}{\text{reads}_{r}(a)}.
 \end{align}
-(Appendix ??? describes how this equation can be extended to multiple reference species.)
-For a constant reference species with unknown density, we can set $\widehat{\text{density}}_{r}(a)$ equal to 1 to estimate density in units of the density of the reference species.
-The error in this ratio-based density estimate is
+Alternatively, if we only know that the reference species is constant, we can set $\widehat{\text{density}}_{r}(a)$ in Equation \@ref(eq:density-ratio-meas) equal to 1 to estimate the density in unknown but fixed units, which is sufficient for multiplicative DA analysis.
+(Appendix \@ref(model-details) considers possible extensions to multiple reference species.)
+It follows from Equation \@ref(eq:ratio-error) that the error caused by taxonomic bias in this density measurement is
 \begin{align}
   (\#eq:density-ratio-error)
   \widehat{\text{density}}_{i}(a) 
   = \text{density}_{i}(a) \cdot \frac{\text{efficiency}_{i}}{\text{efficiency}_{r}} 
   \cdot \begin{array}{c} \text{fold error in} \\ \widehat{\text{density}_r}(a) \end{array}.
 \end{align}
-Again, the multiplicative error consists of two factors: the error in the estimated ratio (due to taxonomic bias in the MGS measurement), and error in the estimated density of the reference taxa.
-So long as the fold error in the reference density is constant across samples, so will be the error in the estimated density of the focal species $i$.
+Here, it is the constant error in the measured ratio of species $i$ to $r$ that propagates into the density measurement.
+There will generally be systematic error in the density of the reference species; however, if the systematic fold error is constant across samples, so will be that of the densities of other species.
 
-- Note: The current distinction between proportion- and ratio-based density estimation is incomplete, as the example of spike-in normalization shows: Whether the density of species $i$ is estimated by Equation \@ref(eq:density-ratio-meas), or by first estimating total density from the ratio of non-spike-in to spike-in reads and then using Equation \@ref(eq:density-prop-meas), the results are mathematically identical. Future revisions should clarify this point.
+**Differences between the two approaches:**
+Equations \@ref(eq:density-prop-error) and \@ref(eq:density-ratio-error) show that the manner in which taxonomic bias in the sequencing measurement impacts the two approaches mirrors that of proportions and ratios.
+If the fold error in the total-density or reference species measurement is negligible (or at least constant) then the fold errors in species densities by the total-density approach vary across samples with the mean efficiency, whereas the fold errors by the reference-species approach are constant. 
+The fundamental determinant of whether constant error is obtained is not which of these two equations is ultimately used, but rather whether densities of individual species, which (we assume) have constant efficiency, or the total community, which has varying efficiency, provide the absolute-abundance information.
+Studies using spike-ins as constant reference species will often, instead of using Equation \@ref(eq:density-ratio-meas), first use the spike-in species to estimate the total density, and then estimate the density of focal species with Equation \@ref(eq:density-prop-meas).
+If the calculation is done carefully, however, this method still yields constant fold errors so long as the species efficiencies (including those of the spike-in) are constant across samples (Appendix \@ref(appendix-total-density)).
