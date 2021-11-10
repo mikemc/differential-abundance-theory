@@ -1,0 +1,170 @@
+---
+title: "Explore gut datasets"
+description: |
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - R
+date: 2021-11-10
+draft: false
+output:
+  distill::distill_article:
+    self_contained: false
+    dev: svg
+---
+
+
+```{r}
+library(here)
+library(tidyverse)
+library(speedyseq)
+library(metacal)
+
+library(cowplot)
+theme_set(theme_cowplot())
+```
+
+
+```{r}
+# curatedMetagenomicData("HMP")
+tse <- curatedMetagenomicData::curatedMetagenomicData(
+  "HMP_2019_ibdmdb.relative_abundance", 
+  dryrun = FALSE
+)
+stopifnot(identical(length(tse), 1L))
+tse <- tse[[1]]
+ibd_ps <- mia::makePhyloseqFromTreeSummarizedExperiment(
+  tse,
+  abund_values = "relative_abundance"
+) %>%
+  rename_with_sample_data(janitor::make_clean_names) %>%
+  rename_with_tax_table(janitor::make_clean_names)
+sam <- ibd_ps %>% sample_data %>% as_tibble
+```
+
+```{r}
+```
+
+## metadata
+
+```{r}
+sam %>% glimpse
+sam %>% dplyr::count(body_site)
+sam %>% dplyr::count(dna_extraction_kit)
+sam %>% dplyr::count(location)
+sam %>% dplyr::count(subject_id) %>% dplyr::count(n)
+sam %>% dplyr::count(study_condition, disease, disease_subtype)
+```
+
+Most subjects have many samples.
+
+
+
+## what is dominance like?
+
+```{r}
+ps <- ibd_ps %>% transform_sample_counts(close_elts)
+x <- ps %>% as_tibble
+```
+
+```{r}
+x %>%
+  group_by(.sample) %>%
+  slice_max(.abundance, n = 1) %>%
+  ggplot(aes(.abundance)) +
+  scale_x_log10() +
+  geom_histogram()
+```
+
+```{r}
+x %>%
+  group_by(.sample) %>%
+  slice_max(.abundance, n = 1) %>%
+  pull(.abundance) %>%
+  summary
+```
+
+Note that even in the gut, the most abundant species may often be dominant.
+
+
+## B:F ratio
+
+```{r}
+ps.phy <- ps %>% tax_glom('phylum')
+x.phy <- ps.phy %>% as_tibble
+```
+
+```{r}
+x.phy %>%
+  group_by(.sample) %>%
+  slice_max(.abundance, n = 1) %>%
+  pull(.abundance) %>%
+  summary
+```
+
+```{r}
+x.phy %>%
+  filter(phylum %in% c('Bacteroidetes', 'Firmicutes')) %>%
+  ggplot(aes(.abundance + 1e-4, fill = disease_subtype)) +
+  facet_wrap(~phylum, ncol = 1) +
+  scale_x_log10() +
+  geom_histogram()
+```
+
+```{r}
+x.phy %>%
+  filter(phylum %in% c('Bacteroidetes', 'Firmicutes')) %>%
+  mutate(
+    across(.abundance, ~ . + 1e-4),
+    ratio_f = .abundance / .abundance[phylum == 'Firmicutes']
+  ) %>%
+  filter(phylum == 'Bacteroidetes') %>%
+  ggplot(aes(ratio_f, fill = disease_subtype)) +
+  scale_x_log10(breaks = 10^(-3:4)) +
+  facet_wrap(~disease, ncol = 1) +
+  geom_histogram() +
+  theme_minimal_vgrid()
+```
+
+There is a lot of variation, but most if it is generally not associated with disease.
+This suggests that in this case, the main impact of variation in mean efficinecy from B:F ratio may be to create noise.
+
+(note, I am ignoring structure in the data such as replicate sampling)
+
+how correlated are species within a phylum?
+what is the typical within-phylum diversity?
+
+Question: is the HMP2 gut protocol the same as HMP1?
+
+
+What is the inverse simpson diversity within phyla?
+
+```{r}
+div <- x %>% 
+  filter(phylum %in% c('Bacteroidetes', 'Firmicutes')) %>%
+  with_groups(c(.sample, phylum), mutate,
+    across(.abundance, close_elts)
+  ) %>%
+  with_groups(c(.sample, phylum), summarize,
+    diversity = 1/sum(.abundance^2)
+  )
+```
+
+```{r}
+div %>%
+  ggplot(aes(diversity)) +
+  scale_x_log10() +
+  facet_wrap(~phylum, ncol = 1) +
+  geom_histogram() +
+  theme_minimal_vgrid()
+```
+
+```{r}
+div %>%
+  with_groups(phylum, summarize,
+    qs = quantile(diversity, c(0.25, 0.5, 0.75), na.rm = TRUE), 
+    prob = c(0.25, 0.5, 0.75)
+  )
+```
+
