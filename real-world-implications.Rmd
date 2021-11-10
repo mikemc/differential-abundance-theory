@@ -10,9 +10,9 @@ This covariance can be split into two components: the standard deviation of (log
 Hence when considering whether taxonomic bias creates large error, it can be useful to separately ask whether the mean efficiency is likely to vary across samples and whether it is likely to be correlated with a covariate of interest.
 
 One approach to studying the mean efficiency empirically is to analyze data from studies for which control measurements allow direct measurement of species' efficiencies.
-@brooks2015thet performed 16S rRNA gene sequencing of mock communities of seven bacterial species thought to play a critical role in the human vaginal microbiome with the MGS protocol developed for the Vaginal Human Microbiome Project (VaHMP). 
-@mclaren2019cons later used this data to estimate the efficiencies of these seven species and develop a method to use these estimates to infer the true compositions of natural samples (see Section \@ref(calibrate-compositions)).
-SI Analysis (MOMS-PI) uses these estimated efficiencies to correct the compositions and explore the implied variation in mean efficiency in the VaHMP's Multi-Omic Microbiome Study: Pregnancy Initiative (MOMS-PI) @fettweis2019thev.
+To characterize bias in a 16S sequencing protocol developed for the Vaginal Human Microbiome Project (VaHMP), @brooks2015thet performed 16S rRNA gene sequencing of mock communities of seven bacterial species thought to play a critical role in the human vaginal microbiome.
+This protocol was later used for the VaHMP's Multi-Omic Microbiome Study: Pregnancy Initiative (MOMS-PI) study (@fettweis2019thev).
+We used the method for measuring and correcting bias developed by @mclaren2019cons to measure bias from the mock communities and analyze its potential impact on DA analyses that use the MOMSPI measurements (SI Analysis MOMS-PI).
 The vaginal microbiome during pregnancy is characterized by relatively low diversity, with a single species often forming a vast majority of calibrated or uncalibrated read counts.
 The three species that most often dominate the calibrated profiles are _Gardnerella vaginalis_, _Lactobacillus iners_, and _Lactobacillus crispatus_.
 Our mock-community analysis indicate _G. vaginalis_ has the lowest efficiency of the seven species, roughly 20X lower than _L. crispatus_ and 30X lower than _L. iners_ (the most efficiently measured).
@@ -25,12 +25,12 @@ A second study in which control communities make it possible to directly analyze
 To study the interactions between a host plant and its fungal commensals and pathogen, the authors inoculated trees with a fungal synthetic community and later exposed plants to a fungal pathogen.
 The authors used ITS amplicon sequencing to measure communities before and after infection, along with mock communities which they used to estimate the species efficiencies with the method of @mclaren2019cons.
 (DNA mocks were used, so that bias due to DNA extraction is not included, but other major bias sources such as PCR and ribosomal copy-number-variation are included.) 
-SI Analysis X reanalyses this experiment to consider the impact that bias has on different possible DA analyses.
-There was a 13X difference between the most and least efficiently measured commensals, while the pathogen was measured 40X more efficiently than the least efficiently measured commensal.
-Despite the 13X variation among commensals, the mean efficiency is remarkably stable across communities prior to pathogen colonization.
-Consequently, taxonomic bias creates little systematic error in proportion-based DA analysis on these samples.
-However, the high efficiency of the pathogen typically led to a roughly 6X increase in mean efficiency in post-colonization samples.
-An analysis of how commenals responded to calibration that used uncalibrated proportions without first discarding the pathogen reads would therefore tend to suggest that the commensals had substantially smaller fold changes than they actually did.
+We reanalyzed this experiment to consider the impact that bias has on different possible DA analyses (SI Analysis Fungi).
+As noted by @leopold2020host, there was a 13X difference between the most and least efficiently measured commensals, while the pathogen was measured 40X more efficiently than the least efficiently measured commensal.
+Yet despite this 13X variation among commensals, the mean efficiency is remarkably stable across communities prior to pathogen colonization.
+Consequently, taxonomic bias creates little systematic error in proportion-based DA analysis of these pre-colonization samples.
+The high efficiency of the pathogen did, however, typically lead to a roughly 6X increase in the mean efficiency of post-colonization samples.
+Hence DA analysis of how commensals responded to the pathogen did not first discard pathogen reads would therefore tend to suggest that the commensals had substantially smaller fold changes than they actually did, unless bias were accounted for.
 
 It is clear that an individual species with an unusually high or low efficiency can drive large changes in the mean efficiency when it shifts from a very large ($\sim 1$) to very small proportion ($\ll 1$) of the sample.
 Consideration of dynamics in the human gut illustrates another a way in which large shifts in higher-level taxa might create similar shifts, due to the fact that efficiencies do not vary independently among closely related species.

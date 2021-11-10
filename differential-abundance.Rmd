@@ -40,7 +40,7 @@ For Species 2, which decreases by a smaller factor than the mean efficiency, we 
 In contrast, because species ratios are distorted by a constant factor, their measured fold changes remain accurate.
 The fold error in Equation \@ref(eq:ratio-error) completely cancels when we divide the ratio measured for one sample $a$ by another sample $b$.
 
-If other error sources remain negligible (or constant across samples), than this dichotomy continues to apply to proportion- and ratio-based density measurements.
+If other error sources remain negligible (or constant across samples), then this dichotomy continues to apply to proportion- and ratio-based density measurements.
 The inferred FCs in proportion-based density measurements will be incorrect by a factor equal to the inverse fold change in the mean efficiency, creating magnitude and/or directional errors.
 Moreover, any species with a constant density will appear to vary inversely with the mean efficiency.
 In contrast, fold changes in ratio-based density measurements will remain accurate.

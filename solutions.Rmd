@@ -7,7 +7,6 @@ The theoretical results from Section \@ref(differential-abundance) suggest a num
 Since the fold changes in species ratios are unaffected by consistent taxonomic bias, a natural approach to countering bias in relative DA analysis is to ratio- rather than proportion-based methods.
 A variety of such methods have been developed for microbiome DA analysis that build on earlier work from the field of Compositional Data Analysis (CoDA).
 These methods analyze log-fold changes in the ratios among a pair of species or, more generally, some product of exponential power of multiple species, which likewise are bias-invariant.
-
 Besides a greater robustness to taxonomic bias, such ratio-based analyses have other advantages.
 First, analysis of ratios avoids other standard criticisms leveled at proportion-based analysis—namely that the change in proportion of a species is affected by change in the density of all other species and the set of species used in the denominator of the proportion calculation (@gloor2017micr).
 Second, ratios may be more informative than absolute density in some cases, such as for swabs or other sample types for which the absolute density in the sample may be an unreliable indicator of the absolute density of the sampled ecosystem.
@@ -20,18 +19,19 @@ Finally, bias invariance at the level of ratios among species does not extend to
 
 ## Calibration using community controls {#calibrate-compositions}
 
-Measurement of appropriate control samples along with the primary experimental samples can make it possible to directly measure and remove the effect of bias before or while conducting downstream analysis.
-Under the assumption that taxonomic bias acts consistently across samples, it can be directly estimated for the species in one or more community control samples—samples whose species identities and relative abundances are known either by construction of by characterization with a chosen 'gold standard' or _reference protocol_ (@mclaren2019cons).
-The estimated relative efficiencies among the control species can then be used to correct the effect of bias on the relative abundances (ratios) among these species in a set of target (non-control) samples measured with the same protocol (ideally in the same experiment and sequencing run) @mclaren2019cons.
-Calibration can be extended to species not in the controls by making additional assumptions that allow one to impute the missing efficiencies; such imputation might employ phylogenetic relationships, genetic characteristics (such as 16S copy number), and/or phenotypic properties (such as cell-wall structure).
+Measurement of community calibration controls along with the primary experimental samples can enable researchers to directly measure and remove the effect of bias prior to or concurrent with downstream DA analysis.
+Community calibration controls are samples whose species identities and relative abundances are known either by construction or by characterization with a chosen 'gold standard' or _reference protocol_ (@mclaren2019cons).
+MGS measurement of one or more control communities can be used to directly measure the relative efficiencies among the superset of species in the controls (@mclaren2019cons).
+The measured relative efficiencies can then be used to calibrate (remove the effect of bias from) the relative abundances (ratios) of the control species in a set of primary (non-control) experimental samples that were measured with the same protocol (ideally in the same experiment and sequencing run) (@mclaren2019cons).
+Calibration can be extended to species not in the controls using statistical methods to impute (predict) the unobserved efficiencies using phylogenetic relatedness, genetic characteristics (such as 16S copy number), and/or phenotypic properties (such as cell-wall structure).
 
 The calibrated compositions can be used for arbitrary downstream microbiome analyses, including relative and absolute DA analysis.
 To demonstrate the potential for calibration to improve fold-change measurements, we estimated bias from one sample in the mock community data from @brooks2015thet that contained all 7 species and used it to calibrate the compositions of all samples (Figure \@ref(fig:calibration-example)).
 We then estimated species' densities using the uncalibrated and calibrated proportions using the community normalization method, treating the total density as known and fixed.
 Visual inspection shows that the bias estimated from just a single control community with all species can be sufficient to greatly reduce the effect of taxonomic bias on the measured fold change in species' proportions and densities (Figure \@ref(fig:calibration-example)).
-To demonstrate a more practical application, we used the bias estimated from the full set of mock communities as the basis for calibrating the vaginal community time series measurements from the MOMS-PI study (@fettweis2019thev) that were made using the same 16S sequencing protocol.
-We imputed the efficiencies of other species using the taxonomic relationship to the control species (Methods).
-Calibration then allowed us to explore the impact of bias on the measured trajectories of species proportions within women over the course of pregnancy as described in [implications].
+To demonstrate a practical application, we used the bias estimated from the full set of mock communities as the basis for calibrating the vaginal community time series measurements from the MOMS-PI study (@fettweis2019thev) that were made using the same 16S sequencing protocol.
+We imputed the efficiencies of other species using taxonomic relationships (Methods).
+Calibration then allowed us to explore the impact of bias on the measured trajectories of species proportions within women over the course of pregnancy as described in Section \@ref(implications).
 
 <!-- begin figure -->
 
@@ -51,32 +51,32 @@ rm(fig_path)
 ## Calibration using reference species
 
 Obtaining control communities that span the taxa of interest is often not practical.
-Moreover, there is no guarantee that bias is consistent across the control and primary samples.
-The results of the previous sections suggest an alternative approach to calibration that overcomes these problems for the specific purpose of species-level DA analysis, requiring only that there are one or more reference species whose abundance can be determined, up to a constant error factor, by background knowledge, experimental design, or independent measurement.
+Moreover, the bias that is measured from controls may differ from that in the primary samples due to differences in cell state or sample preparation.
+These problems may be overcome for the purpose of species-level absolute DA analysis by using the reference-species approach to absolute-density measurement that was described in Section \@ref(differential-abundance).
+This *reference-species calibration* allows one to simultaneously account for changes in total density and the sample mean efficiency, obtaining accurate fold changes in absolute density from taxonomically biased, relative metagenomics measurements.
 
-Reference-species calibration allows one to simultaneously account for changes in total density and the sample mean efficiency, obtaining accurate fold changes in absolute density from (taxonomically biased, relative abundance) metagenomics measurements.
-Section X described the reference-species approach to density measurement and showed that such measurements have a constant fold error, provided that the error in the density of the reference species is constant.
-Three categories of reference species of practical import are described in Box X: housekeeping species assumed to have constant abundance, spike-in species added at constant abundance, and species whose abundance has been measured with a targeted method like qPCR.
+Recall that densities estimated by the reference-species approach have a constant fold error, provided that the fold error in the reference species is also constant (Equation \@ref(eq:density-ratio-error)).
+Three categories of reference species are reviewed for this purpose in Appendix \@ref(review-absolute-methods), including why they might be expected to produce constant fold errors: housekeeping species assumed to have constant abundance, spike-in species added at known or constant abundance, and species whose abundance has been measured with a targeted method like species-specific qPCR.
+
 To demonstrate the ability for reference calibration to improve fold changes, we treated the abundance of one species (_Lactobacillus crispatus_) in the @brooks2015thet mock community data as known, and used it to calibrate the abundances of all species. 
 Doing so improved the resulting measurements of fold changes in density for all species (Figure \@ref(fig:calibration-example)).
 
 ## Choosing complementary total-density and metagenomics measurements
 
-A variety of methods for measuring total community density have been paired with both amplicon and shotgun sequencing data for the community-normalization method to measure absolute densities for absolute DA analysis, with little consensus on the pros and cons of the various methods.
-Although these methods differ in many aspects, a notable aspect is the sources of taxonomic bias inherent in each method.
-Just as species differ in how efficiently they are measured by MGS, so can they differ in how efficiently they contribute to a total density measurement.
+A variety of methods for measuring total community density have been paired with either amplicon or shotgun sequencing data for the purpose of conducting absolute DA analysis using the total-density approach described in Section \@ref(differential-abundance).
+Each of these methods is subject to its own taxonomic bias: Cells from different species are likely to contribute more or less efficiently to the total abundance measurement.
 Consider the popular method of assessing bacterial abundance with total-16S qPCR measurement.
 Even an ideal qPCR protocol that perfectly amplifies all species remains a biased measurement of cell density, since the total 16S copies in the extracted DNA contributed by each species will be proportional to its (species-specific) lysis efficiency and 16S copy-number.
 16S qPCR is commonly paired with 16S amplicon sequencing, with which these sources of bias are shared, perhaps along with variation in primer binding and amplification efficiency.
 Methods like using flow cytometry that directly measures cell density lacks these biases but likely have their own that are more likely to be orthogonal to the 16S sequencing measurement.
-By extending the analysis of Section X to include consistent taxonomic bias in the total-density measurement, we find that pairings of total-density and sequencing measurements that share large sources of taxonomic bias can lead to an offsetting of errors that reduces the error in fold-change measurement and DA inference (Appendix \@ref(appendix-total-density)).
+By extending the analysis of Section \@ref(differential-abundance) to include consistent taxonomic bias in the total-density measurement, we find that pairings of total-density and sequencing measurements that share large sources of taxonomic bias can lead to an offsetting of errors that reduces the error in fold-change measurement and DA inference (Appendix \@ref(appendix-total-density)).
 This finding suggests that methods of total-density measurement that are more accurate as measures of total cell density may actually perform worse than less accurate methods for the purposes of absolute DA inference.
 
 We illustrate with a hypothetical example of two vaginal communities of equal density, but which are dominated either by _Lactobacillus iners_ or _Gardnerella vaginalis_.
-Based on our earlier analysis in @mclaren2019cons, we estimate that cells of _L. iners_ 20X more 16S copies than _G. vaginalis_ from DNA extraction (CHECK NUMBERS).
-Ignoring other sources of bias, we expect relative efficiencies of _L. iners_:_G. vaginalis_ of 20 for both qPCR and 16S sequencing measurements.
+Based on our earlier analysis in @mclaren2019cons, we estimate that _L. iners_ yields 10X more 16S copies per cell than _G. vaginalis_ in extracted DNA.
+Ignoring other sources of bias, we expect relative efficiencies of _L. iners_:_G. vaginalis_ of 10 for both qPCR and 16S sequencing measurements.
 Consequently, the _G. vaginalis_ community will yield a substantially lower qPCR measurement than the _L. iners_ community and we would incorrectly infer a decrease in total abundance.
-At the same time, this decrease in the mean efficiency of the sequencing measurement causes artificially high fold changes in the proportions of all species (ref previous section).
+At the same time, this decrease in the mean efficiency of the sequencing measurement would cause artificially high fold changes in the proportions of all species (Section \@ref(differential-abundance)).
 When using qPCR and 16S sequencing measurements for community-based density estimation, these two opposing errors cancel, yielding accurate fold changes in species densities.
 
 More generally, changes in the mean efficiency of the total density measurement offset those in the sequencing measurement when comparing log density of species across samples.
@@ -84,7 +84,7 @@ If the (log) efficiencies of the total and sequencing measurement are positively
 These observations suggest that qPCR of a marker gene may be the ideal pairing for amplicon sequencing measurements, despite being a poor measure of changes in total cell density.
 Similarly, bulk DNA quantification may be an ideal pairing for shotgun sequencing, making it possible to account for variation in lysis efficiency and genome length.
 These pairings even make it possible to account for error caused by variation among samples in the fraction of unclassified reads, which can form a major fraction of amplicon and shotgun data.
-Importantly, maximizing the offsetting of errors requires thoughtful choices during bioinformatic analysis, perhaps eschewing the filtering and normalization steps used in many software packages and workflows (REF Appendix).
+Importantly, maximizing the offsetting of errors requires thoughtful choices during bioinformatic analysis, perhaps eschewing the filtering and normalization steps used in many software packages and workflows (Appendix \@ref(appendix-total-density)).
 
 ## Bias-sensitivity analysis and bias-aware meta-analysis
 

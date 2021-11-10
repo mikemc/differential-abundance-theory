@@ -4,11 +4,13 @@ To understand how bias affects the measured differential abundance between sampl
 
 ## Model of MGS measurement
 
-Our primary tool for understanding the impact of taxonomic bias MGS measurement is the theoretical model of MGS measurement developed and empirically validated by @mclaren2019cons.
+Our primary tool for understanding the impact of taxonomic bias on MGS measurement is the theoretical model of MGS measurement developed and empirically validated by @mclaren2019cons.
 This model is the simplest model of MGS measurement that includes multiplicative taxonomic bias while respecting the *compositional* nature of sequencing measurements, in which the total read count for a sample is unrelated to its total cell number or density (@gloor2017micr).
-We consider a set of microbial species that are measured by a specific MGS protocol.
-The protocol assigns each sequencing read to at most one sample and species and we ignore the possibility of contamination or false-positive taxonomic assignments---we assume that reads assigned to a given species and sample really do come from that species and sample.
-Unless otherwise stated, we treat the sequencing measurement as deterministic, ignoring the random error due to the sampling of sequencing reads and aspects of the sequencing process.
+We consider a set of microbial species that are measured by a specific MGS protocol that extracts, sequences, and bioinformatically analyzes samples to assign reads to various microbial species.
+We assume that assigned reads have been correctly assigned to the given species and sample.
+Thus we ignore the possibility of contamination or false-positive taxonomic assignment, though we allow that many reads may not receive a taxonomic assignment and so ultimately be discarded.
+Unless otherwise stated, we treat the sequencing measurement as deterministic, ignoring the 'noise' or random error due to the random sampling of sequencing reads and other aspects of the MGS process.
+
 Our model stipulates that the assigned read count of species $i$ in sample $a$ equals its cell density multiplied by a species-specific factor and a sample-specific factor,
 \begin{align}
   (\#eq:measurement-model)
@@ -36,15 +38,12 @@ is the average or mean efficiency of cells in the sample.
 
 ## Relative abundances (proportions and ratios)
 
-The term *relative abundance* carries multiple meanings in microbiome science.
-Often, relative abundance refers to the number of cells of a given species divided by the total number of cells from the taxonomic domain of interest (e.g. Prokaryotes).
-We use the term *proportion* for this type of relative abundance.
-A second view, drawn from the statistical framework of Compositional Data Analysis (CoDA), equates the relative abundances in a sample with the *ratios* among two or more species (e.g. a ratio of 5:4:2 among three species).
-By this view, it is meaningless to refer to the relative abundance of a species independently of one or more others.
-Confusingly, many microbiome papers use 'relative abundance' to mean proportion despite analysing these 'relative abundances' with CoDA-inspired ratio-based analyses.
-Additionally, as we will see, DA analyses based on proportions and ratios are differently affected by bias.
-For these reasons, we distinguish between proportions and ratios throughout.
-Although other interpretations exist^[e.g. the rank order within a sample, or value associated with a species after a centered-log-ratio transform], we focus on the proportion and ratio views as they underly most relative and absolute DA methods and the differences between them clarify when and why the effects of bias cancel in a DA analysis.
+We distinguish between two types of species-level *relative abundances*---abundances in which the absolute scale is not intrinsically meaningful.
+The first type consists of the *ratios* among the abundances of two or more species, such as a ratio of 5:4:2 among three species.
+The second type consists of the *proportion* of an individual species, equal to its abundance divided by that of the chosen root taxon (e.g. Prokaryotes).
+Species' ratios and proportions constitute distinct views of relative abundance and hence what it means for relative abundances to change across samples.
+Although proportions are dominant in microbiome DA analysis, researchers increasingly adopt the ratio view via analyses adapted from the statistical framework of Compositional Data Analysis (CoDA).
+The different manner in which taxonomic bias affects ratios vs. proportions (@mclaren2019cons) forms the basis in subsequent sections for understanding the extent to which its effects cancel in DA analysis.
 
 The standard measurement of the proportion of species $i$ in sample $a$ is given by the ratio of its read count to the total,
 \begin{align}
@@ -93,6 +92,11 @@ rm(svg_path, fig_path)
 (ref:cap-error-proportions) **Taxonomic bias creates sample-dependent multiplicative errors in species proportions, which can lead to inaccurate fold changes between samples.** Top row: Error in proportions measured by MGS in two microbiome samples that contain different relative abundances of three species. Bottom row: Error in the measured fold-change in the third species that is derived from these measurements.
 
 <!-- end figure -->
+
+**Difference between species proportions and species ratios:**
+Consistent taxonomic bias at the species level creates a consistent fold error in the ratios among species, but a varying fold error in the proportions of individual species.
+But a proportion is, after all, just a ratio between two taxa in which the denominator taxon is the entire taxonomic domain under study.
+The difference in behavior from that of ratios between species arises because the efficiency of higher-level taxa, which consist of the aggregate of many species, varies across samples with the changing relative abudances among its constituent species.
 
 ## Absolute abundances (cell densities)
 
