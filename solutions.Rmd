@@ -96,7 +96,7 @@ A straightforward approach to bias-sensitivity analysis is to use computer simul
 First, multiple sets of efficiency vectors are randomly generated, each representing a possible quantification of taxonomic bias for the study.
 Second, each efficiency vector is used to calibrate the original MGS measurements; each set of calibrated measurements represents the true community compositions under the given hypothesized bias. 
 Finally, the DA analysis is re-run on each set of calibrated measurements and the distribution of results is compared graphically or with summary statistics.
-A graphical summary of such an analysis being applied to results from the corncob frequentist DA- analysis tool 'corncob' are shown in \@ref(fig:sensitivity-example).
+A graphical summary of such an analysis being applied to results from the corncob frequentist DA- analysis tool 'corncob' are shown in SI Figure \@ref(fig:sensitivity-example).
 The simulated efficiency vectors may be generated to different hypotheses about bias in the given system, such as its overall magnitude and correlation among phylogenetically-related species.
 Thus the utility of such simulations will increase the more we learn about the properties of taxonomic bias in different systems.
 
@@ -113,25 +113,3 @@ A potential solution is to perform a bias-aware meta-analysis that that explicit
 Parametric microbiome meta-analysis models include sets of species-specific latent parameters to model "batch effects"—amorphous differences in the measurements of each study.
 By configuring these models so that these latent parameters correspond to study-specific species efficiencies, we can improve their biological interpretability and gain the ability to directly assess whether disagreements in DA results across studies can be explained by differences in taxonomic bias.
 To the extent that taxonomic bias truly is consistent within studies, meta-analyses that directly account for it can have greater statistical power to extract the truly consistent and inconsistent microbial patterns across studies.
-
-## Supplemental figures
-
-<!-- begin figure -->
-
-```{r sensitivity-example, fig.cap = '(ref:cap-sensitivity-example)'}
-svg_path <- here::here(
-  "notebook/_posts/2021-10-18-evaluate-robustness-example/",
-  "evaluate-robustness-example_files/figure-html5/summary_plot-1.svg"
-)
-if (knitr::is_html_output()) {
-  fig_path <- svg_path
-} else if (knitr::is_latex_output()) {
-  fig_path <- svg_to_pdf(svg_path)
-}
-knitr::include_graphics(fig_path)
-rm(svg_path, fig_path)
-```
-
-(ref:cap-sensitivity-example) **A bias-sensivity analysis can be performed to examine how sensitive the results of a DA analysis are to assumptions about taxonomic bias in community measurements.** The figure shows the results of a bias-sensitivity analysis used to study the effect of bias on the association of _Gardnerella vaginalis_ and preterm birth that was investigated by @callahan2017repl. 100 random efficiency vectors were drawn at 6 different bias strengths (quantified by the variance in log efficiency, $\sigma_{e}^{2}$). Each efficiency vector was used to calibrate the MGS profiles and perform a DA association test of _G. vaginalis_ versus the host's preterm birth outcome; regression coefficients $\hat \beta$ indicate the increase of average logit proportion of  _G. vaginalis_ in women who experienced preterm birth.
-
-<!-- end figure -->

@@ -16,10 +16,30 @@ We used the method for measuring and correcting bias developed by @mclaren2019co
 The vaginal microbiome during pregnancy is characterized by relatively low diversity, with a single species often forming a vast majority of calibrated or uncalibrated read counts.
 The three species that most often dominate the calibrated profiles are _Gardnerella vaginalis_, _Lactobacillus iners_, and _Lactobacillus crispatus_.
 Our mock-community analysis indicate _G. vaginalis_ has the lowest efficiency of the seven species, roughly 20X lower than _L. crispatus_ and 30X lower than _L. iners_ (the most efficiently measured).
-As a result, the mean efficiency varies substantially across samples, with samples dominated by a _Lactobacillus_ species typically having an efficiency that is 3-20X greater than samples dominated by _Gardnerella_ (SI figure).
-Shifts between _Lactobacillus_ and _Gardnerella_ dominance are common in between-women comparisons, and also occasionally occur between subsequent sampling points in individual women (SI Figure).
-Examination of the multiplicative trajectories in the proportions of individual species indicates that such transitions can cause spurious fold changes in lower-abundance species (SI Figure).
+As a result, the mean efficiency varies substantially across samples, with samples dominated by a _Lactobacillus_ species typically having an efficiency that is 3-20X greater than samples dominated by _Gardnerella_ (Figure \@ref(fig:momspi-mean-efficiency-dist)).
+Shifts between _Lactobacillus_ and _Gardnerella_ dominance are common in between-women comparisons, and also occasionally occur between subsequent sampling points in individual women (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)).
+Examination of the multiplicative trajectories in the proportions of individual species indicates that such transitions can cause spurious fold changes in lower-abundance species (SI Figure TODO).
 Decreases in mean efficiency during transitions from _Lactobacillus_ to _Gardnerella_ dominance can be expected to be even more extreme for commonly-used vaginal microbiome primers that fail to amplify _Gardnerella_.
+
+<!-- begin figure -->
+
+```{r momspi-mean-efficiency-dist, fig.cap = '(ref:cap-momspi-mean-efficiency-dist)'}
+svg_path <- fs::path(
+  "notebook/_posts/2021-11-01-momspi-summary/momspi-summary_files", 
+  "figure-html5/momspi-mean-efficiency-dist-1.svg"
+)
+if (knitr::is_html_output()) {
+  fig_path <- svg_path
+} else if (knitr::is_latex_output()) {
+  fig_path <- svg_to_pdf(svg_path)
+}
+knitr::include_graphics(fig_path)
+rm(svg_path, fig_path)
+```
+
+(ref:cap-momspi-mean-efficiency-dist) **The mean efficiency in vaginal samples from the MOMS-PI study varies with the most abundant species.**
+
+<!-- end figure -->
 
 A second study in which control communities make it possible to directly analyze the impact of taxonomic bias in experimental samples was performed by @leopold2020host.
 To study the interactions between a host plant and its fungal commensals and pathogen, the authors inoculated trees with a fungal synthetic community and later exposed plants to a fungal pathogen.
