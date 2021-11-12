@@ -1,0 +1,29 @@
+---
+title: "MOMS-PI patient exploration and analysis of fold changes"
+description: 
+author:
+  - name: Jacob T. Nearing
+  - name: Michael R. McLaren
+date: 2021-10-09
+categories:
+  - ref:brooks2015thet
+  - ref:fettweis2019thev
+# bibliography: ../../../main.bib
+output:
+  distill::distill_article:
+    self_contained: false
+    dev: svg
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE
+)
+```
+
+This is a link post to an analysis of the MOMS-PI vaginal microbiome profiles.
+The analysis computes, for each species, the fold changes between subsequent visits within individual women.
+It then plots species trajectories for several women, with and without calibration, and visualizes and computes some summary statistics for the observed versus actual fold changes for the species in the mock community.
+
+[Link to analysis](MOMS_patient_and_summary.html)

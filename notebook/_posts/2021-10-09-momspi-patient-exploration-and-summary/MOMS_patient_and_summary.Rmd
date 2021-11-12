@@ -1,0 +1,676 @@
+---
+title: "MOMS Patient Exploration and Overall Summary"
+author: "Jacob T. Nearing"
+date: "07/10/2021"
+output: 
+  rmdformats::downcute:
+    self_contained: true
+    default_style: "light"
+    downcute_theme: "chaos"
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.dim=c(6,6))
+```
+
+# Set up
+
+Load in required libaries for the analysis
+```{r, message=F, echo=F}
+
+#work in the github repo
+setwd("~/GitHub_Repos/MOMSPI/momspi/")
+library(here)
+
+
+
+library(tidyverse)
+
+#Use cowplot theme for ggplots
+library(cowplot)
+theme_set(theme_cowplot())
+
+#used for mult panel figures
+library(patchwork)
+
+#used to calibrate microbe abundances using mock communities and multiplicative bias.
+library(metacal)
+
+#improved implementation of some phyloseq functions
+library(speedyseq)
+
+library(kableExtra)
+```
+
+# Load in mock data
+
+This code section is copied from MM's original analysis
+```{r}
+#Load in otu data
+otu <- here("output", "stirrups-profiles", "abundance-matrix.csv.bz2") %>%
+  read_csv(
+    col_types = cols(.default = col_double(), sample_name = col_character())
+  ) %>%
+  otu_table(taxa_are_rows = FALSE)
+
+#load in sample data
+sam <- here("output", "stirrups-profiles", "sample-data.csv.bz2") %>%
+  read_csv(col_types = "ccccccic") %>%
+  mutate(across(host_visit_number, factor, ordered = TRUE)) %>%
+  sample_data
+
+#load in taxa profiles
+tax <- here("output", "stirrups-profiles", "taxonomy.csv.bz2") %>%
+  read_csv(col_types = cols(.default = col_character())) %>%
+  tax_table %>%
+  mutate_tax_table(
+    species = case_when(!is.na(genus) ~ .otu)
+  )
+
+ps <- phyloseq(otu, sam, tax)
+
+taxa_names(ps) <- taxa_names(ps) %>% 
+  str_replace("(?<=Lactobacillus_crispatus)_cluster", "")
+taxa_names(ps) %>% str_subset("crispatus")
+```
+
+# Calibrate data
+```{r}
+#grab data files from metacal package 
+dr <- system.file("extdata", package = "metacal")
+
+
+#table contains the expected abundances of the mock communties from
+# brooks et al., 2015
+actual <- file.path(dr, "brooks2015-actual.csv") %>%
+  read.csv(row.names = "Sample") %>%
+  as("matrix")
+
+#table contains the observed abundances from 16S sequencing above mock communties
+# data from brooks et al., 2015
+observed <- file.path(dr, "brooks2015-observed.csv") %>%
+  read.csv(row.names = "Sample") %>%
+  subset(select = - Other) %>%
+  as("matrix")
+
+# Estimate bias with bootstrapping for error estimation
+mc_fit <- estimate_bias(observed, actual, margin = 1, boot = TRUE)
+summary(mc_fit)
+
+#to keep our workspace clean we will remove the tables we don;t need.
+rm(actual, observed, dr)
+
+control_species <- mc_fit %>% coef %>% names
+stopifnot(all(control_species %in% taxa_names(ps)))
+```
+
+We'll just use the point estimate, ignoring the uncertainty, since the standard errors are so small.
+
+We don't have a way to directly estimate the efficiencies of the other OTUs, so we'll impute them as follows.
+
+1. Set the efficiencies of the 7 control species to the directly estimated values
+2. Compute efficiencies for the 6 control genera to the efficiency of the control species (if only one) or the geometric mean efficiency (if more than one; here this is just _Lactobacillus_)
+3. Use these genera-level efficiencies for the efficiencies of OTUs that are not control species but are in the same genus as one
+4. For other OTUs, use the geometric mean of the genera efficiencies; this is similar to using the mean of the 7 control species but gives _Lactobacillus_ equal weight to the other genera.
+
+
+
+```{r}
+#bias of all 
+bias_species <- coef(mc_fit) %>% 
+  enframe("species", "efficiency") %>%
+  print
+
+bias_genus <- bias_species %>%
+  mutate(genus = str_extract(species, "^[^_]+"), .before = 1) %>%
+  with_groups(genus, summarize, across(efficiency, gm_mean)) %>%
+  print
+
+# Match on genus or species, depending on which is available; then set others
+# to average genus efficiency
+bias_all <- tax_table(ps) %>% as_tibble %>%
+  left_join(bias_species, by = "species") %>%
+  left_join(bias_genus, by = "genus") %>%
+  mutate(
+    efficiency = case_when(
+      !is.na(efficiency.x) ~ efficiency.x,
+      !is.na(efficiency.y) ~ efficiency.y,
+      TRUE ~ gm_mean(bias_genus$efficiency)
+    )
+  ) %>%
+  select(-efficiency.x, -efficiency.y) %>%
+  # standardize to L. iners, the most efficiently measured
+  mutate(
+    across(efficiency, ~ . / max(.))
+  ) %>%
+  glimpse
+
+bias_all_vec <- bias_all %>% select(.otu, efficiency) %>% deframe 
+```
+
+
+
+```{r}
+ps.obs <- ps %>% 
+  # prune_taxa(control_species, .) %>%
+  transform_sample_counts(close_elts)
+
+# note, calibrate() automatically subsets to just the focal taxa if we haven't
+# already
+ps.cal <- ps.obs %>% calibrate(bias_all_vec)
+
+
+mean_eff <- perturb(ps.cal, bias_all_vec, norm = "none")%>% 
+  sample_sums %>%
+  enframe('.sample', 'mean_efficiency') %>%
+  left_join(sam %>% as_tibble, by = '.sample')
+```
+
+# Calculate fold-change between subsequent visits
+
+```{r}
+
+#takes in as input 2 phyloseq objects (obs and calibrated phyloseq objects)
+#the subject of interest (i.e. patient ID)
+#whether you want to prune to only the taxa in the mock community (i.e. control species)
+#a vector that contains the names of all the cntrl species (required when pruning)
+get_taxa_fold_change <- function(cal, obs, subject, prune=F, cntrl_spec=control_species){
+  
+  
+  #if we want to only keep taxa in the mocks prune set to T
+  if(prune){
+  
+    #borrow Mike's code from above
+    temp <- list(Calibrated = cal, Observed = obs) %>%
+    map(filter_sample_data, host_subject_id == subject) %>%
+    #remove taxa that are not control taxa
+    map(~prune_taxa(cntrl_spec, .)) %>%
+    #change to relative abundances are they not already in proportions though?
+    #ohhh we need to recalculate the relative abundances as we removed some taxa!
+      
+    map(transform_sample_counts, fun = close_elts) %>%
+    map(as_tibble)
+    
+  }else{
+    temp <- list(Calibrated = cal, Observed = obs) %>%
+    map(filter_sample_data, host_subject_id == subject) %>%
+    map(as_tibble)
+  }
+  
+  #set the type of overvation
+  temp[["Calibrated"]]$Type <- "Calibrated"
+  temp[["Observed"]]$Type <- "Observed"
+
+  #list that will contain the returned info.
+  ret_list_cal <- list()
+  
+  
+  taxa_names <- unique(temp$Calibrated$.otu)
+  #go through list and create a new dataframe of each taxa arrange by the their visit number
+  for(i in taxa_names){
+    ret_list_cal[[i]] <- filter(temp$Calibrated, .otu==i) %>% arrange(host_visit_number)
+    
+  }
+  #okay for each of these taxa we now need to calculate the fold change in abundance between row i and row i + 1
+  # i.e. each subsequent visit
+  for(i in taxa_names){
+    #loop through each taxa abundance for that sample
+    for(j in 1:nrow(ret_list_cal[[i]])){
+      #initalize the column as -1 (fold change value should never be negative)
+      #if its the first sample we will just mark at is "START"
+      if(j==1){
+        ret_list_cal[[i]][j,"fold_change_from_last"] <- NA
+        ret_list_cal[[i]][j,"change"] <- "START"
+        next()
+      }
+      #get the previous sample index
+      last_index <- j-1
+      #divide current index abundance by last abundance to get FC change
+      fc_change <- ret_list_cal[[i]][j,".abundance"]/ret_list_cal[[i]][last_index,".abundance"]
+      ret_list_cal[[i]][j,"fold_change_from_last"] <- fc_change
+      
+      #sometimes NaN is retunred as abundance when all abundances are 0 during reclosing to RA
+      #this is only an issue when pruning to control taxa.
+      if(is.na(ret_list_cal[[i]][j, ".abundance"]) | is.na(ret_list_cal[[i]][last_index, ".abundance"])){
+        ret_list_cal[[i]][j, "change"] <- "FAIL"
+        next()
+      }
+      #set what the change was (went up down or stayed same between visits)
+      if(ret_list_cal[[i]][j,".abundance"] > ret_list_cal[[i]][last_index, ".abundance"]){
+        ret_list_cal[[i]][j,"change"] <- "UP"
+      }
+      if(ret_list_cal[[i]][j,".abundance"] < ret_list_cal[[i]][last_index, ".abundance"]){
+        ret_list_cal[[i]][j,"change"] <- "DOWN"
+      }
+      if(ret_list_cal[[i]][j,".abundance"] == ret_list_cal[[i]][last_index, ".abundance"]){
+        ret_list_cal[[i]][j,"change"] <- "SAME"
+      }
+      
+    }
+    
+  }
+  
+  #same analysis as above but for observed values.
+  ret_list_obs <- list()
+  
+  taxa_names <- unique(temp$Observed$.otu)
+  for(i in taxa_names){
+    ret_list_obs[[i]] <- filter(temp$Observed, .otu==i) %>% arrange(host_visit_number)
+    
+  }
+  #okay for each of these taxa we now need to calculate the fold change in abundance between row i and row i + 1
+  for(i in taxa_names){
+    for(j in 1:nrow(ret_list_obs[[i]])){
+      #initalize the column as -1 (fold change value should never be negative)
+      if(j==1){
+        ret_list_obs[[i]][j,"fold_change_from_last"] <- NA
+        ret_list_obs[[i]][j,"change"] <- "START"
+        next()
+      }
+      last_index <- j-1
+      #divide current index abundance by last abundance to get FC change
+      fc_change <- ret_list_obs[[i]][j,".abundance"]/ret_list_obs[[i]][last_index,".abundance"]
+      ret_list_obs[[i]][j,"fold_change_from_last"] <- fc_change
+      
+      #sometimes NaN is retunred as abundance when all abundances are 0 during reclosing to RA
+      if(is.na(ret_list_obs[[i]][j, ".abundance"]) | is.na(ret_list_obs[[i]][last_index, ".abundance"])){
+        ret_list_obs[[i]][j, "change"] <- "FAIL"
+        next()
+      }
+      
+      if(ret_list_obs[[i]][j,".abundance"] > ret_list_obs[[i]][last_index, ".abundance"]){
+        ret_list_obs[[i]][j,"change"] <- "UP"
+      }
+      if(ret_list_obs[[i]][j,".abundance"] < ret_list_obs[[i]][last_index, ".abundance"]){
+        ret_list_obs[[i]][j,"change"] <- "DOWN"
+      }
+      if(ret_list_obs[[i]][j,".abundance"] == ret_list_obs[[i]][last_index, ".abundance"]){
+        ret_list_obs[[i]][j,"change"] <- "SAME"
+      }
+    }
+    
+  }
+  
+  return(list(ret_list_cal,ret_list_obs))
+  
+}
+
+### Function that goes through the list that is returned from get_taxa_fold_change and finds taxa/samples that have a sign change between obs and calibrated
+## for now we will return a DF with two rows for each occurance of a fold change difference between calibrated and observed.
+find_sign_change <- function(taxa_list){
+  
+  taxa_names <- names(taxa_list[[1]])
+  
+  found_hit=F
+  ret_df <- NULL
+  #go through each taxa
+  for(taxa in taxa_names){
+    #1 is calibrated list
+    for(j in 1:nrow(taxa_list[[1]][[taxa]])){
+      if(taxa_list[[1]][[taxa]][j,"change"] != taxa_list[[2]][[taxa]][j,"change"]){
+        message("found diff")
+        if(found_hit==F){
+          ret_df <- rbind(taxa_list[[1]][[taxa]][j,], taxa_list[[2]][[taxa]][j,])
+          
+          val1 <- ret_df[1,"fold_change_from_last"]/ret_df[2,"fold_change_from_last"]
+          val2 <- ret_df[2,"fold_change_from_last"]/ret_df[1,"fold_change_from_last"]
+          vals <- c(val1,val2)
+          
+          fc_diff <- vals[which.max(vals)]
+          message(fc_diff)
+          ret_df$FC_Diff <- fc_diff
+
+          
+
+          found_hit=T
+        }else{
+          temp_df <- rbind(taxa_list[[1]][[taxa]][j,], taxa_list[[2]][[taxa]][j,])
+          
+          val1 <- temp_df[1,"fold_change_from_last"]/temp_df[2,"fold_change_from_last"]
+          val2 <- temp_df[2,"fold_change_from_last"]/temp_df[1,"fold_change_from_last"]
+          vals <- c(val1,val2)
+          
+          fc_diff <- vals[which.max(vals)]
+          temp_df$FC_Diff <- fc_diff
+          
+          ret_df <- rbind(ret_df, temp_df)
+        }
+
+      }
+
+    }
+  }
+  return(ret_df)
+  
+}
+
+Get_total_fc <- function(taxa_list){
+  
+  taxa_names <- names(taxa_list[[1]])
+  found_hit=F
+  ret_df <- NULL
+  #go through each taxa
+  for(taxa in taxa_names){
+    #1 is calibrated list
+    for(j in 1:nrow(taxa_list[[1]][[taxa]])){
+        if(found_hit==F){
+          ret_df <- rbind(taxa_list[[1]][[taxa]][j,], taxa_list[[2]][[taxa]][j,])
+          found_hit=T
+        }else{
+          temp_df <- rbind(taxa_list[[1]][[taxa]][j,], taxa_list[[2]][[taxa]][j,])
+          ret_df <- rbind(ret_df, temp_df)
+        }
+
+      }
+
+    }
+  
+  return(ret_df)
+}
+
+```
+
+
+## Generate FC change values
+For the purposes of this analysis we will only focus on the values that also include the imputed bias for non-control taxa
+
+This takes awhile to run so we will save the results as an RDS file. 
+```{r, eval=F}
+#get a list of subjects in the dataset
+Subject_names <- unique(sample_data(ps.cal)$host_subject_id)
+
+#remove subjects with only 1 samples
+one_sample_subjects <- names(which(table(sample_data(ps.cal)$host_subject_id) ==1 ))
+Subject_names <- Subject_names[! Subject_names %in% one_sample_subjects]
+
+#list to contain FC_changes
+nonpruned_fc_changes <- list()
+#list to contain samples/taxa that there is FC dif between observed and calibrated
+nonpruned_sign_dif <- list()
+
+#Go through each subject and calulate fold changes for every taxa
+for(i in Subject_names){
+  message(i)
+  nonpruned_fc_changes[[i]] <- get_taxa_fold_change(cal=ps.cal, obs = ps.obs, subject=i,
+                                                 prune=F, cntrl_spec = control_species)
+  nonpruned_sign_dif[[i]] <- find_sign_change(nonpruned_fc_changes[[i]])
+}
+
+#bind all sign_difs for each patient into a single dataframe.
+all_together_nonprune_dif <- do.call(rbind, nonpruned_sign_dif)
+#save it
+saveRDS(all_together_nonprune_dif, "~/GitHub_Repos/MOMSPI/momspi/data/FC_data/FC_changes_dif_nonprune.RDS")
+
+#save the fc_changes
+saveRDS(nonpruned_fc_changes, "~/GitHub_Repos/MOMSPI/momspi/data/FC_data/FC_changes_all_nonprune.RDS")
+
+
+### To make this simplier lets only look at control species
+
+all_together_control <- all_together[which(all_together$control==T),]
+which.max(all_together_control$FC_Diff)
+```
+
+## Explore FC differences of control taxa
+
+While we imputed the bias for all taxon lets just focus on the taxa that were included in the mock communnities.
+
+```{r}
+all_together_dif <- readRDS("~/GitHub_Repos/MOMSPI/momspi/data/FC_data/FC_changes_dif_nonprune.RDS")
+all_together_dif$FC_Diff <- unlist(all_together_dif$FC_Diff)
+
+
+#only keep taxa that were included in the mock
+all_together_dif_control <- all_together_dif[which(all_together_dif$control==T),]
+
+#lets see what the maximum FC difference is
+max_diff_index <- which.max(all_together_dif_control$FC_Diff)
+
+#list of metadata to look at
+metadata_of_int <- c(".sample", "host_subject_id", ".otu", "host_visit_number", "FC_Diff")
+
+
+all_together_dif_control[max_diff_index,metadata_of_int]
+#Patient EP229454 has the largest fold change difference between the different individuals
+
+#fairly large FC change for this individual as well mostly in Prevotella bivia
+all_together_dif_control[which(all_together_dif_control$host_subject_id=="EP972345"), metadata_of_int]
+
+#lets do the same as above but filter on FC_diff being larger than 5.
+all_together_dif_control_large <- all_together_dif_control[which(all_together_dif_control$FC_Diff>=5),]
+tail(sort(table(all_together_dif_control_large$host_subject_id)))
+
+```
+
+Patient EP229454 has the largest FC difference between calibrated and observed individuals and it is for the taxon Atopobium_vaginae.
+
+Patient EP972345 is also a good example of a patient with a large FC difference between the calibrated and observed individuals.
+
+Patient EP587032 has multiple instances of fairly large FC differences between the calibrated and observed individuals
+
+We will inspect each of these patients individually
+
+```{r}
+
+x1 <- list(Calibrated = ps.cal, Observed = ps.obs) %>%
+  map(~prune_taxa(control_species, .)) %>%
+  map_dfr(as_tibble, .id = "type") %>%
+  mutate(otu_abbrev = .otu %>% str_replace("_", " ") %>% abbreviate)
+```
+
+# Patient EP229454
+
+```{r}
+EP229454_lines <-  x1 %>%
+  filter(host_subject_id == "EP229454") %>%
+  ggplot(aes(host_visit_number, .abundance, color = type)) +
+  scale_y_log10() +
+  facet_grid(otu_abbrev~., scales = 'fixed') +
+  geom_line(aes(group = type)) +
+  ylab("Log10 relative abundance") +
+  xlab("Visit Number") +
+  labs(color="Observation Type")
+
+
+EP229454_me <- mean_eff %>%
+  filter(host_subject_id == "EP154266") %>%
+  ggplot(aes(host_visit_number, mean_efficiency)) +
+  #scale_y_log10() +
+  scale_y_log10(limits = c(1e-2, 1e1)) +
+  geom_line(aes(group = 1)) +
+  ylab("Log10 Mean Efficiency") +
+  xlab("Visit Number")
+
+EP229454_lines / EP229454_me + plot_layout(heights = c(1, 0.1))
+```
+
+We can see an example of a sign change between the two Observation types from visits 1 - 2 in Atopobium vaginae
+
+# Patient EP972345
+```{r}
+EP972345_lines <- x1 %>%
+  filter(host_subject_id == "EP972345") %>%
+  ggplot(aes(host_visit_number, .abundance, color = type)) +
+  scale_y_log10() +
+  facet_grid(otu_abbrev~., scales = 'fixed') +
+  geom_line(aes(group = type)) +
+  ylab("Log10 relative abundance") +
+  xlab("Visit Number") +
+  labs(color="Observation Types")
+
+EP972345_me <- mean_eff %>%
+  filter(host_subject_id == "EP972345") %>%
+  ggplot(aes(host_visit_number, mean_efficiency)) +
+  #scale_y_log10() +
+  scale_y_log10(limits = c(1e-2, 1e1)) +
+  geom_line(aes(group = 1)) +
+  ylab("Log10 Mean Efficiency") +
+  xlab("Visit Number")
+
+
+EP972345_lines / EP972345_me + plot_layout(heights = c(1, 0.1))
+```
+
+Here we see that there is a sign change between the observation types from visits 2-4. This is accompanied by a decrease in mean effiency due to an increase in the abundance of Gardnerella vaginalis
+
+# Patient EP587032
+```{r}
+EP587032_lines <- x1 %>%
+  filter(host_subject_id == "EP587032") %>%
+  ggplot(aes(host_visit_number, .abundance, color = type)) +
+  scale_y_log10() +
+  facet_grid(otu_abbrev~., scales = 'fixed') +
+  geom_line(aes(group = type)) +
+  ylab("Log10 relative abundance") +
+  xlab("Visit Number") +
+  labs(color="Observation Types")
+
+EP587032_me <- mean_eff %>%
+  filter(host_subject_id == "EP587032") %>%
+  ggplot(aes(host_visit_number, mean_efficiency)) +
+  #scale_y_log10() +
+  scale_y_log10(limits = c(1e-2, 1e1)) +
+  geom_line(aes(group = 1)) +
+  ylab("Log10 Mean Efficiency") +
+  xlab("Visit Number")
+
+
+EP587032_lines / EP587032_me + plot_layout(heights = c(1, 0.1))
+```
+
+This patient is a very interesting example as there is sign changes in almost all of the taxa being measured. This is also accompanied by a decrease in the mean effiency due to an increase in Streptococcus aglactiae. 
+
+# Overall fold changes 
+
+```{r, eval=F}
+#get a list of subjects in the dataset
+Subject_names <- unique(sample_data(ps.cal)$host_subject_id)
+
+#remove subjects with only 1 samples
+one_sample_subjects <- names(which(table(sample_data(ps.cal)$host_subject_id) ==1 ))
+Subject_names <- Subject_names[! Subject_names %in% one_sample_subjects]
+
+nonpruned_fc_changes <- readRDS("~/GitHub_Repos/MOMSPI/momspi/data/FC_data/FC_changes_all_nonprune.RDS")
+All_fc_change <- list()
+for(i in Subject_names){
+  message(i)
+  All_fc_change[[i]] <- Get_total_fc(nonpruned_fc_changes[[i]])
+  
+}
+
+View(All_fc_change)
+ALL_fc_change_df <- do.call(rbind, All_fc_change)
+saveRDS(ALL_fc_change_df, "~/GitHub_Repos/MOMSPI/momspi/data/FC_data/FC_changes_all_nonprune_df.RDS")
+```
+
+## All Fold Change Comparisons
+
+```{r}
+All_fc_change_df <- readRDS("~/GitHub_Repos/MOMSPI/momspi/data/FC_data/FC_changes_all_nonprune_df.RDS")
+
+
+### First lets contrict to just control taxa
+All_fc_change_df <- All_fc_change_df %>% filter(.otu %in% control_species)
+### remove start samples
+All_fc_change_df <- All_fc_change_df %>% filter(change != "START")
+
+#remove when FC was the same usually this is when FC is NaN
+#this is not a completely "fair" way to filter the data most likely...
+All_fc_change_df <- All_fc_change_df %>% filter(change != "SAME")
+
+split_dfs <- split(All_fc_change_df, All_fc_change_df$Type)
+
+identical(split_dfs[[1]]$.otu, split_dfs[[2]]$.otu)
+identical(split_dfs[[1]]$.sample, split_dfs[[2]]$.sample)
+
+split_dfs[[1]]$obs_val <- split_dfs[[2]]$fold_change_from_last
+split_dfs[[1]]$obs_change <- split_dfs[[2]]$change
+
+test_plot <- ggplot(split_dfs[[1]], aes(y=log(fold_change_from_last), x=log(obs_val), color=.otu)) + geom_point() +
+  xlab("log(Observed Fold Changes)") + ylab("log(Calibrated Fold Changes)") + geom_abline(intercept=0, slope=1)
+test_plot
+```
+
+## Lets examine these results looking at specific taxa {.tabset}
+```{r, fig.height=20, fig.width=5, out.height="200%", out.width="150%"}
+
+taxa_split_dfs <- split(split_dfs[[1]], split_dfs[[1]]$.otu)
+
+fc_change_perc <- c()
+for(i in control_species){
+  
+  agg_occ <- table(taxa_split_dfs[[i]]$change, taxa_split_dfs[[i]]$obs_change)
+  total_dis <- sum(agg_occ[1,2], agg_occ[2,1])
+  fc_change_perc[i] <- total_dis/dim(taxa_split_dfs[[i]])[1]*100
+}
+
+fc_change_perc
+
+agreeance_plots <- list()
+for(i in control_species){
+  
+  agreeance_plots[[i]] <- ggplot(taxa_split_dfs[[i]], aes(y=log(fold_change_from_last), x=log(obs_val), color=.otu)) + geom_point() +
+  xlab("log(Observed Fold Changes)") + ylab("log(Calibrated Fold Changes)") + geom_abline(intercept=0, slope=1)
+}
+```
+
+### Atopobium vaginae
+
+```{r}
+agreeance_plots[1]
+```
+
+### Gardnerella vaginalis
+
+```{r}
+agreeance_plots[2]
+```
+
+### Lactobacillus crispatus
+
+```{r}
+agreeance_plots[3]
+```
+
+### Lactobacillus iners
+
+```{r}
+agreeance_plots[4]
+```
+
+### Prevotella bivia
+
+```{r}
+agreeance_plots[5]
+```
+
+### Sneathia amnii
+
+```{r}
+agreeance_plots[6]
+```
+
+### Steptococcus agalactiae
+
+```{r}
+agreeance_plots[7]
+```
+
+
+### Percent occurences of fold change differences
+
+```{r}
+#table showing total occurences of when things don't agree
+agreeance_occurances <- table(split_dfs[[1]]$change, split_dfs[[1]]$obs_change)
+
+total_disagreeance <- sum(agreeance_occurances[1,2],agreeance_occurances[2,1])
+total_disagreeance/dim(split_dfs[[1]])[1]*100
+
+### in total it looks like it occurs roughly 5% of the time regardless of taxa
+
+## Note this is after filtering out start samples and samples that didn't have a fold change from their last visit.
+```
+
+
+
