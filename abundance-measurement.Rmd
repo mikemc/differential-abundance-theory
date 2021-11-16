@@ -38,11 +38,11 @@ is the average or mean efficiency of cells in the sample.
 
 ## Relative abundances (proportions and ratios)
 
-We distinguish between two types of species-level *relative abundances*---abundances in which the absolute scale is not intrinsically meaningful.
+We distinguish between two types of species-level *relative abundances*.
 The first type consists of the *ratios* among the abundances of two or more species, such as a ratio of 5:4:2 among three species.
-The second type consists of the *proportion* of an individual species, equal to its abundance divided by that of the chosen root taxon (e.g. Prokaryotes).
-Species' ratios and proportions constitute distinct views of relative abundance and hence what it means for relative abundances to change across samples.
-Although proportions are dominant in microbiome DA analysis, researchers increasingly adopt the ratio view via analyses adapted from the statistical framework of Compositional Data Analysis (CoDA).
+The second type consists of the *proportion* of an individual species, equal to its abundance divided by that of a particular root taxon (e.g. Prokaryotes).
+DA analyses of proportions consider how the proportion of a species changes indepently of other species, whereas DA analyses of ratios consider the conserted change in relative abundance among two or more species.
+Although proportion-based analysis is dominant, microbiome researchers increasingly use ratio-based analyses adapted from the statistical framework of Compositional Data Analysis (CoDA).
 The different manner in which taxonomic bias affects ratios vs. proportions (@mclaren2019cons) forms the basis in subsequent sections for understanding the extent to which its effects cancel in DA analysis.
 
 The standard measurement of the proportion of species $i$ in sample $a$ is given by the ratio of its read count to the total,
@@ -96,7 +96,7 @@ rm(svg_path, fig_path)
 **Difference between species proportions and species ratios:**
 Consistent taxonomic bias at the species level creates a consistent fold error in the ratios among species, but a varying fold error in the proportions of individual species.
 But a proportion is, after all, just a ratio between two taxa in which the denominator taxon is the entire taxonomic domain under study.
-The difference in behavior from that of ratios between species arises because the efficiency of higher-level taxa, which consist of the aggregate of many species, varies across samples with the changing relative abudances among its constituent species.
+The difference in behavior from that of ratios between species arises because the efficiency of higher-level taxa, which consist of the aggregate of many species, varies across samples with the changing relative abundances among its constituent species.
 
 ## Absolute abundances (cell densities)
 
