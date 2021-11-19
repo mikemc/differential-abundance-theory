@@ -48,7 +48,7 @@ The different manner in which taxonomic bias affects ratios vs. proportions (@mc
 The standard measurement of the proportion of species $i$ in sample $a$ is given by the ratio of its read count to the total,
 \begin{align}
   (\#eq:prop-meas)
-  \widehat{\text{prop}}_{i}(a) = \frac{\text{reads}_i(a)}{\text{total reads(a)}}.
+  \widehat{\text{prop}}_{i}(a) = \frac{\text{reads}_i(a)}{\text{total reads}(a)}.
 \end{align}
 From Equations \@ref(eq:measurement-model), \@ref(eq:total-reads), and \@ref(eq:prop-meas), it follows that
 \begin{align}

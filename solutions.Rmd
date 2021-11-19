@@ -86,7 +86,7 @@ Similarly, bulk DNA quantification may be an ideal pairing for shotgun sequencin
 These pairings even make it possible to account for error caused by variation among samples in the fraction of unclassified reads, which can form a major fraction of amplicon and shotgun data.
 Importantly, maximizing the offsetting of errors requires thoughtful choices during bioinformatic analysis, perhaps eschewing the filtering and normalization steps used in many software packages and workflows (Appendix \@ref(appendix-total-density)).
 
-## Bias-sensitivity analysis and bias-aware meta-analysis
+## Bias-sensitivity analysis
 
 For experiments that have been conducted without calibration controls, it is still possible to investigate the likelihood that DA results can be explained by taxonomic bias by performing a computational bias-sensitivity analysis.
 
