@@ -122,7 +122,7 @@ We can rewrite the species' density measurements to account for the effect of ta
 \end{align}
 The variable fold error that bias creates in the measured proportions directly transfers to the density measurements.
 
-Taxonomic bias can also create systematic error in the total-density measurements (Appendix \@ref(appendix-total-density)).
+Taxonomic bias can also create systematic error in the total-density measurements (Appendix \@ref(total-density-bias)).
 For now, we suppose that the total density can be measured accurately; 
 later, Section \@ref(solutions) describes how experiments might be designed such that taxonomic bias in the total density measurement offsets that in the MGS proportions, leading to a (more) consistent fold error in the measured densities.
 
@@ -147,9 +147,11 @@ It follows from Equation \@ref(eq:ratio-error) that the error caused by taxonomi
 Here, it is the constant error in the measured ratio of species $i$ to $r$ that propagates into the density measurement.
 There will generally be systematic error in the density of the reference species; however, if the systematic fold error is constant across samples, so will be that of the densities of other species.
 
+<!-- NOTE: the above doesn't quite make sense for DNA spike-ins -->
+
 **Differences between the two approaches:**
 Equations \@ref(eq:density-prop-error) and \@ref(eq:density-ratio-error) show that the manner in which taxonomic bias in the sequencing measurement impacts the two approaches mirrors that of proportions and ratios.
 If the fold error in the total-density or reference species measurement is negligible (or at least constant) then the fold errors in species densities by the total-density approach vary across samples with the mean efficiency, whereas the fold errors by the reference-species approach are constant. 
 The fundamental determinant of whether constant error is obtained is not which of these two equations is ultimately used, but rather whether densities of individual species, which (we assume) have constant efficiency, or the total community, which has varying efficiency, provide the absolute-abundance information.
 Studies using spike-ins as constant reference species will often, instead of using Equation \@ref(eq:density-ratio-meas), first use the spike-in species to estimate the total density, and then estimate the density of focal species with Equation \@ref(eq:density-prop-meas).
-If the calculation is done carefully, however, this method still yields constant fold errors so long as the species efficiencies (including those of the spike-in) are constant across samples (Appendix \@ref(appendix-total-density)).
+If the calculation is done carefully, however, this method still yields constant fold errors so long as the species efficiencies (including those of the spike-in) are constant across samples (Appendix \@ref(total-density-ref)).
