@@ -1870,7 +1870,10 @@ function init_distill() {
 
     // hoverable references
     $('span.citation[data-cites]').each(function() {
-      var refHtml = $('#ref-' + $(this).attr('data-cites')).html();
+      var refs = $(this).attr('data-cites').split(" ");
+      var refHtml = refs.map(function(ref) {
+        return "<p>" + $('#ref-' + ref).html() + "</p>";
+      }).join("\n");
       window.tippy(this, {
         allowHTML: true,
         content: refHtml,
@@ -2062,7 +2065,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"Exploring the effect of bias in Leopold and Busby (2020)\n","authors":[{"author":"Michael McLaren","authorURL":"#","affiliation":"&nbsp;","affiliationURL":"#","orcidID":""}],"publishedDate":"2019-10-21T00:00:00.000-04:00","citationText":"McLaren, 2019"}
+{"title":"Exploring the effect of bias in Leopold and Busby (2020)\n","authors":[{"author":"Michael McLaren","authorURL":"#","affiliation":"&nbsp;","affiliationURL":"#","orcidID":""}],"publishedDate":"2019-10-21T00:00:00.000-07:00","citationText":"McLaren, 2019"}
 </script>
 
 <!--/radix_placeholder_front_matter-->

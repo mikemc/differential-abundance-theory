@@ -5,14 +5,14 @@
       "title": "About this site",
       "author": [],
       "contents": "\nThis site contains analyses for a manuscript on the impact of taxonomic bias on microbimoe differential-abundance methods.\n\n\n\n",
-      "last_modified": "2021-10-25T19:30:47-04:00"
+      "last_modified": "2021-11-29T10:11:17-08:00"
     },
     {
       "path": "index.html",
       "title": "Research notebook for manuscript on taxonomic bias and differential-abundance methods",
       "author": [],
       "contents": "\n\n\n\n",
-      "last_modified": "2021-10-25T19:30:48-04:00"
+      "last_modified": "2021-11-29T10:11:18-08:00"
     }
   ],
   "collections": ["posts/posts.json"]

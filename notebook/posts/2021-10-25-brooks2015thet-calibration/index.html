@@ -114,7 +114,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <!--/radix_placeholder_rmarkdown_metadata-->
   
   <script type="text/json" id="radix-resource-manifest">
-  {"type":"character","attributes":{},"value":["brooks2015thet-calibration_files/anchor-4.2.2/anchor.min.js","brooks2015thet-calibration_files/bowser-1.9.3/bowser.min.js","brooks2015thet-calibration_files/distill-2.2.21/template.v2.js","brooks2015thet-calibration_files/figure-html5/brooks2015thet_fc_calibration-1.png","brooks2015thet-calibration_files/header-attrs-2.11/header-attrs.js","brooks2015thet-calibration_files/jquery-3.6.0/jquery-3.6.0.js","brooks2015thet-calibration_files/jquery-3.6.0/jquery-3.6.0.min.js","brooks2015thet-calibration_files/jquery-3.6.0/jquery-3.6.0.min.map","brooks2015thet-calibration_files/popper-2.6.0/popper.min.js","brooks2015thet-calibration_files/tippy-6.2.7/tippy-bundle.umd.min.js","brooks2015thet-calibration_files/tippy-6.2.7/tippy-light-border.css","brooks2015thet-calibration_files/tippy-6.2.7/tippy.css","brooks2015thet-calibration_files/tippy-6.2.7/tippy.umd.min.js","brooks2015thet-calibration_files/webcomponents-2.0.0/webcomponents.js"]}
+  {"type":"character","attributes":{},"value":["brooks2015thet-calibration_files/figure-html5/brooks2015thet_fc_calibration-1.png"]}
   </script>
   <!--radix_placeholder_navigation_in_header-->
 <meta name="distill:offset" content="../.."/>
@@ -1867,7 +1867,10 @@ function init_distill() {
 
     // hoverable references
     $('span.citation[data-cites]').each(function() {
-      var refHtml = $('#ref-' + $(this).attr('data-cites')).html();
+      var refs = $(this).attr('data-cites').split(" ");
+      var refHtml = refs.map(function(ref) {
+        return "<p>" + $('#ref-' + ref).html() + "</p>";
+      }).join("\n");
       window.tippy(this, {
         allowHTML: true,
         content: refHtml,
@@ -2059,7 +2062,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"Illustrate calibration types in the mock communities from Brooks et al (2015)","authors":[{"author":"Michael R. McLaren","authorURL":{},"affiliation":"&nbsp;","affiliationURL":"#","orcidID":""}],"publishedDate":"2021-10-25T00:00:00.000-04:00","citationText":"McLaren, 2021"}
+{"title":"Illustrate calibration types in the mock communities from Brooks et al (2015)","authors":[{"author":"Michael R. McLaren","authorURL":{},"affiliation":"&nbsp;","affiliationURL":"#","orcidID":""}],"publishedDate":"2021-10-25T00:00:00.000-07:00","citationText":"McLaren, 2021"}
 </script>
 
 <!--/radix_placeholder_front_matter-->
