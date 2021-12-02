@@ -37,8 +37,7 @@ Violations in this assumption can again be understood using an approach similar 
 The final number of reads also varies due to idiosyncratic events that we typically think of (and model) as 'random', such as the precise handling of a sample during pipetting or loading of a sequencing flow cell.
 Such variation may or may not be dwarfed by the 'random' variation in the sample composition (i.e., the variation not explained by the covariates in a regression analysis).
 For simplicity, we ignore this random variation when considering the impact of taxonomic bias on MGS measurement.
-The effect of random variation in regression analysis is addressed in Appendix
-\@ref(appendix-regression) and the effect of random counting error is discussed in Section \@ref(implications).
+The effect of random variation in regression analysis is addressed in Appendix \@ref(appendix-regression) and the effect of random counting error is discussed in Section \@ref(case-studies).
 
 The absolute efficiency of a taxon can also vary simply because more effort is put towards sequencing that sample, either intentionally or unintentionally.
 The sequencing effort might depend on the taxonomic composition and bias of a sample.

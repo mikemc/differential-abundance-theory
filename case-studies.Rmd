@@ -1,4 +1,4 @@
-# Implications for real-world inference {#implications}
+# Case studies  {#case-studies}
 
 Are biologically significant errors in DA analyses likely in practice?
 We can begin to answer this question using a combination of theoretical analysis, consideration of hypothetical scenarios, and analysis of case studies for which some information about taxonomic bias is available.

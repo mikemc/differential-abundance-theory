@@ -10,7 +10,7 @@ rmd_files: [
   "introduction.Rmd",
   "abundance-measurement.Rmd",
   "differential-abundance.Rmd",
-  "real-world-implications.Rmd",
+  "case-studies.Rmd",
   "solutions.Rmd",
   "appendix.Rmd",
   "appendix-regression.Rmd",

@@ -31,7 +31,7 @@ We then estimated species' densities using the uncalibrated and calibrated propo
 Visual inspection shows that the bias estimated from just a single control community with all species can be sufficient to greatly reduce the effect of taxonomic bias on the measured fold change in species' proportions and densities (Figure \@ref(fig:calibration-example)).
 To demonstrate a practical application, we used the bias estimated from the full set of mock communities as the basis for calibrating the vaginal community time series measurements from the MOMS-PI study (@fettweis2019thev) that were made using the same 16S sequencing protocol.
 We imputed the efficiencies of other species using taxonomic relationships (Methods).
-Calibration then allowed us to explore the impact of bias on the measured trajectories of species proportions within women over the course of pregnancy as described in Section \@ref(implications).
+Calibration then allowed us to explore the impact of bias on the measured trajectories of species proportions within women over the course of pregnancy as described in Section \@ref(case-studies).
 
 <!-- begin figure -->
 
