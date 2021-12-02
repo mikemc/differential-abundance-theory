@@ -8,7 +8,7 @@ Let $s_{xy}$ denote the sample covariance between variables $x$ and $y$, $s^{2}_
 
 The ordinary least squares (OLS) and maximum likelihood (MLE) estimates of the slope of $z$ equals the sample covariance of $z$ and $x$ divided by the sample variance in $x$ or, equivalently, the sample correlation of $z$ and $x$ multiplied by the ratio of their sample standard deviations,
 \begin{align}
-  \hat \beta_z = \frac{s_{zx}}{s^2_x} = r_{zx} \cdot \frac{s_y}{s_x}.
+  \hat \beta_z = \frac{s_{zx}}{s^2_x} = r_{zx} \cdot \frac{s_z}{s_x}.
 \end{align}
 From the (bi)linearity of sample covariances it follows that
 \begin{align}
