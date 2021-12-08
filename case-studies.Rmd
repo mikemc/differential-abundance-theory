@@ -1,13 +1,43 @@
 # Case studies  {#case-studies}
 
-Are biologically significant errors in DA analyses likely in practice?
-We can begin to answer this question using a combination of theoretical analysis, consideration of hypothetical scenarios, and analysis of case studies for which some information about taxonomic bias is available.
+To better understand the potential impact of taxonomic bias on DA analysis in practice, we conducted several case studies spanning a range of biological scenarios and sequencing technologies.
 
-## Systematic error in slope or LFC estimates
+## Foliar fungi experiment
 
-Recall from Section \@ref(differential-abundance) that the error in the slope or LFC in a DA regression analysis is proportional to the covariance of the log mean efficiency with the covariate.
-This covariance can be split into two components: the standard deviation of (log) mean efficiency and its correlation with the covariate.
-Hence when considering whether taxonomic bias creates large error, it can be useful to separately ask whether the mean efficiency is likely to vary across samples and whether it is likely to be correlated with a covariate of interest.
+To study the interactions between a host plant and its fungal symbionts and pathogen, @leopold2020host inoculated plants with 8 fungal species and, after allowing these fungal microbiomes to establish, exposed plants to a fungal pathogen.
+To investigate the role of colonization order and host genotype, plants varied in source location and in which symbiont was allowed to colonize first.
+The authors used ITS amplicon sequencing to measure communities before and after pathogen infection, along with mock communities with known genome concentrations of DNA from the 9 species.
+These DNA mock communities allowed the authors to directly measure the bias due to PCR and ribosomal copy-number-variation (CNV) following the method of @mclaren2019cons and correct for it when analyzing the primary experimental samples.
+The authors found a 13X difference between the most and least efficiently measured symbiont, while the pathogen was measured 40X more efficiently than the least efficiently measured commensal.
+We reanalyzed this experiment to understand the impact that bias might have had on the study's analyses were it not accounted for (SI Analysis Fungi).
+
+@leopold2020host used the ITS sequencing profiles of the pre-infection samples to understand the impact of host genotype and an experimental treatment---which species was allowed to colonize first---on the community composition after all species were later allowed to colonize.
+The authors used linear regression of log species proportions, using negative-binomial regression to account for random read-sampling error, to ask whether host genotype, treatment, and their interaction significantly impacted overall log species proportions and to quantify the advantage of being allowed to colonize first (priority effects).
+Bias was accounted for via the use of species- and sample-specific offset terms in the regression model (SI / appendix).
+In principle, bias could significantly impact the results of such regressions through variation in the log mean efficiency among samples.
+Yet bias has a negligible impact on the study's analyses, with nearly identical DA results being obtained regardless of whether bias correction is used (Ref SI, which will run the analyses from the paper with and without bias correction).
+To understand why, we compared the variation in log species proportions across samples to that in log mean efficiency (Figure X).
+Individual species show substantial variation in log proportion (give numbers); nevertheless, the log mean efficiency hardly varies (number; perhaps ref a figure).
+This difference is due to the communities always being dominated by just three species, whose efficiencies happen to be the highest among the commensal species and only vary by 3X (and just 1.5X between the two most dominant).
+The lowest efficiency species, despite having large variation in their proportion on the log scale, are always rare (proportions $\ll 1$, even after bias correction) and hence don't induce significant variation in the mean efficiency.
+Due to the stable mean efficiency across samples, bias primarily impacts the intercept terms and has a negligible impact on the estimates and standard errors of slope (DA) terms in the regressions.
+
+@leopold2020host restricted their analysis to ITS profiles form the pre-infection samples, as reads from post-infection samples were dominated by the pathogen.
+<!-- (due to a combination of pathogen growth and, presumably, its much greater efficiency). -->
+However, we can use the post-infection samples to ask what the impact of the pathogen's much greater efficiency would have were community sequencing used to understand the impact of pathogen invasion on the already-colonized commensal species without accounting for bias.
+n particular, suppose the ITS sequencing data were coupled with an accurate measurement of total genome copy number using Equation \@ref(eq:density-prop-meas) to predict absolute genome copies of each species.
+The high efficiency of the pathogen typically leads to a roughly 6X increase in the mean efficiency of post-colonization samples; this increase would tend to lead to a concommittant 6X decrease in the fold changes in genome copies.
+
+TODO:
+
+- Give e.g. for the lowest eff species, Penicillium being ~6X too low.
+- Check that correlations aren't an important part of the story as well
+- Clarify that could still impact standard error of rare low eff species due to zeros
+- Analysis: re-run DL analysis with and without calibrated offsets
+
+## Vaginal microbiomes of pregant women
+
+(Has not been updated)
 
 One approach to studying the mean efficiency empirically is to analyze data from studies for which control measurements allow direct measurement of species' efficiencies.
 To characterize bias in a 16S sequencing protocol developed for the Vaginal Human Microbiome Project (VaHMP), @brooks2015thet performed 16S rRNA gene sequencing of mock communities of seven bacterial species thought to play a critical role in the human vaginal microbiome.
@@ -41,16 +71,13 @@ rm(svg_path, fig_path)
 
 <!-- end figure -->
 
-A second study in which control communities make it possible to directly analyze the impact of taxonomic bias in experimental samples was performed by @leopold2020host.
-To study the interactions between a host plant and its fungal commensals and pathogen, the authors inoculated trees with a fungal synthetic community and later exposed plants to a fungal pathogen.
-The authors used ITS amplicon sequencing to measure communities before and after infection, along with mock communities which they used to estimate the species efficiencies with the method of @mclaren2019cons.
-(DNA mocks were used, so that bias due to DNA extraction is not included, but other major bias sources such as PCR and ribosomal copy-number-variation are included.) 
-We reanalyzed this experiment to consider the impact that bias has on different possible DA analyses (SI Analysis Fungi).
-As noted by @leopold2020host, there was a 13X difference between the most and least efficiently measured commensals, while the pathogen was measured 40X more efficiently than the least efficiently measured commensal.
-Yet despite this 13X variation among commensals, the mean efficiency is remarkably stable across communities prior to pathogen colonization.
-Consequently, taxonomic bias creates little systematic error in proportion-based DA analysis of these pre-colonization samples.
-The high efficiency of the pathogen did, however, typically lead to a roughly 6X increase in the mean efficiency of post-colonization samples.
-Hence DA analysis of how commensals responded to the pathogen did not first discard pathogen reads would therefore tend to suggest that the commensals had substantially smaller fold changes than they actually did, unless bias were accounted for.
+Systematic error in DA regression results requires that the variation in log mean efficiency is correlated with the covariate.
+The examples above each suggest plausible biologically-significant scenarios in which such correlations might arise.
+For example, in the vaginal microbiome a decline in _Lactobacillus_ and rise of species including _Gardnerella vaginalis_ is associated with preterm birth in pregnant women; hence the variation in mean efficiency driven by these species may also create an association of mean efficiency with preterm status.
+
+## Gut microbiome
+
+(Has not been updated)
 
 It is clear that an individual species with an unusually high or low efficiency can drive large changes in the mean efficiency when it shifts from a very large ($\sim 1$) to very small proportion ($\ll 1$) of the sample.
 Consideration of dynamics in the human gut illustrates another a way in which large shifts in higher-level taxa might create similar shifts, due to the fact that efficiencies do not vary independently among closely related species.
@@ -60,22 +87,51 @@ Thus changes from Bacteroidetes to Firmicutes dominance are unlikely to be drive
 However, if Firmicutes species tend to have systematically different efficiencies than Bacteroidetes species, then changes in phylum dominance can be expected to drive substantial changes in the mean efficiency even if many species contribute.
 Indeed, several studies have found DNA extraction protocols to more efficiently lyse Gram-negative Bacteroidetes species than Gram-positive Firmicutes species (though substantial variation within phyla also occurs, @mclaren2019cons).
 
-Systematic error in DA results requires that the variation in log mean efficiency is correlated with the covariate.
+Systematic error in DA regression results requires that the variation in log mean efficiency is correlated with the covariate.
 The examples above each suggest plausible biologically-significant scenarios in which such correlations might arise.
-For example, in the vaginal microbiome a decline in _Lactobacillus_ and rise of species including _Gardnerella vaginalis_ is associated with preterm birth in pregnant women; hence the variation in mean efficiency driven by these species may also create an association of mean efficiency with preterm status.
-In the plant-fungal experiment of @leopold2020host, the increase in pathogen proportion after infection leads to a large increase in the mean efficiency over time, which systematic increases the observed decline in the proportions of commensal species (SI Analysis).
 The Bacteroidetes-to-Firmicutes ratio has also been linked to host conditions.
 Yet in the HMP2 IBD dataset, the large variation in this ratio is largely independent of disease status, suggesting that the primary effect of any variation in mean efficiency driven by these phyla would be to increase noise rather than create systematic error in DA analysis.
 
-<!-- General mechanisms -->
+## Marine sediment growers
 
-Are there general mechanisms by which we might expect associations to arise between mean efficiency and the covariates commonly of interest in microbiome studies?
-One possibility is that the ecology and measurement efficiency of species may become correlated simply due to shared evolutionary history.
-A species' efficiency is heavily influenced by genetically determined traits such as cell-wall structure, ribosomal-operon copy number, sequence in a primer-targeted region, GC content, and even whether the species is present in a given taxonomic database.
-Shared evolutionary history creates positive trait associations among more closely related species, such that we should expect a significant degree of phylogenetic conservation in efficiency.
-Meanwhile, the same shared evolutionary history creates phylogenetic conservation in ecological traits that drives species abundance dynamics.
-In this way, we may expect evolution to lead to a situation in which groups of species with similar efficiencies have similar shifts in abundance between conditions, creating the potential for commensurate shifts in mean efficiency.
-For example, a change in diet that favors Bacteroidetes species relative to Firmicutes based on the resulting gut conditions will also increase the relative abundance of easy-to-lyse species.
+As sediment is slowly buried, the cencentration of oxygen and nutrients decreases, and cell density decreases; @lloyd2020evid asked whether some taxa are nevertheless able to continue to grow and increase in cell density.
+To measure density with depth, they used community 16S sequencing coupled with measurmeents of total community density using CARD-FISH, which they combined using community-normalization (Equation X).
+(The authors refer to these absolute density measurements as FRAxC measurements.)
+The authors assessed whether density of bacterial and archaeal families increased with depth, using linear regression on log cell density to infer the exponential growth (or decay) rate over the first 3 cm below the bioirrigation layer (corresponding to $\sim 8$ years of burial time). (Per time after converting depth -> time)
+The authors did this for two cores, and checked the inferences from these sequencing-based measurements against targeted measurements (qPCR) of 16S concentration for particular taxa.
+They further checked w/ sequencing-based growth-rate inference from two laboratory incubations.
+
+The authors attempted to explictly account for bias by arguing that a consistent taxonomic bias would cancel in the observed log-fold-changes that determine the inferred exponential growth rates (ref kevorkian2018 as well); however, their calculations neglected the impact of changes in mean efficiency which do not cancel and may lead to spurious conclusions (previous section).
+We were therefore interested in whether the unaccounted for error caused by bias might have led to spurious inferences about which species were increasing with depth.
+Supposing the CARD-FISH measurements accurately measured total density, our results from the previous section indicate that a systematic error in growth rates would arise if the log mean efficiency systematically changed with depth.
+Diversity is sufficiently high that this systematic error is unlikely to be driven by just a few species, as in the vaginal MB example and leopold pathogen case.
+But it is possible that the covariate (burial time) selects directly on a species efficiency as well as its ability to grow. 
+In particular, we considered that microbes with tougher cell walls would tend to persist longer (alive or dead) in the sediment, while at the same time being more difficult to extract DNA from than microbes with weaker cell walls.
+In this case, we would expect the the relative abundance of tougher species to increase with depth and hence the mean extraction efficiency to decrease, which in turn would lead to inflated growth-rate estimates for all taxa; a possible end result would be that taxa that are just persisting or even slowly dying off would be mistakenly inferred to have positive growth.
+
+We can test the hypothesis that systematic variation in log mean efficiency with depth distorts inferred growth rates using the qPCR measurements of two clades also collected by @lloyd2020evid.
+qPCR measurements of specific clades are also subject to taxonomic bias, but not the compositional constraint of sequencing, or at least are expected to experience it to a much weaker extent (Section \@ref(review-absolute-methods)). 
+Hence we expect the systematic fold error in qPCR measurements to be approximately constant across samples and for targeted qPCR measurements to yield relatively accurate estimates of growth rates.
+Comparing qPCR to FRAxC growth rates on the same taxa allows us to estimate the systematic error in the FRAxC growth rates, equal to the rate of change of log mean efficiency with depth.
+Because the same error applies to all taxa, these targeted comparisons inform us about the impact of bias on the growth rates of all taxa.
+
+We compared the growth rates for taxa with both FRAxC and qPCR values for the two sediment cores, as reported in Table 1.
+The first soil core included qPCR measurements of a single archaeal clade, _Bathyarchaeota_, for which growth rates by qPCR and FRAxC were nearly identical (doubling rates of 0.099/yr by FRAxC and 0.097/yr by qPCR).
+The second soil core included qPCR measurements of _Bathyarchaeota_ and a second clade, _Thermoprofundales_/MBG-D.
+In this core, FRAxC and qPCR growth rates differed more substantially, with growth rates from FRAxC being larger by 0.012/yr for _Bathyarchaeota_ (0.112/yr by FRAxC and 0.100/yr by qPCR) and by 0.086/yr for _Thermoprofundales_/MBG-D (0.294/yr by FRAxC and 0.208/yr by qPCR).
+A low number of experimental samples and noise in both the FRAxC and qPCR measurements place signficant uncertainty in these measurements; however, the fact that FRAxC-derived growth rates are larger than qPCR-derived rates in all three cases is consistent with our hypothesis that mean efficiency decreases with depth in a manner that systematically biases FRAxC-derived rates to higher values.
+The differences in growth rate are small in absolute terms; however, the maximum observed difference of 0.086/yr is signficant for this low nutrient environment, where growth rates of the identified positive growers ranged between 0.04/yr and 0.5/yr.
+Overall, the comparison between FRAxC and qPCR measurements gives support to the study conclusions, but suggest that species at the lower end of this range of positive FRAxC-derived rates may in fact be merely persisting or even slowly declining in abundance.
+    
+Caveats that might be instructive to mention
+
+- qPCR and seq analysis are both at ~family level; this is prob not a big deal when it comes to inferring the systematic varation in mean efficiency though, since qPCR and 16S seq share a lot of bias
+- relic dna
+- possibility of non-genetic variation -> change in efficiency with depth. This could still lead to a change in mean efficiency, but would offset the effect for these particular species.
+- possible error/bias in CARD-FISH
+    
+    
+### old text
 
 Associations between efficiency and abundance can also arise more directly when a single microbial trait affects both.
 For example, microbes at the ocean floor are slowly buried, sinking into a low nutrient, low oxygen environment.
@@ -88,6 +144,45 @@ The primary analysis, which used proportion-based density estimates, was support
 For instance, in Core 30, the doubling time estimated for the Archaeal phylum Bathyarchaeota was estimated to be 10.1 years using the proportion-based densities and 10.3 years by qPCR (@lloyd2020evid Table 1 and Figure 4).
 These doubling times correspond to highly similar estimated slopes of log density per year of $1/10.1 \approx 0.99$ and $1/10.3\approx 0.97$.
 The small difference between these slopes suggests that there is little correlation of log mean efficiency with burial time and hence little systematic error in the estimated doubling times derived from the proportion-based density estimates.
+
+Cut from previous version
+
+In Core 30, the doubling time estimated for the Archaeal phylum Bathyarchaeota was estimated to be 10.1 years (CHECK) using the proportion-based densities and 10.3 years by qPCR (Lloyd et al. (2020) Table 1 and Figure 4). These doubling times correspond to highly similar estimated slopes of log density per year of 1 / 10.1 ≈ 0.99 and 1 / 10.3 ≈ 0.97 . The difference between these slopes, ≈ 0.02, estimates the slope of the mean efficiency. It’s small value suggests little systematic variation in mean efficiency with burial time and hence little systematic bias in the estimated doubling times derived from the proportion-based density estimates. In this case, close agreement in the DA results across methods for a specific taxon suggests that variation in sample mean efficiency did not significantly distort the MGS-based results and hence provides a degree of validation for all taxa, not just the taxa with targeted measurements. (An important caveat for this example is that this analysis assumes consistent efficiencies at the higher taxonomic levels used for qPCR measurement and MGS analysis performed by Lloyd et al. (2020).) 
+
+Here we compared summary statistics; however, in principle a joint statistical analysis of targeted and proportion-based density measurements would provide more statistical power to estimate and correct the effects of variation in the mean efficiency across samples and provide calibrated fold change and regression estimates for all taxa [APPENDIX]
+
+## conclusions
+
+Are there general mechanisms by which we might expect associations to arise between mean efficiency and the covariates commonly of interest in microbiome studies?
+One possibility is that the ecology and measurement efficiency of species may become correlated simply due to shared evolutionary history.
+A species' efficiency is heavily influenced by genetically determined traits such as cell-wall structure, ribosomal-operon copy number, sequence in a primer-targeted region, GC content, and even whether the species is present in a given taxonomic database.
+Shared evolutionary history creates positive trait associations among more closely related species, such that we should expect a significant degree of phylogenetic conservation in efficiency.
+Meanwhile, the same shared evolutionary history creates phylogenetic conservation in ecological traits that drives species abundance dynamics.
+In this way, we may expect evolution to lead to a situation in which groups of species with similar efficiencies have similar shifts in abundance between conditions, creating the potential for commensurate shifts in mean efficiency.
+For example, a change in diet that favors Bacteroidetes species relative to Firmicutes based on the resulting gut conditions will also increase the relative abundance of easy-to-lyse species.
+
+Another example of a trait that might simultaneously affect efficiency and relative abundance is ribosomal copy number, which increases the measurement efficiency in ribosomal amplicon experiments and is also linked to differences in ecology and population dynamics among species.
+
+- Associations between efficiency and abundance can also arise more directly when a single microbial trait affects both.
+
+
+# Old
+
+## Systematic error in slope or LFC estimates
+
+Recall from Section \@ref(differential-abundance) that the error in the slope or LFC in a DA regression analysis is proportional to the covariance of the log mean efficiency with the covariate.
+This covariance can be split into two components: the standard deviation of (log) mean efficiency and its correlation with the covariate.
+Hence when considering whether taxonomic bias creates large error, it can be useful to separately ask whether the mean efficiency is likely to vary across samples and whether it is likely to be correlated with a covariate of interest.
+
+<!-- General mechanisms -->
+
+Are there general mechanisms by which we might expect associations to arise between mean efficiency and the covariates commonly of interest in microbiome studies?
+One possibility is that the ecology and measurement efficiency of species may become correlated simply due to shared evolutionary history.
+A species' efficiency is heavily influenced by genetically determined traits such as cell-wall structure, ribosomal-operon copy number, sequence in a primer-targeted region, GC content, and even whether the species is present in a given taxonomic database.
+Shared evolutionary history creates positive trait associations among more closely related species, such that we should expect a significant degree of phylogenetic conservation in efficiency.
+Meanwhile, the same shared evolutionary history creates phylogenetic conservation in ecological traits that drives species abundance dynamics.
+In this way, we may expect evolution to lead to a situation in which groups of species with similar efficiencies have similar shifts in abundance between conditions, creating the potential for commensurate shifts in mean efficiency.
+For example, a change in diet that favors Bacteroidetes species relative to Firmicutes based on the resulting gut conditions will also increase the relative abundance of easy-to-lyse species.
 
 Another example of a trait that might simultaneously affect efficiency and relative abundance is ribosomal copy number, which increases the measurement efficiency in ribosomal amplicon experiments and is also linked to differences in ecology and population dynamics among species.
 
