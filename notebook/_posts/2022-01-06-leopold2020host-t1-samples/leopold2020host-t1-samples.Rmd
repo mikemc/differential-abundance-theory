@@ -1,0 +1,361 @@
+---
+title: "Explore variation among T1 samples in Leopold and Busby (2020)"
+description: |
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - R
+  - ref:leopold2020host
+  - differential abundance
+date: 2022-01-06
+bibliography: ../../../main.bib
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: true
+    dev: svg
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  cache = TRUE,
+  autodep = TRUE,
+  cache.comments = FALSE
+)
+```
+
+Currently this file analyses variation in the T1 samples.
+We may want to include the T2 analysis as well.
+The purpose is to understand how variation in the mean efficiency might impact DA analyses based on proportions.
+
+# Setup
+
+```{r libraries}
+library(here)
+# Tools for microbiome data
+library(speedyseq)
+# Tools for general purpose data manipulation and plotting
+library(tidyverse)
+# ggplot helpers
+library(ggbeeswarm)
+library(ggdist)
+library(cowplot)
+library(patchwork)
+theme_set(theme_cowplot())
+# stats helpers
+library(broom)
+
+library(metacal)
+
+library(rstanarm)
+options(mc.cores = 4)
+```
+
+```{r load-data, code_folding = TRUE}
+## From the metacal 2.0 tutorial
+# Download data from https://zenodo.org/record/3872145
+data_path <- here::here("notebook/_data", "leopold2020host")
+# To use a temporary directory:
+# data_path <- file.path(tempdir(), "leopold2020")
+if (!dir.exists(data_path)) {
+  dir.create(data_path, recursive = TRUE)
+  download.file(
+    "https://zenodo.org/record/3872145/files/dleopold/Populus_priorityEffects-v1.2.zip",
+    file.path(data_path, "Populus_priorityEffects-v1.2.zip")
+  )
+  unzip(
+    file.path(data_path, "Populus_priorityEffects-v1.2.zip"), 
+    exdir = data_path
+  )
+}
+
+mock_actual <- file.path(data_path, 
+  "dleopold-Populus_priorityEffects-8594f7c/data/MockCommunities.csv") %>%
+  read.csv(row.names = 1) %>%
+  select(-Sym4) %>%
+  as("matrix") %>%
+  otu_table(taxa_are_rows = FALSE) %>%
+  transform_sample_counts(function(x) close_elts(1 / x))
+mock_taxa <- taxa_names(mock_actual)
+commensal_taxa <- setdiff(mock_taxa, 'Melampsora')
+
+# Rust severity
+rust <- file.path(data_path, 'dleopold-Populus_priorityEffects-8594f7c',
+  'data/rust_measurements.csv'
+) %>%
+  read_csv %>%
+  select(-1)
+# summarize following approach from leopold 
+rust_summary <- rust %>%
+  janitor::clean_names() %>%
+  rename(plant_id = samp_id) %>%
+  with_groups(plant_id, summarize, 
+    # across(ends_with('cm2'), mean)
+    rust_pct = sum(rust_cm2)/sum(leaf_cm2),
+    lesion_pct = sum(lesion_cm2) / sum(leaf_cm2),
+    leaf_area = sum(leaf_cm2),
+    leaf_n = n()
+  )
+
+#> The microbiome data is stored in a phyloseq object,
+ps <- file.path(data_path, 
+  "dleopold-Populus_priorityEffects-8594f7c/output/compiled/phy.rds") %>%
+  readRDS %>%
+  filter_tax_table(.otu %in% mock_taxa) %>%
+  mutate_sample_data(., 
+    Timepoint = factor(Timepoint),
+    sample_sum = sample_sums(.)
+  ) %>%
+  mutate_sample_data(
+    plant_id = str_extract(.sample, 'G[0-9]+\\.T[0-9]+\\.R[0-9]+')
+  ) %>%
+  left_join_sample_data(
+    rust_summary, by = 'plant_id'
+  ) %>%
+  rename_with_sample_data(janitor::make_clean_names)
+
+sam <- sample_data(ps) %>% as("data.frame") %>% as_tibble(rownames = "Sample")
+tax <- tax_table(ps) %>% as("matrix") %>% as_tibble(rownames = "Taxon")
+ps_mock <- ps %>% 
+  subset_samples(samp_type == "Mock") %>%
+  prune_taxa(mock_taxa, .)
+```
+
+
+```{r}
+```
+
+Check sample sums,
+
+```{r}
+sam %>%
+  as_tibble %>%
+  ggplot(aes(sample_sum, fill = samp_type)) +
+  scale_x_log10() +
+  geom_histogram() +
+  scale_fill_brewer(type = 'qual')
+```
+
+```{r}
+sam %>%
+  filter(sample_sum < 3e3) %>%
+  select(Sample, timepoint, treatment, sample_sum)
+```
+
+The sample with less than 3000 reads is in the 'Negative' treatment group and so will be ignored in our analysis of the T1 samples.
+
+## Bias estimation
+
+We estimate bias using `metacal::estimate_bias()`; see the [metacal tutorial](https://mikemc.github.io/metacal/articles/tutorial.html) for more information.
+@leopold2020host identified the sample Mock.5 as an outlier sample and exluded it when estimating bias.
+One taxon in this sample, Epicoccum, was undetected, and including it leads to a larger standard error especially for this taxon (as seen in the metacal tutorial).
+We could improve our bias estimates by setting this taxon's nomial abundance to 0 in this sample; however, let's just drop this sample to maintain consistent bias estimates with those used in the original study.
+
+```{r estimate-bias}
+control_samples <- ps_mock %>% sample_names %>% setdiff('Mock.5')
+mc_fit <- estimate_bias(
+  ps_mock %>% prune_samples(control_samples, .), 
+  mock_actual %>% prune_samples(control_samples, .), 
+  boot = TRUE
+)
+bias <- coef(mc_fit) %>% print(digits = 2)
+```
+
+```{r, fig.dim = c(5,3)}
+mc_fit_summary <- summary(mc_fit)
+coef_tb <- mc_fit_summary$coefficients
+coef_tb %>%
+  mutate(taxon = fct_reorder(taxon, estimate)) %>%
+  ggplot(aes(taxon, estimate, 
+      ymin = estimate / gm_se^2, ymax = estimate * gm_se^2)) +
+  geom_hline(yintercept = 1, color = "grey") +
+  geom_pointrange() +
+  scale_y_log10() +
+  coord_flip()
+```
+
+# T1 samples
+
+From our previous analyses, we know that there is little impact of bias correction on the primary analyses done on these samples, and also that there is fairly little variation in the mean efficiency in the T1 samples.
+Here we further explore the variation in both the species proportions and the mean effiency to more fully understand why bias has little impact on DA analysis.
+
+NOTES
+
+- observation to interrogate: small variation in mean efficiency. Why? is it because the proportions don't change much? or because they change in ways that offset each other (e.g. a high eff sp and a low eff species increase)?
+- DA analysis: effect of treatment, and effect of host region and/or genotype; do a single multiple regression with all of these, and what happens to mean efficiency. then compare to coefficients of individual species.
+<!--  -->
+
+## Setup
+
+Here we subset to the T1 experimental samples and the commensal taxa.
+The analysis of T1 samples by @leopold2020host first subsets to just the 8 commensal (non-pathogenic) inoculum taxa, and we follow suit here.
+This step excludes Melampsora reads; since these samples are collected prior to pathogen inoculation, these reads are likely from cross contamination.
+It also excludes OTUs not identified with the 9 inoculum taxa.
+In addition, we add the sample sums and mean efficiency to the sample data, after subsetting to the commensals.
+
+```{r}
+# Bias among the commensals; for convenience, set relative to max
+bias_t1 <- bias[names(bias) != 'Melampsora']
+bias_t1 <- bias_t1 / max(bias_t1)
+most_efficient_taxon <- which.max(bias_t1) %>% names
+stopifnot(most_efficient_taxon == 'Fusarium')
+
+ps_t1 <- ps %>%
+  filter_sample_data(
+    samp_type == "Experiment", 
+    timepoint == 1, 
+    treatment != 'Negative'
+  ) %>%
+  filter_tax_table(.otu %in% commensal_taxa) %>%
+  mutate_sample_data(., 
+    sample_sum = sample_sums(.),
+    mean_efficiency = transform_sample_counts(., close_elts) %>%
+      perturb(bias_t1, norm = 'none') %>% 
+      sample_sums,
+  )
+sam_t1 <- ps_t1 %>% sample_data %>% as_tibble
+```
+
+A small fraction (`r ps_t1 %>% otu_table %>% as('matrix') %>% {mean(. == 0)} %>% signif(digits = 3)`) of the observed counts are zero. 
+For calculations that ignore the counting error, we want to ensure there are only positive abundances.
+We will replace the zeros using `zCompositions::cmultRepl()` following @leopold2020host.
+
+```{r}
+stopifnot(taxa_are_rows(ps_t1) == FALSE)
+otu_new <- ps_t1 %>% 
+  otu_table %>% 
+  as('matrix') %>%
+  zCompositions::cmultRepl(
+    method = 'GBM', 
+    output = 'p-counts', 
+    suppress.print = TRUE
+  )
+ps_t1_pos <- ps_t1
+otu_table(ps_t1_pos) <- otu_table(otu_new, taxa_are_rows = FALSE)
+rm(otu_new)
+```
+
+TODO: consider using the approach from the MOMSPI dataset instead
+TODO: recompute the mean efficiency with the imputed phyloseq object (shouldn't impact results)
+
+Let's create a data frame with the observed and calibrated proportions of each species, with their efficiencies added in.
+
+```{r}
+props <- ps_t1_pos %>%
+  as_tibble %>%
+  left_join(bias_t1 %>% enframe('.otu', 'efficiency'),
+    by = '.otu'
+  ) %>%
+  with_groups(.sample, mutate, 
+    prop_obs = close_elts(.abundance),
+    prop_cal = close_elts(.abundance / efficiency),
+  ) %>%
+  mutate(
+    .otu_fct = fct_reorder(.otu, efficiency)
+  )
+```
+
+## Variation in mean efficiency
+
+Let's examine the variation in mean efficiency
+
+```{r, fig.dim = c(7,4)}
+lyrs <- list(
+  geom_histogram(),
+  scale_x_log10(),
+  expand_limits(x = 1.2),
+  scale_fill_brewer(type = "qual"),
+  labs(
+    x = "Mean efficiency", 
+    y = "Number of samples",
+    # fill = ''
+  )
+)
+
+p1 <- sam_t1 %>%
+  ggplot(aes(mean_efficiency, fill = region)) +
+  lyrs
+p2 <- sam_t1 %>%
+  ggplot(aes(mean_efficiency, fill = treatment)) +
+  lyrs
+p1 / p2
+```
+
+The relative efficiency has a geometric range of `r bias_t1 %>% gm_range %>% signif(3)`-fold and a geometric standard deviation of `r bias_t1 %>% gm_sd %>% signif(3)`-fold.
+But the mean efficiency's geometric range is only `r sam_t1$mean_efficiency %>% gm_range %>% signif(3)`-fold and its geometric standard deviation is just `r sam_t1$mean_efficiency %>% gm_sd %>% signif(3)`-fold.
+
+## Variation in proportions vs mean efficiency
+
+First let's create some summary statistics of the calibrated proportions, to compare to those of the mean efficiency.
+
+```{r}
+props %>%
+  with_groups(.otu_fct, summarize,
+    across(prop_cal, 
+      list(gm_mean = gm_mean, gm_sd = gm_sd, gm_range = gm_range),
+      .names = '{.fn}'
+    )
+  ) %>%
+  arrange(desc(.otu_fct)) %>%
+  mutate(across(-.otu_fct, signif, 3)) %>%
+  knitr::kable()
+# TODO: adjust formatting to make sig fig's clearer; consider using formatC
+```
+
+Now let's create the main figure showing the varation in taxa proportions against that in the mean efficiency, with the individual taxa efficiencies also shown for more context.
+
+Caption: **In the pre-infection samples from @leopold2020host, multiplicative variation in taxa proportions is much larger than that in the mean efficiency.**
+Panel A shows the distribution of the proportions of each commensal isolate (denoted by its genus) across all samples collected prior to pathogen inoculation;
+Panel C shows the distribution of the (estimated) sample mean efficiency across these same samples on the same scale; 
+and Panel B shows the efficiency of each taxon estimated from DNA mock communities as point estimates and 90% bootstrap percentile confidence intervals.
+Efficiencies are shown relative to the most efficiently measured taxon (Fusarium).
+
+```{r}
+rng <- props %>% pull(prop_cal) %>% range
+## species proportions
+p_props <- props %>%
+  ggplot(aes(y = .otu_fct, x = prop_cal)) +
+  scale_x_log10() +
+  stat_slab() +
+  labs(x = 'Proportion', y = NULL)
+## mean efficiency
+p_me <- sam_t1 %>%
+  ggplot(aes(y = 'Mean efficiency', x = mean_efficiency)) +
+  scale_x_log10() +
+  expand_limits(x = rng) +
+  stat_slab() +
+  labs(x = 'Efficiency relative to Fusarium', y = NULL)
+# p_me / p_props + plot_layout(heights = c(0.1, 1))
+## Estimated efficiency with bootstrap CIs
+x <- mc_fit$bootreps %>%
+  data.table::as.data.table(keep.rownames = '.id') %>%
+  select(.id, all_of(commensal_taxa)) %>%
+  mutate(across(-.id, ~. / Fusarium)) %>%
+  pivot_longer(-.id, names_to = 'taxon', values_to = 'efficiency') 
+p_eff <- x %>%
+  mutate(taxon = fct_reorder(taxon, efficiency)) %>%
+  ggplot(aes(y = taxon, x = efficiency)) +
+  stat_pointinterval(.width = 0.9) +
+  scale_x_log10() +
+  labs(x = str_glue('Efficiency relative to Fusarium'), y = NULL)
+```
+
+```{r variation-in-proportions-and-mean-efficiency, fig.dim = c(8.5, 6.5)}
+p_props + p_eff + p_me + plot_spacer() + 
+  plot_layout(heights = c(1, 0.15), widths = c(1, 0.8), ncol = 2) +
+  plot_annotation(tag_levels = 'A')
+```
+ 
+TODO: consider a different zero-replacement strategy that would perhaps not create bimodal distributions in Trichoderma and Penicillium. This would let us show a zoomed in scale. Could also consider plotting the efficiencies on the same scale, to show that the mean efficiency is less, or add annotated lines marking the efficiencies as I did with one leopold plot previously.
+TODO: see if I can get the y axis ticks to line up better (bonus)
+
+# Session info {.appendix}
+
+<details><summary>Click for session info</summary>
+```{r, R.options = list(width = 83)}
+sessioninfo::session_info()
+```
+</details>
