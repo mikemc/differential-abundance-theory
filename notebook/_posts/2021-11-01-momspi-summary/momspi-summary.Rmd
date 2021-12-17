@@ -99,7 +99,6 @@ control_species <- mc_fit %>% coef %>% names
 control_genera <- control_species %>% str_extract('^[^_]+')
 ```
 
-
 ## Load the MOMSPI data
 
 TODO: replace this code chunk with one that pulls data from the github repo into `_data/`
@@ -247,8 +246,7 @@ tmp2 <- momspi_cal %>%
   perturb(bias_species %>% deframe, norm = "none") %>% 
   sample_sums %>%
   enframe('.sample', 'mean_efficiency_controls')
-mean_eff <- left_join(tmp1, tmp2, by = '.sample') %>%
-  left_join(sample_data(momspi_cal) %>% as_tibble, by = '.sample')
+mean_eff <- left_join(tmp1, tmp2, by = '.sample')
 ```
 
 For each sample, let's get the most abundant species in the calibrated and uncalibrated profiles. 
@@ -312,6 +310,7 @@ tmp <- top_species %>%
   pivot_wider(names_from = type, values_from = .otu, 
     names_glue = 'top_{str_to_lower(type)}')
 mean_eff1 <- mean_eff %>%
+  left_join(sample_data(momspi_cal) %>% as_tibble, by = '.sample') %>%
   left_join(genus_prop, by = '.sample') %>%
   left_join(tmp, by = '.sample') %>%
   mutate(
@@ -320,11 +319,9 @@ mean_eff1 <- mean_eff %>%
 rm(tmp)
 ```
 
-
 # Visual analysis of mean efficiency distribution and role of key species
 
 We can make a plot similar to that used for the Leopold et al analysis.
-
 
 ```{r}
 # First let's look at the distribution of mean efficiencies
@@ -492,6 +489,25 @@ tb %>%
   arrange(desc(abs(log(fc)))) %>%
   select(fc, host_subject_id.1, top_plot.1, top_plot.2, host_visit_rank.1)
 ```
+
+# Testing
+
+how many subjects?
+
+```{r}
+cts <- momspi %>% sample_data %>% as_tibble %>% count(host_subject_id)
+nrow(cts)
+#> [1] 577
+cts %>% pull(n) %>% summary
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#>    1.00    2.00    3.00    3.39    4.00    9.00 
+cts %>%
+  ggplot(aes(x = n)) +
+  geom_histogram(binwidth = 1)
+  # geom_dotplot(binwidth = 1)
+```
+
+577 subjects
 
 
 # Session info {.appendix}

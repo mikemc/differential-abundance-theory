@@ -1,0 +1,553 @@
+---
+title: "MOMS-PI: Regression on diversity"
+description: |
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - ref:brooks2015thet
+  - ref:fettweis2019thev
+date: 2021-12-15
+draft: false
+bibliography: ../../../main.bib
+output:
+  distill::distill_article:
+    self_contained: false
+    dev: svg
+    toc: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  cache = TRUE,
+  autodep = TRUE,
+  cache.comments = FALSE,
+  dpi = 300
+)
+```
+
+# Setup
+
+## R setup
+
+```{r libraries}
+# Tools for microbiome data
+library(speedyseq)
+# Tools for general purpose data manipulation and plotting
+library(tidyverse)
+library(fs)
+# ggplot helpers
+library(ggbeeswarm)
+library(cowplot)
+library(patchwork)
+library(scales)
+# stats helpers
+# library(broom)
+
+library(metacal); packageVersion("metacal")
+```
+
+```{r ggplot}
+theme_set(theme_cowplot())
+
+colors_brooks <- c(
+  "Atopobium_vaginae" = "#009E73",
+  "Gardnerella_vaginalis" = "#56B4E9",
+  "Lactobacillus_crispatus" = "#D55E00",
+  "Lactobacillus_iners" = "#505050",
+  "Prevotella_bivia" = "#0072B2",
+  "Sneathia_amnii" = "#CC79A7",
+  "Streptococcus_agalactiae" = "#E69F00")
+
+scale_y_custom <- scale_y_continuous(
+    trans = 'log10',
+    breaks = trans_breaks('log10', function(x) 10^x),
+    labels = trans_format('log10', math_format(10^.x))
+  )
+```
+
+# SETUP TODO
+
+# Regression analysis
+
+NOTE: Consider saving output so can be used in other notebook files
+
+## Classify samples into high and low diversity groups
+
+TODO: Consider possible better way to do calibration
+
+Compute Shannon and Inverse-Simpson diversity indices and add to the sample metadata.
+`Phyloseq::estimate_richness()` will complain about the lack of singletons, but we can ignore this since we aren't using species richness estimators.
+I will exponentiate the Shannon index to convert it to the q1 Hill number so that (like Inverse Simpson) it has the scale of number of species.
+
+```{r}
+div <- list(
+  'obs' = momspi_obs,
+  'cal' = momspi_cal
+) %>%
+  map(estimate_richness, measures = c('Shannon', 'InvSimpson')) %>%
+  map_dfr(as_tibble, rownames = '.sample', .id = 'type') %>%
+  transmute(
+    .sample, type,
+    div_q1 = exp(Shannon),
+    div_q2 = InvSimpson,
+  ) %>%
+  pivot_longer(starts_with('div_'), names_to = 'index', values_to = 'diversity')
+div_wide <- div %>%
+  pivot_wider(values_from = diversity, names_from = c('index', 'type')) 
+```
+
+```{r}
+div_wide %>%
+  mutate(across(starts_with('div'), log2)) %>%
+  ggplot() +
+  geom_point(aes(x = .panel_x, y = .panel_y), alpha = 0.5) +
+  ggforce::geom_autodensity() +
+  geom_bin2d(aes(x = .panel_x, y = .panel_y)) +
+  ggforce::facet_matrix(vars(starts_with('div')), layer.diag = 2, layer.lower = 3)
+```
+
+The observed (Log) order-1 and order-2 diversity show a tight correlation with each other, as do the calibrated diversities, while the correlation is much lower when comparing observed and calibrated numbers.
+The reason is likely that calibration will tend to increase the diversity of samples that are observed to be dominated by a high-efficiency taxon (like L. iners) and decrease the diversity of samples dominated by a low efficiency tason (like G. vaginalis).
+
+Shannon diversity of the observed profiles is what is most often considered in vaginal microbiome studies, so let's use this metric to partition the samples. 
+
+```{r}
+div_wide %>%
+  ggplot(aes(x = div_q1_obs)) +
+  scale_x_log10() +
+  annotate('rect', xmin = 0, xmax = 1.5, ymin = -Inf, ymax = Inf, 
+    fill = 'blue', alpha = 0.3) +
+  annotate('rect', xmin = 1.5, xmax = 3, ymin = -Inf, ymax = Inf, 
+    fill = 'grey', alpha = 0.3) +
+  annotate('rect', xmin = 3, xmax = Inf, ymin = -Inf, ymax = Inf, 
+    fill = 'green', alpha = 0.3) +
+  geom_histogram() +
+  geom_vline(xintercept = c(1.5, 3), color = 'black')
+```
+
+I'll pick the first mode as the 'Low diversity' group, treat the second mode as 'Medium', and the tail as 'High'.
+
+```{r}
+div_wide <- div_wide %>%
+  mutate(
+    div_group = case_when(
+      div_q1_obs < 1.5 ~ 'Low',
+      div_q1_obs > 3 ~ 'High',
+      TRUE ~ 'Medium'
+    ) %>% factor(levels = c('Low', 'Medium', 'High'))
+  )
+```
+
+## Understanding the diversity-efficiency relationship
+
+```{r}
+mean_eff3 <- mean_eff2 %>%
+  left_join(
+    div,
+    # div %>% pivot_wider(names_from = type, values_from = c(Shannon, InvSimpson)),
+    by = '.sample'
+  )
+```
+
+```{r}
+mean_eff3 %>%
+  ggplot(aes(diversity, mean_efficiency, color = top_plot)) +
+  facet_grid(type~index) +
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_point(alpha = 0.6) +
+  stat_smooth(aes(group = 'none'), color = 'black') +
+  scale_color_manual(
+    values = colors_top,
+    labels = function(x) str_replace_all(x, '_', ' ')
+  )
+```
+
+
+
+```{r}
+sam_div <- momspi_div %>%
+  sample_data %>%
+  as_tibble
+```
+
+```{r}
+sam_div %>%
+  ggplot(aes(y = div_group, x = mean_efficiency)) +
+  scale_x_log10() +
+  ggdist::stat_slab()
+```
+
+We can see that the mean efficiency is 3-10X lower in the High diversity relative to the low diversity group.
+
+```{r}
+lm(log(mean_efficiency) ~ div_group, data = sam_div) %>% summary
+```
+
+## Regression setup
+
+To simplify interpretation of some of the regression models, let's rarefy samples to 10K reads (we'll be dropping some samples).
+
+```{r}
+momspi_rare <- momspi %>% 
+  rarefy_even_depth(
+    sample.size = 1e4, 
+    rngseed = 42,
+    replace = TRUE, # for speed, might want to change
+    trimOTUs = FALSE
+  )
+```
+
+Add the diversity grouping information and the offset terms for the Gamma-Poisson (Negative Binomial) regression.
+
+```{r}
+momspi_div <- momspi_rare %>%
+  left_join_sample_data(mean_eff, by = '.sample') %>%
+  left_join_sample_data(div_wide, by = '.sample') %>%
+  mutate_sample_data(
+    gp_offset_obs = log(sample_sum),
+    gp_offset_cal = log(sample_sum) - log(mean_efficiency),
+  )
+```
+
+We'll use the criterion from Fettweis et al to pick the taxa to test.
+Note, we may not get the same exact taxa as them since we're using a larger set of women.
+Note, the sample sums used in the offset were calculated for the full species set, so we are still analzying log proportions with respect to the full species set.
+
+```{r}
+taxa_to_test <- momspi %>%
+  transform_sample_counts(close_elts) %>%
+  filter_taxa2(~ mean(. >= 1e-2) >= 0.05 | mean(. >= 1e-3) >= 0.15) %>%
+  taxa_names %>%
+  print
+```
+
+## Linear regression on log proportion
+
+Do this first to confirm as expected from theory.
+
+```{r}
+stat_test <- function(ps) {
+  ps %>%
+    transform_sample_counts(close_elts) %>%
+    filter_sample_data(div_group %in% c('Low', 'High')) %>%
+    prune_taxa(taxa_to_test, .) %>%
+    as_tibble %>%
+    with_groups(.otu, nest) %>%
+    mutate(
+      fit = map(data,
+        ~lm(log(.abundance) ~ div_group, data = .x)
+      ),
+    ) %>%
+    select(-data)
+  # %>% unnest(fit)
+}
+res_div_lm <- list(
+  'Observed' = momspi_div %>% transform_sample_counts(~. + 0.3),
+  'Calibrated' = momspi_div %>% transform_sample_counts(~. + 0.3) %>% calibrate(bias_all_vec)
+) %>%
+  map_dfr(stat_test, .id = 'type')
+res_div_lm_tidy <- res_div_lm %>%
+  mutate(across(fit, map, broom.mixed::tidy)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)')
+```
+
+```{r}
+# x should be the outout of a tidier
+plot_estimates <- function(x) {
+  err <- x %>%
+    select(name = type, .otu, value = estimate) %>%
+    pivot_wider() %>%
+    mutate(
+      # error = Observed - Calibrated, # will be same for everything
+      # error_abs = abs(error),
+      # # error_rel = abs(error / Calibrated), # only makes sense if not a sign error
+      error_sign = sign(Observed) == sign(Calibrated),
+      sign = case_when(
+        sign(Observed) > 0 & sign(Calibrated) > 0 ~ 'Positive',
+        sign(Observed) < 0 & sign(Calibrated) < 0 ~ 'Negative',
+        TRUE ~ 'Depends',
+      )
+    ) %>%
+    select(.otu, error_sign, sign)
+
+  p1 <- x %>%
+    left_join(err, by = '.otu') %>%
+    ggplot(aes(y = type, x = estimate, fill = sign)) +
+    scale_fill_brewer(type = 'qual', palette = 2) +
+    geom_vline(xintercept = 0, color = 'grey') +
+    ggdist::geom_dots()
+  p2 <- x %>%
+    mutate(
+      .otu_fct = fct_reorder(.otu, estimate, .fun = min)
+    ) %>%
+    ggplot(aes(y = .otu_fct, x = estimate, color = type)) +
+    scale_color_brewer(type = 'qual', palette = 7) +
+    geom_vline(xintercept = 0, color = 'grey') +
+    geom_pointrange(
+      aes(
+        xmin = estimate - 2*std.error,
+        xmax = estimate + 2*std.error
+      ))
+  p1 / p2 +
+    plot_layout(ncol = 1, heights = c(0.2, 1))
+}
+plot_estimates(res_div_lm_tidy)
+```
+
+
+Consider doing bootstrap CIs.
+
+```{r, eval = F}
+lm_boot <- function(.data, ...) {
+  fit <- lm(log(.abundance) ~ div_group, data = .data)
+  car::Boot(fit, ...)
+}
+x <- momspi_div %>% transform_sample_counts(~. + 0.3) %>% 
+  filter_sample_data(div_group %in% c('Low', 'High')) %>%
+  filter_tax_table(.otu == 'Gardnerella_vaginalis') %>% 
+  as_tibble
+fit <- lm(log(.abundance) ~ div_group, data = x)
+bt <- car::Boot(fit)
+bt %>% broom::tidy()
+broom::tidy(bt, conf.int = TRUE)
+confint(bt, type = 'perc') %>% broom::tidy()
+```
+
+
+
+## Regression on rank
+
+Similar to Wilcoxin test when there are no ties; not sure about with ties.
+
+```{r}
+stat_test <- function(ps) {
+  ps %>%
+    transform_sample_counts(close_elts) %>%
+    filter_sample_data(div_group %in% c('Low', 'High')) %>%
+    prune_taxa(taxa_to_test, .) %>%
+    as_tibble %>%
+    with_groups(.otu, nest) %>%
+    mutate(
+      fit = map(data,
+        ~lm(
+          rank(.abundance, ties.method = 'average')/n() ~ div_group, 
+          data = .x
+        )
+      ),
+    ) %>%
+    select(-data)
+  # %>% unnest(fit)
+}
+res_div_rank <- list(
+  'Observed' = momspi_div %>% transform_sample_counts(~. + 0.3),
+  'Calibrated' = momspi_div %>% transform_sample_counts(~. + 0.3) %>% calibrate(bias_all_vec)
+) %>%
+  map_dfr(stat_test, .id = 'type')
+res_div_rank_tidy <- res_div_rank %>%
+  mutate(across(fit, map, broom.mixed::tidy)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)')
+```
+
+```{r}
+plot_estimates(res_div_rank_tidy)
+```
+
+## Gamma-Poisson regression
+
+```{r}
+library(rstanarm)
+options(mc.cores = parallel::detectCores())
+```
+
+HERE. Might want to add the (lo) species efficiency to the offset, though it should make absolutely no difference to the fitted models.
+
+HERE. Might make sense to use flat priors or MLE inference, to disable regularization, so that the results are most directly comparable to our prediction that the effect of calibration is to shift the coefficients for each species by approximately the same amount.
+
+```{r}
+stat_test <- function(ps) {
+  ps %>%
+    prune_taxa(taxa_to_test, .) %>%
+    filter_sample_data(div_group %in% c('Low', 'High')) %>%
+    as_tibble %>%
+    # left_join(bias_all %>% select(.otu, efficiency), by = '.otu') %>%
+    # mutate(offset = offset + log(efficiency)) %>%
+    with_groups(.otu, nest) %>%
+    mutate(
+      fit = map(data,
+        ~stan_glm(
+          .abundance ~ div_group + offset(offset), 
+          data = .x, seed = 42,
+          family = neg_binomial_2, 
+          algorithm = 'sampling'
+          # algorithm = 'optimizing'
+          # algorithm = 'meanfield'
+        )
+      ),
+    ) %>%
+    select(-data)
+  # %>% unnest(fit)
+}
+res_div_gp <- list(
+  'Observed' = momspi_div %>% mutate_sample_data(offset = gp_offset_obs),
+  'Calibrated' = momspi_div %>% mutate_sample_data(offset = gp_offset_cal)
+) %>%
+  map_dfr(stat_test, .id = 'type')
+# saveRDS(res_div_gp, 'res_div_gp-meanfield.rds')
+# saveRDS(res_div_gp, 'res_div_gp.rds')
+res_div_gp_tidy <- res_div_gp %>%
+  mutate(across(fit, map, broom.mixed::tidy)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)')
+```
+
+```{r}
+plot_estimates(res_div_gp_tidy)
+```
+
+interpretation:
+
+- The prop of most species is greater in the high (observed) diversity samples, calibrated or not, because the low-diversity samples tend to be dominated by Lactobacillus (especially cripatus and iners).
+- Because of the sum-to-one constraint, this might just be a consequence of Lacto's having lower abundance - aka a compositional effect
+  - consider talking about this in the case study.
+- This compositional effect is compounded by bias, since Lactos also have high efficiency.
+- hence the observed increases are even larger than the bias-corrected (calibrated) ones.
+- interesting to see how some taxa have a much smaller impact from calibration (Gard and BVAB1 especiaully).
+  - Perhaps this has to do with these species often being dominant?
+    - this means that there are conflicting asssociative forces acting on them - high diversity = low lactobacillus = higher abundance, but also places a cap on how high in abundance these species can be. but this argument doesn't explain why our results wouldn't still apply
+  - Are the priors having an impact? What if we flatten the prior on the coefficient?
+  - Is there something about working on counts that is causing the effect?
+  - I can probably learn something by checking the fit on Gard.
+<!--  -->
+
+### flat(er) priors
+
+```{r}
+stat_test <- function(ps) {
+  ps %>%
+    prune_taxa(taxa_to_test, .) %>%
+    filter_sample_data(div_group %in% c('Low', 'High')) %>%
+    as_tibble %>%
+    with_groups(.otu, nest) %>%
+    mutate(
+      fit = map(data,
+        ~stan_glm(
+          .abundance ~ div_group + offset(offset), 
+          data = .x, seed = 42,
+          family = neg_binomial_2, 
+          # prior_intercept = NULL,
+          prior = normal(0, 100),
+          # algorithm = 'sampling'
+          # algorithm = 'optimizing'
+          algorithm = 'meanfield'
+        )
+      ),
+    ) %>%
+    select(-data)
+  # %>% unnest(fit)
+}
+res_div_gp_flat <- list(
+  'Observed' = momspi_div %>% mutate_sample_data(offset = gp_offset_obs),
+  'Calibrated' = momspi_div %>% mutate_sample_data(offset = gp_offset_cal)
+) %>%
+  map_dfr(stat_test, .id = 'type')
+saveRDS(res_div_gp_flat, 'res_div_gp_flat-meanfield.rds')
+# saveRDS(res_div_gp_flat, 'res_div_gp.rds')
+```
+
+```{r}
+res_div_gp_flat_tidy <- res_div_gp_flat %>%
+  mutate(across(fit, map, broom.mixed::tidy)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)')
+```
+
+```{r}
+p1 <- res_div_gp_flat_tidy %>%
+  ggplot(aes(y = type, x = estimate)) +
+  ggdist::geom_dots()
+p2 <- res_div_gp_flat_tidy %>%
+  mutate(
+    .otu_fct = fct_reorder(.otu, estimate, .fun = min)
+  ) %>%
+  ggplot(aes(y = .otu_fct, x = estimate, color = type)) +
+  geom_vline(xintercept = 0, color = 'grey') +
+  geom_pointrange(
+    aes(
+      xmin = estimate - 2*std.error,
+      xmax = estimate + 2*std.error
+    ))
+p1 / p2 +
+  plot_layout(ncol = 1, heights = c(0.2, 1))
+```
+
+Widening the priors seems to have no impact
+
+### checking on gard
+
+```{r}
+fit <- res_div_gp %>%
+  filter(.otu == 'Gardnerella_vaginalis', type == 'Observed') %>%
+  pull(fit) %>% .[[1]]
+fit %>% summary
+```
+
+```{r, eval = F}
+x <- fit$data %>% as_tibble
+y <- x %>% pull(.abundance)
+# launch_shinystan(fit, ppd = TRUE)
+y_rep <- posterior_predict(fit)
+dim(y_rep)
+```
+
+Let's look at the log proportion.
+To make the distributions more directly comparaible, I'll add the species efficiency in the calibrated part.
+
+```{r}
+eff <- bias_all_vec['Gardnerella_vaginalis']
+x1 <- x %>%
+  select(-offset) %>%
+  mutate(gp_offset_cal = gp_offset_cal + log(eff)) %>%
+  pivot_longer(starts_with('gp_offset'), names_to = 'offset_type', values_to = 'offset') %>%
+  mutate(across(offset_type, str_extract, pattern = '(obs|cal)'))
+```
+```{r}
+x1 %>%
+  ggplot(aes(log(.abundance + 0.3) - offset, fill = div_group)) +
+  facet_wrap(~offset_type, ncol = 1) +
+  geom_histogram()
+```
+
+```{r}
+x1 %>%
+  mutate(log_prop = log(.abundance + 0.3) - offset) %>%
+  ggplot(aes(y = div_group, x = log_prop)) +
+  facet_wrap(~offset_type) +
+  ggdist::stat_halfeye()
+```
+
+```{r}
+x1 %>%
+  mutate(log_prop = log(.abundance + 0.3) - offset) %>%
+  with_groups(c(offset_type, div_group), summarize, across(log_prop, mean))
+```
+
+```{r}
+res_div_gp_tidy %>% filter(.otu == 'Gardnerella_vaginalis')
+```
+
+The estimated coefficients are smaller than the differences in the means.
+
+
+Can we understand why there is relatively little impact of calibration?
+
+Should also compare for a taxon where there is a larger impact.
+
+C
+
+
