@@ -1,0 +1,342 @@
+---
+title: "Perform Leopold and Busby (2020) regression analysis with and without bias correction"
+description: |
+  We perform the regression analysis of Leopold and Busby (2020) with and without bias correction, finding that there is negligible impact of bias correction on the results.
+author:
+  - name: Michael R. McLaren
+    url: {}
+date: 2022-01-06
+bibliography: ../../../main.bib
+categories:
+  - ref:leopold2020host
+  - differential abundance
+  - bias sensitivity
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: true
+    dev: svg
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  cache = FALSE
+  # autodep = TRUE,
+  # cache.comments = FALSE
+)
+```
+
+This document asks whether bias correction has a significant impact on the regression analysis of @leopold2020host.
+
+# Run analyses with and without bias correction
+
+```{r libraries}
+library(here)
+
+set.seed(42)
+```
+
+This script follows the analysis of `code/jsdModels.R` in https://github.com/dleopold/Populus_priorityEffects.
+
+We start by running the setup of libraries and loading the phyloseq object and bias estimate.
+The code is modified from `jsdModels.R` to adjust working directories for reading files.
+
+```{r lp-setup}
+library(tidyverse)
+library(magrittr)
+library(phyloseq)
+library(mvabund)
+library(gt)
+
+this_dir <- getwd()
+setwd(here('notebook/_data/leopold2020host/dleopold-Populus_priorityEffects-8594f7c/'))
+
+source("code/Rfunctions.R")
+
+# load phyloseq data
+(phy <- loadPhyloseq())
+
+# load bias correction factors - estimated from mock communities
+bias <- read.csv("output/tabs/bias.csv")
+
+setwd(this_dir)
+```
+
+## Compute offsets with and without bias correction
+
+Bias is accounted for in the original regression analysis through the use of taxon and sample-specific offsets, stored in a matrix `effort`.
+These offsets also account for the variation in read depth across samples.
+To perform the analysis with and without bias correction, we therefore compute two versions of the offsets, using the estimated bias vector and a dummy bias vector where the efficiencies are all set to 1.
+
+```{r}
+bias_list <- list(
+  'Corrected' = bias, 
+  'Uncorrected' = bias %>% mutate(Bhat = 1)
+)
+
+# 'effort' (offset) is calculated following jsdModels.R
+effort_fun <- function(bias, phy) {
+  (sample_sums(unbias(phy, bias)) %*% 
+    t(bias$Bhat[match(taxa_names(phy), bias$Taxon)])
+  ) %>% log 
+}
+
+effort_list <- bias_list %>%
+  map(effort_fun, phy = phy)
+```
+
+The offset calculation is done as in `jsdModels.R`.
+In section 'Quantification and statistical analysis'), @leopold2020host explain
+
+> We accounted for 2 sources of unequal sampling effort, variable sampling depth and the species-specific sequencing biases, by including an offset term ($effort$) for each species $i$ in each sample $j$, in the form: $effort_{ij} = \log(bias_{i} \times depth_{j})$, where $bias_i$ is the sequencing bias correction factor for species $i$, estimated from our mock communities (see above, Estimating Sequencing Bias), and $depth_j$ is the total sum of all species in sample $j$, after dividing each by their species-specific sequencing bias correction factor.
+
+The call to `sample_sums(unbias(phy, bias))` returns the $depth_{j}$ terms as described in this paragraph.
+
+To understand why this calculation yields the correct offset, consider that under our model (and in our notation) we have
+\begin{align}
+  \log \text{reads}_i(a)
+    &= \log \text{prop}_i (a) +
+    \underbrace{\log \left[\frac{\text{efficiency}_i}{\text{efficiency}_S(a)} \cdot \text{reads}_S(a) \right]}_{\text{offset}}.
+\end{align}
+It can be shown with some algebra that
+\begin{align}
+  \frac{\text{reads}_S(a)}{\text{efficiency}_S(a)} 
+  = \sum_i \frac{\text{reads}_i(a)}{\text{efficiency}_i}.
+\end{align}
+The left-hand side is the ratio of total reads to mean efficiency of the sample $a$, and the right-hand side is the $depth_{a}$ of sample $a$ defined by @leopold2020host.
+It follows that the 'effort' terms computed by @leopold2020host are indeed the offsets implied by our model.
+
+## Run analysis with each set of offsets
+
+We'll wrap the analysis from `jsdModels.R` in a function to call with the corrected and uncorrected 'effort' offsets.
+Toggle to see the code.
+
+```{r, code_folding = TRUE}
+analyze_jsd_models <- function(effort, phy, nBoot=4999) { 
+  ##########################
+  ### Fit genotype model ###
+  ##########################
+
+  # Make mvabund object 
+  mvDat <- otu_table(phy) %>% data.frame  %>% mvabund
+
+  # Fit joint-species model for genotype effect
+  mv.full <- manyglm(mvDat ~ Genotype*Treatment, 
+                     offset=effort, 
+                     family="negative.binomial",
+                     data=data.frame(sample_data(phy)))
+
+  # Check model assumptions
+  #plot(mv.full)
+  #meanvar.plot(mvDat~sample_data(phy)$Treatment)
+  #meanvar.plot(mvDat~sample_data(phy)$Genotype)
+
+  # Test with anova.manyglm 
+  # Using unstructured correlation matrix and wald tests.  
+  # Including univariate test with adjustment for multiple testing.  
+  mv.anova <- anova(mv.full, nBoot=nBoot, p.uni="adjusted", cor.type="shrink", test="wald")
+  #> saveRDS(mv.anova, "output/rds/mv.genotype.rds")
+
+  ########################
+  ### Fit region model ###
+  ########################
+
+  #' # Fit joint-species model for genotype effect
+  mv.region <- manyglm(mvDat ~ Region*Treatment, 
+                       offset=effort, 
+                       family="negative.binomial",
+                       data=data.frame(sample_data(phy)))
+
+  #' ## Check model assumptions
+  #plot(mv.region)
+  #meanvar.plot(mvDat~sample_data(phy)$Region)
+
+  #' ## Test with anova.manyglm 
+  #+ cache=T, results='asis'
+  mv.region.anova <- anova(mv.region, nBoot=nBoot, p.uni="adjusted", cor.type="shrink", test="wald")
+  #> saveRDS(mv.region.anova, "output/rds/mv.region.rds")
+
+  mv.results <- bind_cols(
+    mv.anova$table %>% 
+      rownames_to_column() %>%
+      filter(rowname!='(Intercept)') %>%
+      mutate(rowname = gsub("Genotype","Host",rowname)),
+    mv.region.anova$table %>% 
+      rownames_to_column() %>%
+      filter(rowname!='(Intercept)') %>%
+      select(-rowname),
+    # NOTE: [MRM] I set the name repair function to match the original behavior
+    .name_repair = function(x) make.unique(x, sep = '')
+  ) %>%
+    gt(rowname_col = "rowname") %>%
+      tab_spanner(
+        label = "Genotype",
+        columns = vars(Res.Df, Df.diff, wald, 'Pr(>wald)')
+      ) %>%
+      tab_spanner(
+        label = "Ecotype",
+        columns = vars(Res.Df1, Df.diff1, wald1, 'Pr(>wald)1')
+      ) %>%
+      fmt_number(c(4,8),
+                 decimals = 1) %>%
+      fmt(c(5,9),
+          fns = function(x) {
+            ifelse(x>=0.001,round(x,3),"< 0.001")
+          }) %>%
+      cols_label('Pr(>wald)'=md("*P*-value"),
+                 wald=md("Wald-χ<sup>2<sup>"),
+                 Res.Df=md("Df.resid"),
+                 Df.diff="Df",
+                 'Pr(>wald)1'=md("*P*-value"),
+                 wald1=md("Wald-χ<sup>2<sup>"),
+                 Res.Df1=md("Df.resid"),
+                 Df.diff1="Df") %>%
+      cols_move_to_start(3) %>%
+      cols_move(7,5) %>%
+      cols_align("center")
+  #> gtsave(mv.results,"output/figs/jsdModels.png")
+
+  list(
+    mv.full = mv.full,
+    mv.anova = mv.anova,
+    mv.region = mv.region,
+    mv.region.anova = mv.region.anova,
+    mv.results = mv.results
+  )
+}
+```
+
+Finally, we run the analysis.
+The call is wrapped in `xfun::cache_rds()` to cache the results; the hash is based on the inputs and the analysis function's source code.
+
+```{r analyses, message = FALSE, warning = FALSE, results = 'hide'}
+fun_src <- attr(analyze_jsd_models, 'srcref') %>% as('character')
+res <- xfun::cache_rds({
+  effort_list %>% map(analyze_jsd_models, phy = phy)
+}, hash = list(fun_src, effort_list, phy),
+  clean = FALSE
+)
+```
+
+# Compare results
+
+Next we compare the results of the analysis with and without bias correction.
+
+```{r}
+library(cowplot)
+library(patchwork)
+theme_set(theme_cowplot())
+```
+
+## ANOVA summary tables
+
+First, let's compare the results summary tables.
+
+**With bias correction**
+
+```{r, echo = FALSE}
+res$Corrected$mv.results
+```
+
+**Without bias correction**
+
+```{r, echo = FALSE}
+res$Uncorrected$mv.results
+```
+
+## Full model
+
+**With bias correction**
+
+```{r}
+res[['Corrected']][['mv.full']]
+```
+
+**Without bias correction**
+
+```{r}
+res[['Uncorrected']][['mv.full']]
+```
+
+Let's compare the estimated coefficients for the various response variables.
+
+```{r}
+tidy_manyglm <- function(x) {
+  x %>% coef %>%
+    as_tibble(rownames = 'term') %>%
+    pivot_longer(-term, names_to = 'response', values_to = 'estimate')
+}
+```
+
+```{r, fig.dim = c(6, 6.5)}
+coef_ests <- res %>%
+  map('mv.full') %>%
+  map_dfr(tidy_manyglm, .id = 'type')
+x <- coef_ests %>%
+  filter(term != '(Intercept)') %>%
+  pivot_wider(names_from = type, values_from = estimate)
+mse <- x %>%
+  summarize(
+    mse = mean((Corrected - Uncorrected)^2)
+  ) %>% .[[1]] %>% signif(2)
+x %>%
+  ggplot(aes(Uncorrected, Corrected)) +
+  coord_fixed() +
+  geom_abline(color = 'darkred') +
+  geom_point() +
+  labs(title = 'Non-intercept coefficients, full model', 
+    subtitle = str_glue('Mean squared difference: {mse}')
+  ) +
+  theme(plot.title.position = 'plot') +
+  scale_color_brewer(type = 'qual', palette = 2)
+```
+
+## Region model
+
+**With bias correction**
+
+```{r}
+res[['Corrected']][['mv.region']]
+```
+
+**Without bias correction**
+
+```{r}
+res[['Uncorrected']][['mv.region']]
+```
+
+Let's compare the estimated coefficients for the various response variables.
+
+```{r, fig.dim = c(6, 6.5)}
+coef_ests <- res %>%
+  map('mv.region') %>%
+  map_dfr(tidy_manyglm, .id = 'type')
+x <- coef_ests %>%
+  filter(term != '(Intercept)') %>%
+  pivot_wider(names_from = type, values_from = estimate)
+mse <- x %>%
+  summarize(
+    mse = mean((Corrected - Uncorrected)^2)
+  ) %>% .[[1]] %>% signif(2)
+x %>%
+  ggplot(aes(Uncorrected, Corrected)) +
+  coord_fixed() +
+  geom_abline(color = 'darkred') +
+  geom_point() +
+  labs(title = 'Non-intercept coefficients, region model', 
+    subtitle = str_glue('Mean squared difference: {mse}')
+  ) +
+  theme(plot.title.position = 'plot') +
+  scale_color_brewer(type = 'qual', palette = 2)
+```
+
+Bias correction has little impact on the estimated coefficients for the non-intercept terms for either model.
+
+# Session info {.appendix}
+
+<details><summary>Click for session info</summary>
+```{r, R.options = list(width = 83)}
+sessioninfo::session_info()
+```
+</details>
