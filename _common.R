@@ -39,3 +39,13 @@ svg_to_pdf <- function(svg_path) {
   system2("inkscape", args = args)
   fig_path
 }
+
+# include an svg file as a figure
+include_svg <- function(svg_path) {
+  if (knitr::is_html_output()) {
+    fig_path <- svg_path
+  } else if (knitr::is_latex_output()) {
+    fig_path <- svg_to_pdf(svg_path)
+  }
+  knitr::include_graphics(fig_path)
+}

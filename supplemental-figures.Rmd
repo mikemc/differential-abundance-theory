@@ -1,19 +1,26 @@
 # Supplemental figures
 
+<!-- Case studies: leopold2020host -->
+
+```{r leopold2020host-variation, fig.cap = '(ref:cap-leopold2020host-variation)'}
+fs::path(
+  'notebook/_posts/2022-01-06-leopold2020host-t1-samples',
+  'leopold2020host-t1-samples_files/figure-html5',
+  'variation-in-proportions-and-mean-efficiency-1.svg'
+  ) %>%
+  include_svg
+```
+
+(ref:cap-leopold2020host-variation) **In the pre-infection samples from @leopold2020host, multiplicative variation in taxa proportions is much larger than that in the mean efficiency.** Panel A shows the distribution of the proportions of each commensal isolate (denoted by its genus) across all samples collected prior to pathogen inoculation; Panel C shows the distribution of the (estimated) sample mean efficiency across these same samples on the same scale; and Panel B shows the efficiency of each taxon estimated from DNA mock communities as point estimates and 90% bootstrap percentile confidence intervals. Efficiencies are shown relative to the most efficiently measured taxon (_Fusarium_).
+
 <!-- Implications: MOMSPI -->
 
 ```{r momspi-mean-efficiency-fcs, fig.cap = '(ref:cap-momspi-mean-efficiency-fcs)'}
-svg_path <- fs::path(
+fs::path(
   "notebook/_posts/2021-11-01-momspi-summary/momspi-summary_files", 
   "figure-html5/momspi-mean-efficiency-fcs-1.svg"
-)
-if (knitr::is_html_output()) {
-  fig_path <- svg_path
-} else if (knitr::is_latex_output()) {
-  fig_path <- svg_to_pdf(svg_path)
-}
-knitr::include_graphics(fig_path)
-rm(svg_path, fig_path)
+) %>%
+  include_svg
 ```
 
 (ref:cap-momspi-mean-efficiency-fcs) **Fold changes in the mean efficiency within and between women in the MOMS-PI study.**
@@ -23,17 +30,11 @@ rm(svg_path, fig_path)
 <!-- Solutions -->
 
 ```{r sensitivity-example, fig.cap = '(ref:cap-sensitivity-example)'}
-svg_path <- fs::path(
+fs::path(
   "notebook/_posts/2021-10-18-evaluate-robustness-example/",
   "evaluate-robustness-example_files/figure-html5/summary_plot-1.svg"
-)
-if (knitr::is_html_output()) {
-  fig_path <- svg_path
-} else if (knitr::is_latex_output()) {
-  fig_path <- svg_to_pdf(svg_path)
-}
-knitr::include_graphics(fig_path)
-rm(svg_path, fig_path)
+) %>%
+  include_svg
 ```
 
 (ref:cap-sensitivity-example) **A bias-sensivity analysis can be performed to examine how sensitive the results of a DA analysis are to assumptions about taxonomic bias in community measurements.** The figure shows the results of a bias-sensitivity analysis used to study the effect of bias on the association of _Gardnerella vaginalis_ and preterm birth that was investigated by @callahan2017repl. 100 random efficiency vectors were drawn at 6 different bias strengths (quantified by the variance in log efficiency, $\sigma_{e}^{2}$). Each efficiency vector was used to calibrate the MGS profiles and perform a DA association test of _G. vaginalis_ versus the host's preterm birth outcome; regression coefficients $\hat \beta$ indicate the increase of average logit proportion of  _G. vaginalis_ in women who experienced preterm birth.
