@@ -4,54 +4,70 @@ To better understand the potential impact of taxonomic bias on DA analysis in pr
 
 ## Foliar fungi experiment
 
-To study the interactions between a host plant and its fungal symbionts and pathogen, @leopold2020host inoculated plants with 8 fungal species and, after allowing these fungal microbiomes to establish, exposed plants to a fungal pathogen.
-To investigate the role of colonization order and host genotype, plants varied in source location and in which symbiont was allowed to colonize first.
+Measurement of control communities along with the primary experimental samples can enable researchers to directly measure and remove the effect of bias prior to or concurrent with downstream DA analysis (@mclaren2019cons).
+Gnotobiotic community experiments are well suited to this form of _calibration via community controls_ since, unlike most natural ecosystems, it is possible to assemble 'mock communities' containing all species in known relative abundances.
+
+@leopold2020host are the first to use mock-based calibration in a gnotobiotic microbiome experiment.
+In a study of host-commensal-pathogen interactions, @leopold2020host inoculated plants with 8 commensal fungal species and subsequently exposed plants to a fungal pathogen.
+To investigate the joint effect of colonization order and host genotype, plants varied in source location and in which commensal colonized first.
 The authors used ITS amplicon sequencing to measure communities before and after pathogen infection, along with mock communities with quantified genome concentrations of DNA from the 9 species.
 These DNA mock communities allowed the authors to directly measure the bias due to the sequencing workflow following DNA extraction and correct for it when analyzing the primary experimental samples following the method of @mclaren2019cons.
-Although extraction is not accounted for, considerable bias might still be expected due to the substantial ribosomal copy-number-variation (CNV) in fungi (CITE) and preferential PCR binding and amplification (CITE).
-The authors found a 13X difference between the most and least efficiently measured symbiont, while the pathogen was measured 40X more efficiently than the least efficiently measured commensal.
-We reanalyzed this experiment to understand the impact that bias might have had on the study's analyses were it not accounted for (SI Analysis Fungi).
+Although extraction is not accounted for, considerable bias might still be expected due to preferential PCR binding and amplification (CITE) and the substantial ribosomal copy-number-variation (CNV) in fungi (@lofgren2019geno).
+The authors found a 13X difference between the most and least efficiently measured commensal, while the pathogen was measured 40X more efficiently than the least efficiently measured commensal.
+We reanalyzed this experiment to understand the impact that bias might have had on the study's analyses were it not accounted for.
 
-@leopold2020host used the ITS sequencing profiles of the pre-infection samples to understand the impact of host genotype and an experimental treatment---which species was allowed to colonize first---on the community composition after all species were later allowed to colonize.
-The authors used linear regression of log species proportions, using negative-binomial regression to account for random read-sampling error, to ask whether host genotype, treatment, and their interaction significantly impacted overall log species proportions and to quantify the advantage of being allowed to colonize first (priority effects).
-Bias was accounted for via the use of species- and sample-specific offset terms in the regression model (SI / appendix).
-In principle, bias could significantly impact the results of such regressions through variation in the log mean efficiency among samples.
-Yet bias has a negligible impact on the study's analyses, with nearly identical DA results being obtained regardless of whether bias correction is used (Ref SI, which will run the analyses from the paper with and without bias correction).
-To understand why, we compared the variation in log species proportions across samples to that in log mean efficiency (Figure X).
-Individual species show substantial variation in log proportion (give numbers); nevertheless, the log mean efficiency hardly varies (number; perhaps ref a figure).
-This difference is due to the communities always being dominated by just three species, whose efficiencies happen to be the highest among the commensal species and only vary by 3X (and just 1.5X between the two most dominant).
-The lowest efficiency species, despite having large variation in their proportion on the log scale, are always rare (proportions $\ll 1$, even after bias correction) and hence don't induce significant variation in the mean efficiency.
-Due to the stable mean efficiency across samples, bias primarily impacts the intercept terms and has a negligible impact on the estimates and standard errors of slope (DA) terms in the regressions.
+@leopold2020host used the ITS sequencing profiles of the pre-infection samples to understand the impact of host genotype and an experimental treatment---which species was allowed to colonize first---on the commensal community composition prior to infection.
+Two DA analyses were conducted to address these questions.
+First, the authors used linear regression of log species proportion (via negative-binomial regression to account for random read-sampling error) to ask whether host genotype, treatment, and their interaction significantly impacted overall community composition.
+Second, the authors quantified the strength of priority effects---the advantage of being allowed to colonize first---in different host genotypes by the LFC in the proportion of a species when allowed to colonize first versus later with the majority of commensals.
 
-Although not analyzed in the study, the authors also sequenced the fungal communities of plants after pathogen colonization.
-Comparison of the pre- and post-colonization samples suggests a simple, biologically relevant scenario where bias could confound attempts to infer microbial dynamics.
-A natural question to ask in such an experiment is, how do various species in the existing community respond to pathogen invasion?
-Relative abundances alone offer limited information, as they are unable to account for the potential sharp increase in the pathogen abundance post-infection, making such an experiment a natural target for absolute-abundance methods.
-One possibility would be to measure total genome concentration using qPCR of the single-copy gene that was used to quantify concentrations for the mock communities.
-Genome concentration could then be multiplied by ITS sequencing proportions to infer absolute abundances for DA analysis.
-Suppose the genome-concentration measurement is 100% accurate.
-In this case, it would be likely be important to account for bias in the ITS measurement.
-The reason is that the high efficiency of the pathogen typically leads to a roughly 6X increase in the mean efficiency of post-colonization samples (REF SI/FIG), which would tend to cause a concomitant 6X decrease in the infered fold changes in abundance in response to colonization for each species.
-Alternatively, one might measure total ITS concentration via qPCR, possibly using the same primers used for ITS sequencing.
-In this case, bias correction using the measured efficiencies is unnecessary and would be harmful if not also done for the qPCR measurement.
-The reason is that much (if not most) of the bias in the sequencing measurement is shared by the ITS qPCR measurement, including that due to extraction, CNV, and PCR amplification.
-Appendix X shows that this shared bias in fact leads to more accurate inferences of fold changes in the genome concentrations of individual species, even while likely giving inaccurate changes in total genome concentration.
-In summary, accurate inference of species abundances following pathogen colonization requires accounting for the increase in mean efficiency among samples; however, measuring total community abundance with a method (here, ITS qPCR) that is proportional to the mean efficiency naturally does so without needing to explicitly measure or correct for species efficiencies.
-Similarly, the (ratio-based) reference-species approaches discussed in the previous section might instead be used.
+Since these analysis are both based on proportions, bias could in principle impact their results.
+We re-ran both analyses with and without bias correction, finding nearly identical results regardless of whether bias is accounted for^[The two sets of analyses can be seen at the following links: [negative-binomial regression analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-06-leopold2020host-original-regression-analysis/index.html); [priority-effects analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-05-leopold2020host-priority-effects/index.html)].
+To understand why, we compared the multiplicative variation taxa proportions with that of the mean efficiency.
+The proportions of each taxon varied substantially across samples, much more so than the mean efficiency, which had a geometric range of 1.57X and a geometric standard deviation of just 1.06X (Figure \@ref(fig:leopold2020host-variation)).
+<!-- Explanation -->
+Why does the mean efficiency vary so little despite substantial multiplicative variation in the efficiency among taxa and in the taxa proportions across samples?
+This answer relates to the fact that the mean efficiency is a weighted _arithmetic_ average of species proprotions and so is insensitive to large multiplicative variation in low-proportion species.
+The pre-infection samples in the @leopold2020host study are always dominated by the three species with the highest efficiencies, whose efficiencies vary only by 3X (and just 1.5X between the two most dominant).
+The lowest efficiency species, despite having large variation in their proportion on the log scale, are always rare (proportions $\ll 1$, even after bias correction) and hence don't significantly affect the mean efficiency.
+<!-- Conclusion -->
+Because the log mean efficiency varies much less than the log proportions for each taxon, there is little room for it to distort the results of DA analyses based on variation in log proportions.
 
-<!-- The post-colonization samples were not analyzed by @leopold2020host in part because the reads from post-colonization samples tended to be dominated by the pathogen, giving little ability to infer the relative abundance of the rarer and lower efficiency species. -->
-<!-- This was presumably due to high pathogen growth and aided by the pathogen's post-extraction efficiency being substantially larger than the other species; -->
-<!-- the high efficiency of the pathogen typically leads to a roughly 6X increase in the mean efficiency of post-colonization samples (REF SI/FIG). -->
+<!-- Notes: -->
+<!-- - Consider whether to use log-transformed abundances and efficiencies throughout, and standard (non-geometric) ranges and standard deviations -->
+<!-- - Consider connecting back to the previous section and reminding of the condition for the variation in mean efficiency to impact regression analyses -->
+<!-- - Consider comparing the correlations among taxa with covariates; or at least looking at that of the mean efficiency, since correlation is also an important piece of the requirement -->
+<!-- - The priority-effect analysis isn't done as a regression, though it could have been (but would have been a slightly different calculation). I might want to explain this more here and in the notebook post. -->
+<!-- - I don't consider/mention whether there are actually 'significant' DA results; that would perhaps be a useful piece of the story. Or: I should perhaps say what the result was of each of the two analyses, so it is more concrete what results are not changing. -->
+<!-- - Consider expanding on the impact of bias, using Penicillium as an example: It's proportion is generally ~6X lower without correction, but its changes across samples are not affected by correction -->
 
-TODO:
+We additionally considered the potential for bias to impact analysis of how the abundances of commensal taxa changed across experimental timepoints in response to infection.
+First, we considered regression analysis where log proportion is the response variable.
+The observation of tissue lesions and a high observed proportion of the pathogen in the ITS profiles indicates that the pathogen grew to high abundance in most plants, so that we expect the proportion of commensals to typically decrease due to the sum-to-one constraint.
+As expected, regression analysis shows negative LFCs after infection regardless of whether bias is accounted for; however, LFCs are substantially lower (TODO) without bias correction.
+Because the pathogen tends to dominate ITS profiles in post-infection samples, the mean efficiency is much higher in post-infection samples, leading to artificially low LFCs for all species when bias is not accounted for.
 
-- Give numerical e.g. for the lowest eff species, Penicillium, whose prop is typically 6X too low but the magnitude of error in FCs is generally smaller
-- Check that strength of correlation with covariates isn't an important part of the story as well
-- Analysis: re-run DL analysis with and without calibrated offsets
+We then considered the impact this shift in mean efficiency might have on a regression analysis with log absolute genome concentration as the response.
+The actual experiment does not allow absolute-abundance measurement; nevertheless, it is illustrative to consider hypothetical scenarios in which absolute genome concentration were measured using one of the methods described in Section \@ref(abundance-measurement).
+In particular, we consider the total-community normalization method (Equation \@ref(eq:density-prop-meas)), for which shifts in MGS mean efficiency can lead to inaccurate LFCs.
+We consider two scenarios.
+_Scenario 1:_ Total genome concentration in each sample is perfectly known and used to measure the concentrations of individual taxa via Equation \@ref(eq:density-prop-meas).
+In this case, bias in the MGS measurements would create absolute errors in the LFCs for genome concentration identical to those for proportions.
+The scientific error, however, may be much worse.
+Since the sum-to-one constraint of proportions no longer applies, the LFCs will necessarily be larger (less negative), such that the absolute error caused by the change in mean efficiency could plausibly create substantial biological errors where taxa that persist or even increase appear to decrease.
+_Scenario 2:_ Total ITS concentration is measured by qPCR with the same primers and PCR protocol used for ITS sequencing, and used without any correction to measure individual taxa concentration with the total-community normalization method.
+In this case, we should expect the increase in mean efficiency to have little to no impact on LFCs, since it would be offset by the increase in mean efficiency of the total-concentration measurement.
+Moreover, since the total ITS concentration and ITS sequencing are both performed on the extracted DNA, we can also expect the effect of taxonomic bias caused by DNA sequencing to be offset.
+
+TODO: Write a concluding statement about how even in cases where the mean efficiency shifts,  the impact of bias in a proportion-based analysis depends on how exactly the total measurement is made and used (and an appropriate design can account for bias without the need for mock measurements).
+
+<!-- cut text -->
+<!-- - Genome concentration was chosen as the measure of abundance, due to the tendency for fungi to grow in forms where cells are not easily demarcated. -->
+<!-- - The original study focused on how host genotype and the pre-infection community affected disease severity after challenge with a pathogen, and did not analyze the impact of infection on commensals. -->
+<!-- - The post-colonization samples were not analyzed by @leopold2020host in part because the reads from post-colonization samples tended to be dominated by the pathogen, giving little ability to infer the relative abundance of the rarer and lower efficiency species. -->
+<!-- - This was presumably due to high pathogen growth and aided by the pathogen's post-extraction efficiency being substantially larger than the other species; the high efficiency of the pathogen typically leads to a roughly 6X increase in the mean efficiency of post-colonization samples (REF SI/FIG). -->
 
 ## Vaginal microbiomes of pregant women
-
-### Outline
 
 The vaginal microbiomes of pregnant women have been a source of intensive study due to its perceived connection with the health of both mother and her developing child.
 Many MGS studies have found associations of specific microbial species and community characteristics with rates of urinary tract and sexually-transmitted infections, bacterial vaginosis (BV), and preterm births.
@@ -68,22 +84,33 @@ Here we re-analyze data from published studies to examine the potential impact o
   - how we did it given limited species composition of the mock
 
 We first examine what the taxonomic bias observed in control experiments by @brooks2015thet might imply for DA analysis of vaginal microbiomes of pregnant women reported by @fettweis2019thev.
-As part of the Multi-Omic Microbiome Study: Pregnancy Initiative (MOMS-PI) study, @fettweis2019thev collected longitudinal samples from over 1500 pregnant women, including nearly 600 that were measured by amplicon sequencing of the 16S V1-V3 hypervariable region to yield species-level taxonomic profiles.
-The effect of taxonomic bias in the 16S protocol had previously been investigated by @brooks2015thet via the construction and measurement of cellular mock communities of seven vaginally-relevant bacterial species.
-We reanalyzed these data in @mclaren2019cons using a new approach that makes it possible to measure the relative efficiencies among species from mock community measurements.
-Once relative efficiencies of all species are estimated, it is possible to quantitatively examine the impact of bias and to _calibrate_, or correct the effect of bias, in samples with unknown composition (@mclaren2019cons).
-To account for species not in the mock communities, we used a simple method to impute the relative efficiencies of remaining species using their taxonomic relationship to the mock species.
+As part of the Multi-Omic Microbiome Study: Pregnancy Initiative (MOMS-PI) study, @fettweis2019thev collected longitudinal samples from over 1500 pregnant women, including nearly 600 that were measured by amplicon sequencing of the 16S V1-V3 hypervariable region to yield species-level bacterial taxonomic profiles.
+DA analyses of the vaginal microbiome, including those of @fettweis2019thev, are most commonly based on species proportions, creating opportunity for bias to have an impact on their results.
+Previously, the authors evaluated taxonomic bias of this MGS protocol via the construction and measurement of cellular mock communities of seven vaginal bacterial species (@brooks2015thet), but did not directly account for this bias in @fettweis2019thev.
+We used the control measurements from @brooks2015thet to infer the bias of the MOMS-PI 16S protocol and investigate its potential impact on DA analyses of vaginal profiles from the MOMS-PI study.
+To estimate the relative efficiencies among all species, we directly estimated the efficiencies in the control samples following the method of @mclaren2019cons and imputed the remaining efficiencies based on taxonomic relationships.
+We then used these imputed efficiencies to calibrate the measured taxonomic profiles from the MOMS-PI study and compare DA analyses with and without calibration.
+Such imputed efficiencies carry considerable uncertainty, which we ignore to simplify our presentation. 
+Notably, while this uncertainty can majorly impact abundances in individual samples, it has a much weaker impact on LFCs across samples (SI analysis).
 
-maybe say more about this
-- Such imputation carries with it substantial uncertainty; however, 
-- These species collectively constitute a substantial majority of taxomically assigned reads in the MOMSPI 16S profiles (X for species level, and Y when expand to genus).
-- analysis of sensitivty to uncertainty can be done and shows not a very big impact.
+To assess the potential for bias to affect fold changes in species proportions, we first used the imputed efficiencies to consider how the mean efficiency varied across women.
+In contrast to the fungal experiment, the mean efficiency varies substantially across vaginal samples, primarily driven by variation in which species is most abundant (Figure \@ref(fig:momspi-mean-efficiency-dist).
+The four most common top species in the observed and calibrated profiles were _Gardnerella vaginalis_, _Lactobacillus iners_, _Lactobacillus crispatus_, and _Lachnospiraceae BVAB1_.
+All of these except _Lachnospiraceae BVAB1_ where included in the mock-community experiment, from which we estimated that _L. iners_ has an efficiency of 2X relative to _L. crispatus_ and 30X relative to _G. vaginalis_, with _L. iners_ and _G. vaginalis_ having the maximum and minimum efficiencies among the 7 control species.
 
-Efficiency varied subsantially among control species in the @brooks2015thet experiment, with an approximately 30X advantage of the highest efficiency _L. iners_ over the lowest efficiency _G. vaginalis_.
-To assess the impact of bias on the observed fold changes in species proportions, we used our imputed efficiencies to consider how the mean efficiency varied across women.
-The mean efficiency varies substantially across samples (SI Figure \@ref(fig:momspi-mean-efficiency-fcs; SUMMARY STATS), with greater variation between samples from different women than samples from the same woman (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)). 
-Vaginal microbiomes are often dominated by a single species often forming a vast majority of calibrated or uncalibrated read counts, with _Lactobacillus crispatus_, _Lactobacillus iners_, _G. vaginalis_, and BVAB1 being the most common (CHECK).
+HERE
+- finish explaining how the variation is driven by changes in these taxa, esp G and L 
+- add that the importance of these taxa, and the tendency for one species to domiannt, is a gneral well-suported feature of vaginal mb studies, though the identities varies by population and mgs protocol.
+- segue into further considerations - what is the impact of this variation?
+  - trajectories
+    - impact of big shifts 
+  - DA analysis
+
+(TODO: confirm true that often these species dominate. Also check the efficiency numbers)
+
+
 Consequently, the mean efficiency tends to track that of most dominant species, with _Lactobacillus_-dominated samples typically having an efficiency that is 3-20X greater _Gardnerella_-dominated samples (Figure \@ref(fig:momspi-mean-efficiency-dist)).
+
 Shifts between _Lactobacillus_ and _Gardnerella_ dominance are common in between-women comparisons, and also occasionally occur between subsequent sampling points in individual women (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)), and typically result in substantial fold changes in mean efficiency.
 Examination of the multiplicative trajectories in the proportions of individual species indicates that such transitions can cause spurious fold changes in lower-abundance species (SI Figure TODO).
 In contrast, bias-correction only affects the baseline value of species ratios and not the fold changes.
@@ -162,7 +189,7 @@ The examples above each suggest plausible biologically-significant scenarios in 
 The Bacteroidetes-to-Firmicutes ratio has also been linked to host conditions.
 Yet in the HMP2 IBD dataset, the large variation in this ratio is largely independent of disease status, suggesting that the primary effect of any variation in mean efficiency driven by these phyla would be to increase noise rather than create systematic error in DA analysis.
 
-## Marine sediment growers
+## Growth in marine sediments
 
 As sediment is slowly buried, the concentration of oxygen and nutrients decreases, and cell density decreases; @lloyd2020evid asked whether some taxa are nevertheless able to continue to grow and increase in cell density.
 To measure density with depth, they used community 16S sequencing coupled with measurements of total community density using CARD-FISH, which they combined using community-normalization (Equation X).
