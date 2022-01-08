@@ -1,0 +1,671 @@
+---
+title: "Analysis of Leopold and Busby (2020) for manuscript case study"
+description: This document performs analysis of the data from @leopold2020host to support the fungal case study in the manuscript.
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - R
+  - ref:leopold2020host
+  - differential abundance
+date: 2022-01-08
+bibliography: ../../../main.bib
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: true
+    dev: svg
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  cache = TRUE,
+  autodep = TRUE,
+  cache.comments = FALSE
+)
+```
+
+# Setup
+
+```{r libraries}
+library(here)
+# Tools for microbiome data
+library(speedyseq)
+# Tools for general purpose data manipulation and plotting
+library(tidyverse)
+# ggplot helpers
+library(ggbeeswarm)
+library(ggdist)
+library(cowplot)
+library(patchwork)
+theme_set(theme_cowplot())
+# stats helpers
+library(broom)
+
+library(metacal)
+
+# library(rstanarm)
+# options(mc.cores = 4)
+```
+
+```{r}
+# color pallets from leopold2020host
+pal_treatment <- c("#2F4F4F", "#E69F00", "#56B4E9", "#009E73", "#F0E442")
+pal_region <- c("#A2CD5A","#6E8B3D")
+pal_genotype <- c("#800000FF", "#767676FF", "#CC8214FF", "#616530FF",
+  "#0F425CFF", "#9A5324FF", "#3E3E23FF", "#D6D6CEFF", "#FFB547FF", "#ADB17DFF",
+  "#5B8FA8FF", "#D49464FF")
+```
+
+
+```{r load-data, code_folding = TRUE}
+## From the metacal 2.0 tutorial
+# Download data from https://zenodo.org/record/3872145
+data_path <- here::here("notebook/_data", "leopold2020host")
+# To use a temporary directory:
+# data_path <- file.path(tempdir(), "leopold2020")
+if (!dir.exists(data_path)) {
+  dir.create(data_path, recursive = TRUE)
+  download.file(
+    "https://zenodo.org/record/3872145/files/dleopold/Populus_priorityEffects-v1.2.zip",
+    file.path(data_path, "Populus_priorityEffects-v1.2.zip")
+  )
+  unzip(
+    file.path(data_path, "Populus_priorityEffects-v1.2.zip"), 
+    exdir = data_path
+  )
+}
+
+mock_actual <- file.path(data_path, 
+  "dleopold-Populus_priorityEffects-8594f7c/data/MockCommunities.csv") %>%
+  read.csv(row.names = 1) %>%
+  select(-Sym4) %>%
+  as("matrix") %>%
+  otu_table(taxa_are_rows = FALSE) %>%
+  transform_sample_counts(function(x) close_elts(1 / x))
+mock_taxa <- taxa_names(mock_actual)
+commensal_taxa <- setdiff(mock_taxa, 'Melampsora')
+
+# Rust severity
+rust <- file.path(data_path, 'dleopold-Populus_priorityEffects-8594f7c',
+  'data/rust_measurements.csv'
+) %>%
+  read_csv %>%
+  select(-1)
+# summarize following approach from leopold 
+rust_summary <- rust %>%
+  janitor::clean_names() %>%
+  rename(plant_id = samp_id) %>%
+  with_groups(plant_id, summarize, 
+    # across(ends_with('cm2'), mean)
+    rust_pct = sum(rust_cm2)/sum(leaf_cm2),
+    lesion_pct = sum(lesion_cm2) / sum(leaf_cm2),
+    leaf_area = sum(leaf_cm2),
+    leaf_n = n()
+  )
+
+#> The microbiome data is stored in a phyloseq object,
+ps_raw <- file.path(data_path, 
+  "dleopold-Populus_priorityEffects-8594f7c/output/compiled/phy.rds") %>%
+  readRDS %>%
+  filter_tax_table(.otu %in% mock_taxa) %>%
+  mutate_sample_data(., 
+    Timepoint = factor(Timepoint),
+    sample_sum = sample_sums(.)
+  ) %>%
+  mutate_sample_data(
+    plant_id = str_extract(.sample, 'G[0-9]+\\.T[0-9]+\\.R[0-9]+')
+  ) %>%
+  left_join_sample_data(
+    rust_summary, by = 'plant_id'
+  ) %>%
+  rename_with_sample_data(janitor::make_clean_names)
+
+ps_mock <- ps_raw %>% 
+  subset_samples(samp_type == "Mock") %>%
+  prune_taxa(mock_taxa, .)
+```
+
+Check sample sums,
+
+```{r}
+sam <- ps_raw %>% sample_data %>% as_tibble
+sam %>%
+  as_tibble %>%
+  ggplot(aes(sample_sum, fill = samp_type)) +
+  scale_x_log10() +
+  geom_histogram() +
+  scale_fill_brewer(type = 'qual')
+```
+
+```{r}
+sam %>%
+  filter(sample_sum < 3e3) %>%
+  select(.sample, timepoint, treatment, sample_sum)
+```
+
+The sample with less than 3000 reads is in the 'Negative' treatment group and so will be ignored in our analysis of the T1 samples.
+
+
+Let's check the distribution of proportions of the mock taxa across samples.
+
+```{r}
+ps_raw %>% 
+  filter_sample_data(samp_type == "Experiment", treatment != 'Negative') %>%
+  filter_tax_table(.otu %in% mock_taxa) %>%
+  transform_sample_counts(close_elts) %>%
+  as_tibble %>%
+  ggplot(aes(y = .otu, x = .abundance + 1e-5)) +
+  facet_wrap(~timepoint) +
+  scale_x_log10() +
+  stat_slab()
+```
+
+T1 samples have reads of Melampsora, which may be contamination.
+For our analysis, let's subset to the mock taxa and just the experimental samples, and set Melampsora in T1 to zero.
+
+```{r}
+otu_new <- ps_raw %>% 
+  filter_tax_table(.otu %in% mock_taxa) %>%
+  filter_sample_data(samp_type == "Experiment", treatment != 'Negative') %>%
+  as_tibble %>%
+  mutate(.abundance = ifelse(
+      timepoint == 1 & .otu == 'Melampsora', 0, .abundance
+  )) %>%
+  select(.sample, .otu, .abundance) %>%
+  pivot_wider(names_from = .otu, values_from = .abundance) %>%
+  otu_table(taxa_are_rows = FALSE)
+ps <- ps_raw
+otu_table(ps) <- otu_new
+rm(otu_new)
+```
+
+Confirm that Mel is zero'd in the t1 samples,
+
+```{r}
+ps %>% 
+  prune_taxa('Melampsora', .) %>%
+  as_tibble %>%
+  with_groups(timepoint, summarize,
+    across(.abundance, list(median = median, perc_pos = ~mean(. > 0) ))
+  )
+```
+
+## Bias estimation
+
+We estimate bias using `metacal::estimate_bias()`; see the [metacal tutorial](https://mikemc.github.io/metacal/articles/tutorial.html) for more information.
+@leopold2020host identified the sample Mock.5 as an outlier sample and excluded it when estimating bias.
+One taxon in this sample, Epicoccum, was undetected, and including it leads to a larger standard error especially for this taxon (as seen in the metacal tutorial).
+We could improve our bias estimates by setting this taxon's nominal abundance to 0 in this sample; however, let's just drop this sample to maintain consistent bias estimates with those used in the original study.
+
+```{r estimate-bias}
+control_samples <- ps_mock %>% sample_names %>% setdiff('Mock.5')
+mc_fit <- estimate_bias(
+  ps_mock %>% prune_samples(control_samples, .), 
+  mock_actual %>% prune_samples(control_samples, .), 
+  boot = TRUE
+)
+bias <- coef(mc_fit) %>% print(digits = 2)
+```
+
+```{r, fig.dim = c(5,3)}
+mc_fit_summary <- summary(mc_fit)
+coef_tb <- mc_fit_summary$coefficients
+coef_tb %>%
+  mutate(taxon = fct_reorder(taxon, estimate)) %>%
+  ggplot(aes(taxon, estimate, 
+      ymin = estimate / gm_se^2, ymax = estimate * gm_se^2)) +
+  geom_hline(yintercept = 1, color = "grey") +
+  geom_pointrange() +
+  scale_y_log10() +
+  coord_flip()
+```
+
+# T1 samples
+
+From our previous analyses, we know that there is little impact of bias correction on the primary analyses done on these samples, and also that there is fairly little variation in the mean efficiency in the T1 samples.
+Here we further explore the variation in both the species proportions and the mean efficiency to more fully understand why bias has little impact on DA analysis.
+
+## Setup
+
+Here we subset to the T1 experimental samples and the commensal taxa.
+The analysis of T1 samples by @leopold2020host first subsets to just the 8 commensal (non-pathogenic) inoculum taxa, and we follow suit here.
+It excludes Melampsora and OTUs not identified with the 9 inoculum taxa.
+In addition, we add the sample sums and mean efficiency to the sample data, after subsetting to the commensals.
+
+```{r}
+# Bias among the commensals; for convenience, set relative to max
+bias_t1 <- bias[names(bias) != 'Melampsora']
+bias_t1 <- bias_t1 / max(bias_t1)
+most_efficient_taxon <- which.max(bias_t1) %>% names
+stopifnot(most_efficient_taxon == 'Fusarium')
+
+ps_t1 <- ps %>%
+  filter_sample_data(timepoint == 1) %>%
+  filter_tax_table(.otu %in% commensal_taxa) %>%
+  mutate_sample_data(., 
+    sample_sum = sample_sums(.),
+    mean_efficiency = transform_sample_counts(., close_elts) %>%
+      perturb(bias_t1, norm = 'none') %>% 
+      sample_sums,
+  )
+sam_t1 <- ps_t1 %>% sample_data %>% as_tibble
+```
+
+A small fraction (`r ps_t1 %>% otu_table %>% as('matrix') %>% {mean(. == 0)} %>% signif(digits = 3)`) of the observed counts are zero. 
+For calculations that ignore the counting error, we want to ensure there are only positive abundances.
+We will replace zeros using `zCompositions::cmultRepl()` following @leopold2020host, then recompute the mean efficiency (which should only change very slightly).
+
+```{r}
+stopifnot(taxa_are_rows(ps_t1) == FALSE)
+otu_new <- ps_t1 %>% 
+  otu_table %>% 
+  as('matrix') %>%
+  zCompositions::cmultRepl(
+    method = 'GBM', 
+    output = 'p-counts', 
+    suppress.print = TRUE
+  )
+ps_t1_repl <- ps_t1
+otu_table(ps_t1_repl) <- otu_table(otu_new, taxa_are_rows = FALSE)
+rm(otu_new)
+ps_t1_repl <- ps_t1_repl %>%
+  mutate_sample_data(., 
+    mean_efficiency_initial = mean_efficiency,
+    mean_efficiency = transform_sample_counts(., close_elts) %>%
+      perturb(bias_t1, norm = 'none') %>% 
+      sample_sums,
+  )
+```
+
+Let's create a data frame with the observed and calibrated proportions of each species, with their efficiencies added in.
+
+```{r}
+props <- ps_t1_repl %>%
+  as_tibble %>%
+  left_join(bias_t1 %>% enframe('.otu', 'efficiency'),
+    by = '.otu'
+  ) %>%
+  with_groups(.sample, mutate, 
+    prop_obs = close_elts(.abundance),
+    prop_cal = close_elts(.abundance / efficiency),
+  ) %>%
+  mutate(
+    .otu_fct = fct_reorder(.otu, efficiency)
+  )
+```
+
+## Variation in mean efficiency
+
+Let's examine the variation in mean efficiency
+
+```{r, fig.dim = c(7,4)}
+lyrs <- list(
+  geom_histogram(),
+  scale_x_log10(),
+  expand_limits(x = 1.2),
+  scale_fill_brewer(type = "qual"),
+  labs(
+    x = "Mean efficiency", 
+    y = "Number of samples",
+    # fill = ''
+  )
+)
+
+p1 <- sam_t1 %>%
+  ggplot(aes(mean_efficiency, fill = region)) +
+  lyrs
+p2 <- sam_t1 %>%
+  ggplot(aes(mean_efficiency, fill = treatment)) +
+  lyrs
+p1 / p2
+```
+
+The relative efficiency has a geometric range of `r bias_t1 %>% gm_range %>% signif(3)`-fold and a geometric standard deviation of `r bias_t1 %>% gm_sd %>% signif(3)`-fold.
+But the mean efficiency's geometric range is only `r sam_t1$mean_efficiency %>% gm_range %>% signif(3)`-fold and its geometric standard deviation is just `r sam_t1$mean_efficiency %>% gm_sd %>% signif(3)`-fold.
+
+## Variation in proportions vs mean efficiency
+
+First let's create some summary statistics of the calibrated proportions, to compare to those of the mean efficiency.
+
+```{r}
+props %>%
+  with_groups(.otu_fct, summarize,
+    across(prop_cal, 
+      list(gm_mean = gm_mean, gm_sd = gm_sd, gm_range = gm_range),
+      .names = '{.fn}'
+    )
+  ) %>%
+  arrange(desc(.otu_fct)) %>%
+  mutate(across(-.otu_fct, signif, 3)) %>%
+  knitr::kable()
+```
+
+Now let's create the main figure showing the variation in taxa proportions against that in the mean efficiency, with the individual taxa efficiencies also shown for more context.
+
+Caption: **In the pre-infection samples from @leopold2020host, multiplicative variation in taxa proportions is much larger than that in the mean efficiency.**
+Panel A shows the distribution of the proportions of each commensal isolate (denoted by its genus) across all samples collected prior to pathogen inoculation;
+Panel C shows the distribution of the (estimated) sample mean efficiency across these same samples on the same scale; 
+and Panel B shows the efficiency of each taxon estimated from DNA mock communities as point estimates and 90% bootstrap percentile confidence intervals.
+Efficiencies are shown relative to the most efficiently measured taxon (Fusarium).
+
+```{r}
+rng <- props %>% pull(prop_cal) %>% range
+## species proportions
+p_props <- props %>%
+  ggplot(aes(y = .otu_fct, x = prop_cal)) +
+  scale_x_log10() +
+  stat_slab() +
+  labs(x = 'Proportion', y = NULL)
+## mean efficiency
+p_me <- sam_t1 %>%
+  ggplot(aes(y = 'Mean efficiency', x = mean_efficiency)) +
+  scale_x_log10() +
+  expand_limits(x = rng) +
+  stat_slab() +
+  labs(x = 'Efficiency relative to Fusarium', y = NULL)
+# p_me / p_props + plot_layout(heights = c(0.1, 1))
+## Estimated efficiency with bootstrap CIs
+x <- mc_fit$bootreps %>%
+  data.table::as.data.table(keep.rownames = '.id') %>%
+  select(.id, all_of(commensal_taxa)) %>%
+  mutate(across(-.id, ~. / Fusarium)) %>%
+  pivot_longer(-.id, names_to = 'taxon', values_to = 'efficiency') 
+p_eff <- x %>%
+  mutate(taxon = fct_reorder(taxon, efficiency)) %>%
+  ggplot(aes(y = taxon, x = efficiency)) +
+  stat_pointinterval(.width = 0.9) +
+  scale_x_log10() +
+  labs(x = str_glue('Efficiency relative to Fusarium'), y = NULL)
+```
+
+```{r variation-in-proportions-and-mean-efficiency, fig.dim = c(8.5, 6.5), preview = TRUE}
+p_props + p_eff + p_me + plot_spacer() + 
+  plot_layout(heights = c(1, 0.15), widths = c(1, 0.8), ncol = 2) +
+  plot_annotation(tag_levels = 'A')
+```
+
+# Change in commensals due to infection
+
+Goal: Do a linear regression analysis of change in log proportion following pathogen colonization (from T1 to T2).
+
+Note, I am keeping in the pathogen Melampsora for this analysis.
+The increase in Mel proportion post infection is a major driver of the impact of bias, since it causes the mean efficiency to increase.
+If we instead considered the proportions among just the commensals, then we would get different results.
+The results here, with Mel included, are the most informative for what would happen if we were performing absolute-abundance analysis using total-community normalization.
+
+## Setup
+
+For doing simple linear regression, we must replace zeros with positive values.
+I will use `zCompositions::cmultRepl()` as in @leopold2020host for simplicity and consistency with our other analyses in this case study.
+I will recompute the mean efficiency with these new compositions; however, 
+aero replacement will have a minimal impact on the mean efficiency. 
+
+```{r}
+bias_inf <- bias/bias['Fusarium']
+ps_inf <- ps
+stopifnot(taxa_are_rows(ps_inf) == FALSE)
+otu_new <- ps_inf %>% 
+  otu_table %>% 
+  as('matrix') %>%
+  zCompositions::cmultRepl(
+    method = 'GBM', 
+    output = 'p-counts', 
+    suppress.print = TRUE
+  )
+ps_inf_repl <- ps_inf
+otu_table(ps_inf_repl) <- otu_table(otu_new, taxa_are_rows = FALSE)
+rm(otu_new)
+ps_inf_repl <- ps_inf_repl %>%
+  mutate_sample_data(., 
+    mean_efficiency = transform_sample_counts(., close_elts) %>%
+      perturb(bias_inf, norm = 'none') %>% 
+      sample_sums,
+  )
+```
+
+## Variation in mean efficiency
+
+From our previous explorations, we know that the mean efficiency tends to increase post infection due to the higher proportion of Melampsora.
+
+Let's see this again,
+
+```{r}
+mel <- ps_inf %>% 
+  calibrate(bias = bias_inf) %>%
+  transform_sample_counts(close_elts) %>%
+  prune_taxa("Melampsora", .) %>%
+  otu_table %>%
+  as_tibble %>%
+  select(.sample, melampsora_prop = .abundance)
+sam <- ps_inf_repl %>% sample_data %>% as_tibble %>%
+  left_join(mel, by = '.sample')
+p_hist <- sam %>%
+  ggplot(aes(fill = timepoint, x = mean_efficiency)) +
+  scale_x_log10() +
+  geom_histogram() +
+  scale_fill_brewer(type = "qual") +
+  labs(
+    x = "Mean efficiency", 
+    y = "Number of samples"
+  )
+p_mel <- sam %>%
+  ggplot(aes(y = melampsora_prop, x = mean_efficiency, color = timepoint)) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_continuous(
+    trans = scales::pseudo_log_trans(sigma = 1e-2),
+    breaks = c(0, 0.01, 0.1, 0.5, 1)
+    ) +
+  scale_color_brewer(type = "qual") +
+  labs(
+    y = "Pathogen proportion",
+    x = "Mean efficiency",
+    color = 'Timepoint'
+  )
+```
+
+```{r infection-mean-efficiency-dist, fig.dim = c(6, 6)}
+p_hist / p_mel +
+  plot_annotation(tag_levels = "A")
+```
+
+Let's visualize the pre and post infection mean eff's by host genotype.
+
+```{r}
+ps_inf_repl %>%
+  sample_data %>%
+  as_tibble %>%
+  ggplot(aes(y = genotype, x = mean_efficiency, 
+      color = timepoint)) +
+  scale_x_log10() +
+  geom_boxplot() +
+  geom_quasirandom(groupOnX = FALSE) +
+  scale_color_brewer(type = 'qual', palette = 3)
+```
+
+The mean efficiency generally increases by a similar factor in each genotype.
+
+Let's measure the average fold increase in each genotype.
+
+```{r}
+mean_eff_reg <- ps_inf_repl %>%
+  sample_data %>%
+  as_tibble %>%
+  group_by(genotype) %>%
+  nest %>%
+  mutate(
+    fit = map(data, ~lm(log(mean_efficiency) ~ timepoint, data = .x))
+  ) %>%
+  select(-data) %>% 
+  mutate(across(starts_with('fit'), map, tidy)) %>%
+  unnest(fit)
+```
+
+```{r}
+x <- mean_eff_reg %>%
+  filter(term == 'timepoint2') %>%
+  mutate(across(c(estimate, std.error), exp))
+x %>% select(genotype:std.error) %>% arrange(genotype) %>% 
+  knitr::kable(digits = 3)
+x %>%
+  ggplot(aes(y = genotype, x = estimate)) +
+  expand_limits(x = c(1, 6)) +
+  scale_x_log10() +
+  geom_vline(xintercept = 1, color = 'grey') +
+  geom_point() +
+  geom_linerange(
+    aes(
+      xmin = estimate * std.error^2,
+      xmax = estimate / std.error^2
+    )
+  )
+```
+
+The FC in mean efficiency ranges from `r min(x$estimate) %>% signif(3)` to `r max(x$estimate) %>% signif(3)`.
+
+
+## Simple linear regression of log proportion
+
+```{r}
+x <- ps_inf_repl %>% 
+  as_tibble %>%
+  left_join(bias_inf %>% enframe('.otu', 'efficiency'), by = '.otu')
+```
+
+Run a simple linear regression with lm on log proportion,
+
+```{r}
+x_reg <- x %>%
+  with_groups(.sample, mutate,
+    log_prop = log(close_elts(.abundance))
+  ) %>%
+  filter(.otu %in% commensal_taxa) %>%
+  mutate(
+    offset_obs = 0,
+    offset_cal = log(efficiency / mean_efficiency),
+  ) %>%
+  group_by(.otu, genotype) %>%
+  nest() %>%
+  mutate(
+    fit_obs = map(data, 
+      ~lm(
+        log_prop ~ timepoint + offset(offset_obs), 
+        data = .x,
+      )),
+    fit_cal = map(data, 
+      ~lm(
+        log_prop ~ timepoint + offset(offset_cal), 
+        data = .x,
+      )),
+  )
+```
+
+
+```{r}
+z <- x_reg %>%
+  select(-data) %>% 
+  mutate(across(starts_with('fit'), map, tidy, conf.int = TRUE)) %>%
+  pivot_longer(starts_with('fit'), names_to = 'type', values_to = 'fit', 
+    names_prefix = 'fit_') %>%
+  unnest(fit) %>%
+  ungroup %>%
+  left_join(enframe(bias, '.otu', 'efficiency'), by = '.otu')
+```
+
+```{r}
+z1 <- z %>%
+  filter(term == 'timepoint2') %>%
+  select(.otu, genotype, type, estimate, std.error) %>%
+  pivot_wider(names_from = type, values_from = c(estimate, std.error)) %>%
+  glimpse
+```
+
+Check that the corrections are the same for each taxon within a genotype, but differ by genotype.
+
+```{r, fig.dim = c(6,6)}
+z1 %>%
+  ggplot(aes(y = .otu, x = estimate_cal - estimate_obs, color = .otu)) +
+  scale_color_manual(values = pal_genotype, guide = NULL) +
+  facet_wrap(~genotype) +
+  stat_pointinterval()
+```
+
+The corrections are the same within genotypes, as expected, and vary to a small degree between genotypes.
+They tend to be larger for Eastern genotypes; this matches with the finding that Eastern genotypes are more susceptible to rust, and so we should expect the Melampsora proportions to be larger.
+
+Let's visualize the impact of bias correction on the coefficients, in a couple ways.
+First, let's plot the uncorrected against the corrected estimates.
+
+```{r, fig.dim = c(10, 8), layout="l-body-outset"}
+z1 %>%
+  ggplot(aes(estimate_cal, estimate_obs, color = .otu)) +
+  scale_color_manual(values = pal_genotype) +
+  facet_wrap(~genotype, ncol = 4) +
+  theme_minimal_grid() +
+  theme() +
+  coord_fixed() +
+  scale_x_continuous(breaks = seq(-6, 2, 2)) +
+  labs(
+    x = 'Estimate with bias correction',
+    y = 'Estimate without bias correction',
+    color = 'Taxon'
+  ) +
+  geom_hline(yintercept = 0, color = 'black') +
+  geom_vline(xintercept = 0, color = 'black') +
+  geom_abline(color = 'darkred') +
+  geom_linerange(
+    aes(
+      xmin = estimate_cal - 2 * std.error_cal,
+      xmax = estimate_cal + 2 * std.error_cal,
+    )
+  ) +
+  geom_linerange(
+    aes(
+      ymin = estimate_obs - 2 * std.error_obs,
+      ymax = estimate_obs + 2 * std.error_obs
+    )
+  ) +
+  geom_point(size = 2)
+```
+
+This figure makes it clear how the constant shift maintains a perfect correlation between estimates.
+But it is perhaps easier to see the biological impact on the results if we plot the two estimate types in a straight line,
+
+
+```{r infection-lfc-estimates, fig.dim = c(8, 8)}
+z %>%
+  filter(term == 'timepoint2') %>%
+  mutate(
+    across(.otu, fct_reorder, estimate),
+    across(type, fct_recode, Corrected = 'cal', Uncorrected = 'obs')
+  ) %>%
+  ggplot(aes(y =.otu, color = type,
+      x = estimate, 
+      xmin = estimate - 2 * std.error,
+      xmax = estimate + 2 * std.error
+  )) +
+  # theme_minimal_hgrid() +
+  theme(
+    axis.line.y = element_blank()
+  ) +
+  colorblindr::scale_color_OkabeIto() +
+  facet_wrap(~genotype, ncol = 4) +
+  labs(
+    x = 'Estimated LFC',
+    y = 'Taxon',
+    color = 'Type'
+  ) +
+  geom_vline(xintercept = 0, size = 0.5, color = 'grey') +
+  geom_pointrange(fatten = 2)
+```
+
+# Session info {.appendix}
+
+<details><summary>Click for session info</summary>
+```{r, R.options = list(width = 83)}
+sessioninfo::session_info()
+```
+</details>
