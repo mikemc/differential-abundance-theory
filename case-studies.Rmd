@@ -27,7 +27,7 @@ To understand why, we compared the multiplicative variation taxa proportions wit
 The proportions of each taxon varied substantially across samples, much more so than the mean efficiency, which had a geometric range of 1.57X and a geometric standard deviation of just 1.06X (Figure \@ref(fig:leopold2020host-variation)).
 <!-- Explanation -->
 Why does the mean efficiency vary so little despite substantial multiplicative variation in the efficiency among taxa and in the taxa proportions across samples?
-This answer relates to the fact that the mean efficiency is a weighted _arithmetic_ average of species proprotions and so is insensitive to large multiplicative variation in low-proportion species.
+This answer relates to the fact that the mean efficiency is a weighted _arithmetic_ average of species proportions and so is insensitive to large multiplicative variation in low-proportion species.
 The pre-infection samples in the @leopold2020host study are always dominated by the three species with the highest efficiencies, whose efficiencies vary only by 3X (and just 1.5X between the two most dominant).
 The lowest efficiency species, despite having large variation in their proportion on the log scale, are always rare (proportions $\ll 1$, even after bias correction) and hence don't significantly affect the mean efficiency.
 <!-- Conclusion -->
@@ -41,15 +41,16 @@ Because the log mean efficiency varies much less than the log proportions for ea
 <!-- - I don't consider/mention whether there are actually 'significant' DA results; that would perhaps be a useful piece of the story. Or: I should perhaps say what the result was of each of the two analyses, so it is more concrete what results are not changing. -->
 <!-- - Consider expanding on the impact of bias, using Penicillium as an example: It's proportion is generally ~6X lower without correction, but its changes across samples are not affected by correction -->
 
-We additionally considered the potential for bias to impact analysis of how the abundances of commensal taxa changed across experimental timepoints in response to infection.
-First, we considered regression analysis where log proportion is the response variable.
-The observation of tissue lesions and a high observed proportion of the pathogen in the ITS profiles indicates that the pathogen grew to high abundance in most plants, so that we expect the proportion of commensals to typically decrease due to the sum-to-one constraint.
-As expected, regression analysis shows negative LFCs after infection regardless of whether bias is accounted for; however, LFCs are substantially lower (TODO) without bias correction.
-Because the pathogen tends to dominate ITS profiles in post-infection samples, the mean efficiency is much higher in post-infection samples, leading to artificially low LFCs for all species when bias is not accounted for.
+We additionally considered the potential for bias to impact analysis of how commensal taxa responded to infection.
+In particular, it is interesting to consider whether any commensals are able to increase in absolute concentration in response to infection.
+The experiment performed by @leopold2020host does not allow absolute-abundance measurement; nevertheless, the results of the previous sections allow us to consider the impact that bias would have on an analysis of absolute genome concentration 
+measured using the total-community normalization method (Equation \@ref(eq:density-prop-meas)).
+It is first useful to consider how bias impacts the estimated change in log proportion of each commensal following infection.
+The pathogen is absent in pre-infection samples but tends to dominate the community post-infection (Figure \@ref(fig:leopold2020host-infection-mean-efficiency-dist)), leading to an average increase in mean efficiency ranging from 3.5X to 5X across host genotypes and an expectation that commensals will typically decrease in proportion due to the sum-to-one constraint.
+Without bias correction, the log proportion of commensals decrease in each host genotype, often substantially (log-e fold changes less than -2); however, bias leads to overly negative LFCs due to the higher mean efficiency in post-infection samples.
+Bias correction substantially lessens the magnitude of LFC estimates, in some cases leading to estimates that are approximately 0 or slightly positive (Figure \@ref(fig:leopold2020host-infection-lfc)).
 
-We then considered the impact this shift in mean efficiency might have on a regression analysis with log absolute genome concentration as the response.
-The actual experiment does not allow absolute-abundance measurement; nevertheless, it is illustrative to consider hypothetical scenarios in which absolute genome concentration were measured using one of the methods described in Section \@ref(abundance-measurement).
-In particular, we consider the total-community normalization method (Equation \@ref(eq:density-prop-meas)), for which shifts in MGS mean efficiency can lead to inaccurate LFCs.
+Now, consider the impact this shift in mean efficiency might have on a regression analysis with log absolute genome concentration as the response, if measured using the total-community normalization method (Equation \@ref(eq:density-prop-meas)).
 We consider two scenarios.
 _Scenario 1:_ Total genome concentration in each sample is perfectly known and used to measure the concentrations of individual taxa via Equation \@ref(eq:density-prop-meas).
 In this case, bias in the MGS measurements would create absolute errors in the LFCs for genome concentration identical to those for proportions.
@@ -58,8 +59,7 @@ Since the sum-to-one constraint of proportions no longer applies, the LFCs will 
 _Scenario 2:_ Total ITS concentration is measured by qPCR with the same primers and PCR protocol used for ITS sequencing, and used without any correction to measure individual taxa concentration with the total-community normalization method.
 In this case, we should expect the increase in mean efficiency to have little to no impact on LFCs, since it would be offset by the increase in mean efficiency of the total-concentration measurement.
 Moreover, since the total ITS concentration and ITS sequencing are both performed on the extracted DNA, we can also expect the effect of taxonomic bias caused by DNA sequencing to be offset.
-
-TODO: Write a concluding statement about how even in cases where the mean efficiency shifts,  the impact of bias in a proportion-based analysis depends on how exactly the total measurement is made and used (and an appropriate design can account for bias without the need for mock measurements).
+Thus, the systematic shift in mean efficiency following infection may or may not significantly impact the LFC estimates depending on how the total-community measurement is made prior to normalization.
 
 <!-- cut text -->
 <!-- - Genome concentration was chosen as the measure of abundance, due to the tendency for fungi to grow in forms where cells are not easily demarcated. -->
