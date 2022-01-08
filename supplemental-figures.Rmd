@@ -4,14 +4,40 @@
 
 ```{r leopold2020host-variation, fig.cap = '(ref:cap-leopold2020host-variation)'}
 fs::path(
-  'notebook/_posts/2022-01-06-leopold2020host-t1-samples',
-  'leopold2020host-t1-samples_files/figure-html5',
+  'notebook/_posts/2022-01-08-leopold2020host-case-study',
+  'leopold2020host-case-study_files/figure-html5',
   'variation-in-proportions-and-mean-efficiency-1.svg'
   ) %>%
   include_svg
 ```
 
 (ref:cap-leopold2020host-variation) **In the pre-infection samples from @leopold2020host, multiplicative variation in taxa proportions is much larger than that in the mean efficiency.** Panel A shows the distribution of the proportions of each commensal isolate (denoted by its genus) across all samples collected prior to pathogen inoculation; Panel C shows the distribution of the (estimated) sample mean efficiency across these same samples on the same scale; and Panel B shows the efficiency of each taxon estimated from DNA mock communities as point estimates and 90% bootstrap percentile confidence intervals. Efficiencies are shown relative to the most efficiently measured taxon (_Fusarium_).
+
+
+
+```{r leopold2020host-infection-mean-efficiency-dist, fig.cap = '(ref:cap-leopold2020host-infection-mean-efficiency-dist)'}
+fs::path(
+  'notebook/_posts/2022-01-08-leopold2020host-case-study',
+  'leopold2020host-case-study_files/figure-html5',
+  'infection-mean-efficiency-dist-1.svg'
+  ) %>%
+  include_svg
+```
+
+(ref:cap-leopold2020host-infection-mean-efficiency-dist) **The mean efficiency tends to increase after infection due to the high proportion of the pathogen.**
+
+
+
+```{r leopold2020host-infection-lfc, fig.cap = '(ref:cap-leopold2020host-infection-lfc)'}
+fs::path(
+  'notebook/_posts/2022-01-08-leopold2020host-case-study',
+  'leopold2020host-case-study_files/figure-html5',
+  'infection-lfc-estimates-1.svg'
+  ) %>%
+  include_svg
+```
+
+(ref:cap-leopold2020host-infection-lfc) **Bias correction increases the estimated increase in log proportion in response to infection for commensal taxa across all host genotypes.** Shown are the estimated log fold change (LFC) and 95% confidence intervals from simple linear regression of log (base e) proportion against experimental timepoint for commensal taxa. Negative values indicate that the proportion of the taxon decreased on average in response to infection, which we expect due to the increase in pathogen abundance and the sum-to-one constraint. Bias leads to artificially low estimates, as the pathogen drives an increase in mean efficiency. In Western genotypes, several taxa whose proportion is observed to decrease without correction are instead found to remain stable or even increase when bias is corrected.
 
 <!-- Implications: MOMSPI -->
 
