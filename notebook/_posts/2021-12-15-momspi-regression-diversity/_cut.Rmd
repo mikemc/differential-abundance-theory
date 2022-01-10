@@ -1,0 +1,327 @@
+
+# Regression - new 
+
+Let's create a data frame with the abundances and offsets for the different regressions.
+For the analyses that do not model the counting process, we'll adjust the proportions to the Dirichlet posterior mean, with the prior set to the average proportions across all samples.
+
+```{r}
+taxa_mean_prop <- momspi_div %>%
+  otu_table %>%
+  transform_sample_counts(close_elts) %>%
+  orient_taxa(as = 'cols') %>%
+  as('matrix') %>%
+  colMeans
+stopifnot(sum(taxa_mean_prop) == 1)
+prior_vec <- taxa_mean_prop * ntaxa(momspi)
+stopifnot(identical(length(prior_vec), ntaxa(momspi)))
+# Note the need for the seq_along trick to get phyloseq to allow this
+# adjustment
+momspi_div_adj <- momspi_div %>% 
+  transform_sample_counts(~ prior_vec[seq_along(.x)] + .x) %>%
+  transform_sample_counts(close_elts) %>%
+  otu_table %>%
+  as_tibble %>%
+  rename(prop_adj = .abundance)
+```
+
+```{r}
+x <- momspi_div %>%
+  as_tibble %>%
+  rename(count = .abundance) %>%
+  with_groups(.sample, mutate,
+    prop_raw = close_elts(count),
+  ) %>%
+  filter(.otu %in% taxa_to_test) %>%
+  left_join(by = c('.sample', '.otu'), momspi_div_adj) %>%
+  left_join(bias_all %>% select(.otu, efficiency), by = '.otu') %>%
+  mutate(
+    # Offset for log link when bias is ignored
+    offset_obs = log(sample_sum),
+    # Offset for log link accounting for bias
+    offset_cal = log(sample_sum) + log(efficiency / mean_efficiency),
+  ) %>%
+  # Calibrated proportions
+  with_groups(.sample, mutate,
+    across(starts_with('prop_'), .names = '{.col}_cal', 
+      ~close_elts(. / efficiency))
+  )
+all.equal(x$prop_raw_cal * x$sample_sum / exp(x$offset_cal), , x$prop_raw)
+
+stopifnot()
+```
+
+## Regression on rank
+
+Similar to Wilcoxin test; approximately equivalent when there are no ties.
+
+```{r}
+stat_test <- function(ps) {
+  ps %>%
+    transform_sample_counts(close_elts) %>%
+    filter_sample_data(div_group %in% c('Low', 'High')) %>%
+    prune_taxa(taxa_to_test, .) %>%
+    as_tibble %>%
+    with_groups(.otu, nest) %>%
+    mutate(
+      fit = map(data,
+        ~lm(
+          rank(.abundance, ties.method = 'average')/n() ~ div_group, 
+          data = .x
+        )
+      ),
+    ) %>%
+    select(-data)
+  # %>% unnest(fit)
+}
+res_div_rank <- list(
+  'Observed' = momspi_div_prop_adj,
+  'Calibrated' = momspi_div_prop_adj %>% calibrate(bias_all_vec)
+) %>%
+  map_dfr(stat_test, .id = 'type')
+res_div_rank_tidy <- res_div_rank %>%
+  mutate(across(fit, map, broom.mixed::tidy)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)')
+```
+
+```{r}
+plot_estimates(res_div_rank_tidy)
+```
+
+NOTE: I think the results where quite different when zeros are replaced with the same value for each taxon (????)
+
+Try the same thing without zero replacement,
+
+```{r}
+stat_test <- function(ps) {
+  ps %>%
+    transform_sample_counts(close_elts) %>%
+    filter_sample_data(div_group %in% c('Low', 'High')) %>%
+    prune_taxa(taxa_to_test, .) %>%
+    as_tibble %>%
+    with_groups(.otu, nest) %>%
+    mutate(
+      fit = map(data,
+        ~lm(
+          rank(.abundance, ties.method = 'average')/n() ~ div_group, 
+          data = .x
+        )
+      ),
+    ) %>%
+    select(-data)
+  # %>% unnest(fit)
+}
+res_div_rank <- list(
+  'Observed' = momspi_div,
+  'Calibrated' = momspi_div %>% calibrate(bias_all_vec)
+) %>%
+  map_dfr(stat_test, .id = 'type')
+res_div_rank_tidy <- res_div_rank %>%
+  mutate(across(fit, map, broom.mixed::tidy)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)')
+```
+
+```{r}
+plot_estimates(res_div_rank_tidy)
+```
+
+
+This is very mysterious. Needs more investigation before we report these results.
+
+## Gamma-Poisson regression
+
+HERE. Don't have time to mess with this for now. Set eval to false for now.
+
+
+```{r}
+library(rstanarm)
+options(mc.cores = parallel::detectCores())
+```
+
+HERE. Might want to add the (lo) species efficiency to the offset, though it should make absolutely no difference to the fitted models.
+
+HERE. Might make sense to use flat priors or MLE inference, to disable regularization, so that the results are most directly comparable to our prediction that the effect of calibration is to shift the coefficients for each species by approximately the same amount.
+
+```{r}
+stat_test <- function(ps) {
+  ps %>%
+    prune_taxa(taxa_to_test, .) %>%
+    filter_sample_data(div_group %in% c('Low', 'High')) %>%
+    as_tibble %>%
+    # left_join(bias_all %>% select(.otu, efficiency), by = '.otu') %>%
+    # mutate(offset = offset + log(efficiency)) %>%
+    with_groups(.otu, nest) %>%
+    mutate(
+      fit = map(data,
+        ~stan_glm(
+          .abundance ~ div_group + offset(offset), 
+          data = .x, seed = 42,
+          family = neg_binomial_2, 
+          algorithm = 'sampling'
+          # algorithm = 'optimizing'
+          # algorithm = 'meanfield'
+        )
+      ),
+    ) %>%
+    select(-data)
+  # %>% unnest(fit)
+}
+res_div_gp <- list(
+  'Observed' = momspi_div %>% mutate_sample_data(offset = gp_offset_obs),
+  'Calibrated' = momspi_div %>% mutate_sample_data(offset = gp_offset_cal)
+) %>%
+  map_dfr(stat_test, .id = 'type')
+# saveRDS(res_div_gp, 'res_div_gp-meanfield.rds')
+# saveRDS(res_div_gp, 'res_div_gp.rds')
+res_div_gp_tidy <- res_div_gp %>%
+  mutate(across(fit, map, broom.mixed::tidy)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)')
+```
+
+```{r}
+plot_estimates(res_div_gp_tidy)
+```
+
+interpretation:
+
+- The prop of most species is greater in the high (observed) diversity samples, calibrated or not, because the low-diversity samples tend to be dominated by Lactobacillus (especially cripatus and iners).
+- Because of the sum-to-one constraint, this might just be a consequence of Lacto's having lower abundance - aka a compositional effect
+  - consider talking about this in the case study.
+- This compositional effect is compounded by bias, since Lactos also have high efficiency.
+- hence the observed increases are even larger than the bias-corrected (calibrated) ones.
+- interesting to see how some taxa have a much smaller impact from calibration (Gard and BVAB1 especiaully).
+  - Perhaps this has to do with these species often being dominant?
+    - this means that there are conflicting asssociative forces acting on them - high diversity = low lactobacillus = higher abundance, but also places a cap on how high in abundance these species can be. but this argument doesn't explain why our results wouldn't still apply
+  - Are the priors having an impact? What if we flatten the prior on the coefficient?
+  - Is there something about working on counts that is causing the effect?
+  - I can probably learn something by checking the fit on Gard.
+<!--  -->
+
+### flat(er) priors
+
+```{r}
+stat_test <- function(ps) {
+  ps %>%
+    prune_taxa(taxa_to_test, .) %>%
+    filter_sample_data(div_group %in% c('Low', 'High')) %>%
+    as_tibble %>%
+    with_groups(.otu, nest) %>%
+    mutate(
+      fit = map(data,
+        ~stan_glm(
+          .abundance ~ div_group + offset(offset), 
+          data = .x, seed = 42,
+          family = neg_binomial_2, 
+          # prior_intercept = NULL,
+          prior = normal(0, 100),
+          # algorithm = 'sampling'
+          # algorithm = 'optimizing'
+          algorithm = 'meanfield'
+        )
+      ),
+    ) %>%
+    select(-data)
+  # %>% unnest(fit)
+}
+res_div_gp_flat <- list(
+  'Observed' = momspi_div %>% mutate_sample_data(offset = gp_offset_obs),
+  'Calibrated' = momspi_div %>% mutate_sample_data(offset = gp_offset_cal)
+) %>%
+  map_dfr(stat_test, .id = 'type')
+saveRDS(res_div_gp_flat, 'res_div_gp_flat-meanfield.rds')
+# saveRDS(res_div_gp_flat, 'res_div_gp.rds')
+```
+
+```{r}
+res_div_gp_flat_tidy <- res_div_gp_flat %>%
+  mutate(across(fit, map, broom.mixed::tidy)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)')
+```
+
+```{r}
+p1 <- res_div_gp_flat_tidy %>%
+  ggplot(aes(y = type, x = estimate)) +
+  ggdist::geom_dots()
+p2 <- res_div_gp_flat_tidy %>%
+  mutate(
+    .otu_fct = fct_reorder(.otu, estimate, .fun = min)
+  ) %>%
+  ggplot(aes(y = .otu_fct, x = estimate, color = type)) +
+  geom_vline(xintercept = 0, color = 'grey') +
+  geom_pointrange(
+    aes(
+      xmin = estimate - 2*std.error,
+      xmax = estimate + 2*std.error
+    ))
+p1 / p2 +
+  plot_layout(ncol = 1, heights = c(0.2, 1))
+```
+
+Widening the priors seems to have no impact
+
+### checking on gard
+
+```{r}
+fit <- res_div_gp %>%
+  filter(.otu == 'Gardnerella_vaginalis', type == 'Observed') %>%
+  pull(fit) %>% .[[1]]
+fit %>% summary
+```
+
+```{r, eval = F}
+x <- fit$data %>% as_tibble
+y <- x %>% pull(.abundance)
+# launch_shinystan(fit, ppd = TRUE)
+y_rep <- posterior_predict(fit)
+dim(y_rep)
+```
+
+Let's look at the log proportion.
+To make the distributions more directly comparaible, I'll add the species efficiency in the calibrated part.
+
+```{r}
+eff <- bias_all_vec['Gardnerella_vaginalis']
+x1 <- x %>%
+  select(-offset) %>%
+  mutate(gp_offset_cal = gp_offset_cal + log(eff)) %>%
+  pivot_longer(starts_with('gp_offset'), names_to = 'offset_type', values_to = 'offset') %>%
+  mutate(across(offset_type, str_extract, pattern = '(obs|cal)'))
+```
+```{r}
+x1 %>%
+  ggplot(aes(log(.abundance + 0.3) - offset, fill = div_group)) +
+  facet_wrap(~offset_type, ncol = 1) +
+  geom_histogram()
+```
+
+```{r}
+x1 %>%
+  mutate(log_prop = log(.abundance + 0.3) - offset) %>%
+  ggplot(aes(y = div_group, x = log_prop)) +
+  facet_wrap(~offset_type) +
+  ggdist::stat_halfeye()
+```
+
+```{r}
+x1 %>%
+  mutate(log_prop = log(.abundance + 0.3) - offset) %>%
+  with_groups(c(offset_type, div_group), summarize, across(log_prop, mean))
+```
+
+```{r}
+res_div_gp_tidy %>% filter(.otu == 'Gardnerella_vaginalis')
+```
+
+The estimated coefficients are smaller than the differences in the means.
+
+
+Can we understand why there is relatively little impact of calibration?
+
+Should also compare for a taxon where there is a larger impact.
+
+C
+
+

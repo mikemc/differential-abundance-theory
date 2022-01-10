@@ -106,3 +106,21 @@ bias_all <- tax_table(momspi) %>% as_tibble %>%
     across(efficiency, ~ . / max(.))
   )
 bias_all_vec <- bias_all %>% select(.otu, efficiency) %>% deframe 
+
+
+## Function for replacing zeros
+adjust_dirchlet <- function(ps) {
+  taxa_mean_prop <- ps %>%
+    otu_table %>%
+    transform_sample_counts(close_elts) %>%
+    orient_taxa(as = 'cols') %>%
+    as('matrix') %>%
+    colMeans
+  stopifnot(sum(taxa_mean_prop) == 1)
+  prior_vec <- taxa_mean_prop * ntaxa(ps)
+  stopifnot(identical(length(prior_vec), ntaxa(ps)))
+  # Note the need for the seq_along trick to get phyloseq to allow this
+  # adjustment
+  ps %>% 
+    transform_sample_counts(~ prior_vec[seq_along(.x)] + .x)
+}
