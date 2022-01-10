@@ -189,43 +189,76 @@ The examples above each suggest plausible biologically-significant scenarios in 
 The Bacteroidetes-to-Firmicutes ratio has also been linked to host conditions.
 Yet in the HMP2 IBD dataset, the large variation in this ratio is largely independent of disease status, suggesting that the primary effect of any variation in mean efficiency driven by these phyla would be to increase noise rather than create systematic error in DA analysis.
 
-## Growth in marine sediments
+## Microbial growth in marine sediments
 
-As sediment is slowly buried, the concentration of oxygen and nutrients decreases, and cell density decreases; @lloyd2020evid asked whether some taxa are nevertheless able to continue to grow and increase in cell density.
-To measure density with depth, they used community 16S sequencing coupled with measurements of total community density using CARD-FISH, which they combined using community-normalization (Equation X).
-(The authors refer to these absolute density measurements as FRAxC measurements.)
-The authors assessed whether density of bacterial and archaeal families increased with depth, using linear regression on log cell density to infer the exponential growth (or decay) rate over the first 3 cm below the bioirrigation layer (corresponding to $\sim 8$ years of burial time). (Per time after converting depth -> time)
-The authors did this for two cores, and checked the inferences from these sequencing-based measurements against targeted measurements (qPCR) of 16S concentration for particular taxa.
-They further checked w/ sequencing-based growth-rate inference from two laboratory incubations.
+Our route for mean efficiency to become associated with the covariate is if the covariate quantifies a biological process that preferentially selects for a microbial trait that also tends to increase or decrease measurement efficiency.
+We illustrate this potential mechanism with a study of microbial growth in marine sediments.
 
-The authors attempted to explicitly account for bias by arguing that a consistent taxonomic bias would cancel in the observed log-fold-changes that determine the inferred exponential growth rates (see also @kevorkian2018esti); however, their calculations neglected the impact of changes in mean efficiency which do not cancel and may lead to spurious conclusions (previous section).
-We were therefore interested in whether the unaccounted for error caused by bias might have led to spurious inferences about which species were increasing with depth.
-Supposing the CARD-FISH measurements accurately measured total density, our results from the previous section indicate that a systematic error in growth rates would arise if the log mean efficiency systematically changed with depth.
-Diversity is sufficiently high that this systematic error is unlikely to be driven by just a few species, as in the vaginal microbiome and fungal case studies.
-But it is possible that the covariate (burial time) selects directly on a species efficiency as well as its ability to grow. 
-In particular, we considered that microbes with tougher cell walls would tend to persist longer (alive or dead) in the sediment, while at the same time being more difficult to extract DNA from than microbes with weaker cell walls.
-In this case, we would expect the relative abundance of tougher species to increase with depth and hence the mean extraction efficiency to decrease, which in turn would lead to inflated growth-rate estimates for all taxa; a possible end result would be that taxa that are just persisting or even slowly dying off would be mistakenly inferred to have positive growth.
+The surface layers of marine sediments harbor diverse and abundant microbiomes. Total cell density and species richness decrease with depth as resources are consumed in older, deeper sediment layers; however, some taxa are able to grow and increase in density as they are slowly buried.
+@lloyd2020evid performed a systematic assessment of growth rates of bacterial and archaeal taxa over a depth of 10 cm (corresponding to ~40 years of burial time) in sediment of the White Oak River estuary.
+To estimate growth rate, the authors first measured absolute cell density of microbial taxa using the total-community normalization method (Equation \@ref(eq:density-prop-meas)), with taxa proportions measured with 16S amplicon sequencing and total community density measured by directly counting cells using epifluorescence microscopy (CARD-FISH).
+The authors refer to these absolute densities as FRAxC measurements, for 'fraction of 16S reads times total cell counts'.
+The FRAxC measurements were used to infer growth rate from the slope of a simple linear regression of log cell density against burial time over the first 3 cm below the bioirrigation layer (corresponding to $\sim 8$ years of burial).
+To validate the inference of positive growers, the authors compared the growth rates from FRAxC-based inference from two sediment cores, qPCR measurements in these cores for a few reference taxa, and FRAxC-based inference in two replicate laboratory incubation experiments.
+
+Taxonomic bias could lead to systematic error in FRAxC-derived growth rates if sample mean efficiency tends to systematically vary with burial time (or equivalently, depth).
+One possibility is that microbes with tougher cell walls tend to persist longer (alive or dead) in the sediment, while at the same time being more difficult to extract DNA from than microbes with weaker cell walls.
+In this case, we would expect the relative abundance of tougher species to increase with depth and hence the mean extraction efficiency to decrease, which in turn would lead to inflated growth-rate estimates for all taxa; a possible end result would be that taxa that decay sufficiently slowly would be mistakenly inferred to have positive growth.
+
+```{r}
+x <- here(
+  'notebook/_posts/2022-01-08-lloyd2020evi-case-study/_output/table1-tidy.rds'
+) %>% readRDS
+bathy_core30_fraxc <- x %>%
+  filter(exp_name == 'Core 30', str_detect(clade, 'Bathyarchaeota'), 
+    meas_type == 'FRAxC') %>%
+  pull(doubling_rate)
+bathy_core30_qpcr <- x %>%
+  filter(exp_name == 'Core 30', str_detect(clade, 'Bathyarchaeota'), 
+    meas_type == 'qPCR') %>%
+  pull(doubling_rate)
+bathy_core32_fraxc <- x %>%
+  filter(exp_name == 'Core 32', str_detect(clade, 'Bathyarchaeota'), 
+    meas_type == 'FRAxC') %>%
+  pull(doubling_rate)
+bathy_core32_qpcr <- x %>%
+  filter(exp_name == 'Core 32', str_detect(clade, 'Bathyarchaeota'), 
+    meas_type == 'qPCR') %>%
+  pull(doubling_rate)
+mbgd_core32_fraxc <- x %>%
+  filter(exp_name == 'Core 32', str_detect(clade, 'MBG-D'), 
+    meas_type == 'FRAxC') %>%
+  pull(doubling_rate)
+mbgd_core32_qpcr <- x %>%
+  filter(exp_name == 'Core 32', str_detect(clade, 'MBG-D'), 
+    meas_type == 'qPCR') %>%
+  pull(doubling_rate)
+```
 
 We can test the hypothesis that systematic variation in log mean efficiency with depth distorts inferred growth rates using the qPCR measurements of two clades also collected by @lloyd2020evid.
-qPCR measurements of specific clades are also subject to taxonomic bias, but not the compositional constraint of sequencing, or at least are expected to experience it to a much weaker extent (Section \@ref(review-absolute-methods)). 
-Hence we expect the systematic fold error in qPCR measurements to be approximately constant across samples and for targeted qPCR measurements to yield relatively accurate estimates of growth rates.
-Comparing qPCR to FRAxC growth rates on the same taxa allows us to estimate the systematic error in the FRAxC growth rates, equal to the rate of change of log mean efficiency with depth.
-Because the same error applies to all taxa, these targeted comparisons inform us about the impact of bias on the growth rates of all taxa.
-
-We compared the growth rates for taxa with both FRAxC and qPCR values for the two sediment cores, as reported in Table 1.
-The first soil core included qPCR measurements of a single archaeal clade, _Bathyarchaeota_, for which growth rates by qPCR and FRAxC were nearly identical (doubling rates of 0.099/yr by FRAxC and 0.097/yr by qPCR).
+In Section \@ref(review-absolute-methods), we argue that taxonomic bias in targeted qPCR measurements is expected to create a roughly constant fold error and yield fold changes in absolute density that are relatively unaffected by changes in mean efficiency.
+Thus comparing qPCR to FRAxC growth rates on the same reference taxa allows us to estimate the systematic error in FRAxC growth rates.
+Because the systematic error in regression slopes due to bias is the same for each taxon (Equation \@ref(eq:regression-error)), these comparisons allow us to draw conclusions about the accuracy of FRAxC growth rates for all taxa.
+<!-- Our aim is to compare the growth rates for taxa with both FRAxC and qPCR values for the two sediment cores, as reported in Table 1. -->
+The first soil core included qPCR measurements of a single archaeal clade, _Bathyarchaeota_, for which growth rates by qPCR and FRAxC were nearly identical (doubling rates of `r round(bathy_core30_fraxc, 3)`/yr by FRAxC and `r round(bathy_core30_qpcr, 3)`/yr by qPCR).
 The second soil core included qPCR measurements of _Bathyarchaeota_ and a second clade, _Thermoprofundales_/MBG-D.
-In this core, FRAxC and qPCR growth rates differed more substantially, with growth rates from FRAxC being larger by 0.012/yr for _Bathyarchaeota_ (0.112/yr by FRAxC and 0.100/yr by qPCR) and by 0.086/yr for _Thermoprofundales_/MBG-D (0.294/yr by FRAxC and 0.208/yr by qPCR).
-A low number of experimental samples and noise in both the FRAxC and qPCR measurements place signficant uncertainty in these measurements; however, the fact that FRAxC-derived growth rates are larger than qPCR-derived rates in all three cases is consistent with our hypothesis that mean efficiency decreases with depth in a manner that systematically biases FRAxC-derived rates to higher values.
-The differences in growth rate are small in absolute terms; however, the maximum observed difference of 0.086/yr is significant for this low nutrient environment, where growth rates of the identified positive growers ranged between 0.04/yr and 0.5/yr.
+In this core, FRAxC and qPCR growth rates differed more substantially, with growth rates from FRAxC being larger by `r round(bathy_core32_fraxc - bathy_core32_qpcr, 3)`/yr for _Bathyarchaeota_ (`r round(bathy_core32_fraxc, 3)`/yr by FRAxC and `r round(bathy_core32_qpcr, 3)`/yr by qPCR) and by `r round(mbgd_core32_fraxc - mbgd_core32_qpcr, 3)`/yr for _Thermoprofundales_/MBG-D (`r round(mbgd_core32_fraxc, 3)`/yr by FRAxC and `r round(mbgd_core32_qpcr, 3)`/yr by qPCR).
+A low number of experimental samples and noise in both the FRAxC and qPCR measurements place significant uncertainty in these measurements; however, the fact that FRAxC-derived growth rates are larger than qPCR-derived rates in all three cases is consistent with our hypothesis that mean efficiency decreases with depth in a manner that systematically biases FRAxC-derived rates to higher values.
+The differences in growth rate are small in absolute terms; however, the maximum observed difference of 0.086/yr suggests an error large enough to impact results for some taxa classified as positive growers, whose FRAxC growth rates ranged between 0.04/yr and 0.5/yr.
 Overall, the comparison between FRAxC and qPCR measurements gives support to the study conclusions, but suggest that species at the lower end of this range of positive FRAxC-derived rates may in fact be merely persisting or even slowly declining in abundance.
-    
-Caveats that might be instructive to mention
 
-- qPCR and seq analysis are both at ~family level; this is prob not a big deal when it comes to inferring the systematic variation in mean efficiency though, since qPCR and 16S seq share a lot of bias
-- relic dna
-- possibility of non-genetic variation -> change in efficiency with depth. This could still lead to a change in mean efficiency, but would offset the effect for these particular species.
-- possible error/bias in CARD-FISH
+<!-- notes/questions -->
+
+<!-- - also bring in the incubation experiments as providing further evidence? -->
+<!-- - discuss that kl et al attempted to account for bias, incorrected concluded consistent bias couldn't mess up results? -->
+<!-- - discuss other mech's that could impact mean eff, which might even push in other directions? -->
+
+<!-- Caveats that might be instructive to mention -->
+
+<!-- - qPCR and seq analysis are both at ~family level; this is prob not a big deal when it comes to inferring the systematic variation in mean efficiency though, since qPCR and 16S seq share a lot of bias -->
+<!-- - relic DNA -->
+<!-- - possibility of non-genetic variation -> change in efficiency with depth. This could still lead to a change in mean efficiency, but would offset the effect for these particular species. -->
+<!-- - possible error/bias in CARD-FISH -->
     
 ## Conclusions
 
