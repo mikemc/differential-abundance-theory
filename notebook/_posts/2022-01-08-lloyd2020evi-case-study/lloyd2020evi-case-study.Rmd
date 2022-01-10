@@ -1,0 +1,163 @@
+---
+title: "Analysis of Lloyd et al (2020) for manuscript case study"
+description: Perform calculations for the Lloyd et al (2020) case study.
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - ref:lloyd2020evid
+  - differential abundance
+date: 2022-01-08
+bibliography: ../../../main.bib
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: true
+    dev: svg
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  cache = FALSE,
+  autodep = TRUE,
+  cache.comments = FALSE
+)
+```
+
+# Setup
+
+Load libraries,
+
+```{r libraries}
+library(here)
+library(tidyverse)
+# library(tidyxl)
+library(unpivotr)
+```
+
+Our source data is Table 1 from @lloyd2020evid, which I've manually input into a CSV file.
+This table has the form of a 'pivot table' with nested headers; we can properly read it in and create a 'tidy' version table using the unpivotr package, following [this example](https://nacnudus.github.io/spreadsheet-munging-strategies/pivot-simple.html).
+First we'll read it in with one row per spreadsheet cell,
+
+```{r}
+all_cells <- here('notebook/_data/lloyd2020evid/table1.csv') %>%
+  read_csv(col_names = FALSE) %>%
+  as_cells %>%
+  # filter(!is.na(hr), chr != 'Clade') %>%
+  glimpse
+```
+
+Confirm that this data matches Table 1,
+
+```{r}
+all_cells %>% rectify %>% knitr::kable()
+```
+
+Note, the values of the table are doubling times.
+
+Now, munge the data into tidy form, with one row per measurement.
+Additionally, compute the doubling rate as the reciprocal of the doubling time.
+
+```{r}
+# abbreviations: exp for experiment, meas for measurement
+x <- all_cells %>%
+  behead("up-left", exp_type) %>%
+  behead("up-left", exp_name) %>%
+  behead("up", meas_type) %>%
+  behead("left", clade) %>%
+  select(clade, starts_with('exp'), meas_type, doubling_time = chr) %>%
+  mutate(
+    across(doubling_time, as.numeric),
+    doubling_rate = 1 / doubling_time,
+  ) %>%
+  arrange(clade, exp_type, exp_name, meas_type) %>%
+  glimpse
+dir.create('_output')
+saveRDS(x, '_output/table1-tidy.rds')
+```
+
+# Analysis
+
+Let's compute the error in doubling rate, assuming that the qPCR rate is accurate.
+
+```{r}
+y <- x %>%
+  select(-doubling_time) %>%
+  pivot_wider(names_from = meas_type, values_from = doubling_rate) %>%
+  mutate(error = FRAxC - qPCR)
+```
+
+```{r}
+y %>% 
+  filter(!is.na(qPCR)) %>%
+  select(-exp_type) %>% 
+  knitr::kable(digits = 4)
+```
+
+**Core 30**
+
+```{r}
+y %>% 
+  # filter(str_detect(exp_type, 'WOR')) %>%
+  filter(exp_name == 'Core 30') %>%
+  select(-exp_type, -exp_name) %>% 
+  knitr::kable(digits = 4)
+```
+
+**Core 32**
+
+```{r}
+y %>% 
+  filter(exp_name == 'Core 32') %>%
+  select(-exp_type, -exp_name) %>% 
+  knitr::kable(digits = 4)
+```
+
+Compute the calculations for the manuscript text,
+
+```{r, include = TRUE}
+bathy_core30_fraxc <- x %>%
+  filter(exp_name == 'Core 30', str_detect(clade, 'Bathyarchaeota'), 
+    meas_type == 'FRAxC') %>%
+  pull(doubling_rate)
+bathy_core30_qpcr <- x %>%
+  filter(exp_name == 'Core 30', str_detect(clade, 'Bathyarchaeota'), 
+    meas_type == 'qPCR') %>%
+  pull(doubling_rate)
+bathy_core32_fraxc <- x %>%
+  filter(exp_name == 'Core 32', str_detect(clade, 'Bathyarchaeota'), 
+    meas_type == 'FRAxC') %>%
+  pull(doubling_rate)
+bathy_core32_qpcr <- x %>%
+  filter(exp_name == 'Core 32', str_detect(clade, 'Bathyarchaeota'), 
+    meas_type == 'qPCR') %>%
+  pull(doubling_rate)
+mbgd_core32_fraxc <- x %>%
+  filter(exp_name == 'Core 32', str_detect(clade, 'MBG-D'), 
+    meas_type == 'FRAxC') %>%
+  pull(doubling_rate)
+mbgd_core32_qpcr <- x %>%
+  filter(exp_name == 'Core 32', str_detect(clade, 'MBG-D'), 
+    meas_type == 'qPCR') %>%
+  pull(doubling_rate)
+```
+
+**Draft manuscript text:**
+
+Our aim is to compare the growth rates for taxa with both FRAxC and qPCR values for the two sediment cores, as reported in Table 1.
+The first soil core included qPCR measurements of a single archaeal clade, _Bathyarchaeota_, for which growth rates by qPCR and FRAxC were nearly identical (doubling rates of `r round(bathy_core30_fraxc, 3)`/yr by FRAxC and `r round(bathy_core30_qpcr, 3)`/yr by qPCR).
+The second soil core included qPCR measurements of _Bathyarchaeota_ and a second clade, _Thermoprofundales_/MBG-D.
+In this core, FRAxC and qPCR growth rates differed more substantially, with growth rates from FRAxC being larger by `r round(bathy_core32_fraxc - bathy_core32_qpcr, 3)`/yr for _Bathyarchaeota_ (`r round(bathy_core32_fraxc, 3)`/yr by FRAxC and `r round(bathy_core32_qpcr, 3)`/yr by qPCR) and by `r round(mbgd_core32_fraxc - mbgd_core32_qpcr, 3)`/yr for _Thermoprofundales_/MBG-D (`r round(mbgd_core32_fraxc, 3)`/yr by FRAxC and `r round(mbgd_core32_qpcr, 3)`/yr by qPCR).
+A low number of experimental samples and noise in both the FRAxC and qPCR measurements place significant uncertainty in these measurements; however, the fact that FRAxC-derived growth rates are larger than qPCR-derived rates in all three cases is consistent with our hypothesis that mean efficiency decreases with depth in a manner that systematically biases FRAxC-derived rates to higher values.
+The differences in growth rate are small in absolute terms; however, the maximum observed difference of 0.086/yr suggests an error large enough to impact results for some taxa classified as positive growers by @lloyd2020evid, for which growth rates ranged between 0.04/yr and 0.5/yr.
+Overall, the comparison between FRAxC and qPCR measurements gives support to the study conclusions, but suggest that species at the lower end of this range of positive FRAxC-derived rates may in fact be merely persisting or even slowly declining in abundance.
+
+# Session info {.appendix}
+
+<details><summary>Click for session info</summary>
+```{r, R.options = list(width = 83)}
+sessioninfo::session_info()
+```
+</details>
