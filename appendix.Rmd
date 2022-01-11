@@ -124,7 +124,7 @@ The error in the total density depends on the species composition through the me
 How does this error affect the measured densities of individual species when the total is used for normalization?
 Substituting the mean efficiency of the total measurement for the error term in Equation \@ref(eq:density-prop-error) gives
 \begin{align}
-  (\#eq:app-density-prop-error)
+  (\#eq:density-prop-error-with-total-error)
   \widehat{\text{density}}_{i}(a) 
   = \text{density}_{i}(a) \cdot \frac{\text{efficiency}_{i} \cdot \text{efficiency}^{\text{tot}}_S(a)}{\text{efficiency}_S(a)}.
 \end{align}
@@ -217,7 +217,7 @@ NOTE: This might not be a correct way to talk about this; should perhaps make a 
 To understand the impact of non-linearity after bias has been accounted for, let $C(a)$ be a sample-specific factor that accounts for DNA extraction non-linearity after controlling for bias.
 From Equation \@ref(eq:density-prop-error), we have the more general equation
 \begin{align}
-  (\#eq:app-density-prop-error)
+  (\#eq:density-prop-error-linearity)
   \widehat{\text{density}}_{i}(a) 
   = \text{density}_{i}(a) \cdot \frac{\text{efficiency}_{i} \cdot \text{efficiency}^{\text{tot}}_S(a)}{\text{efficiency}_S(a)} \cdot C(a).
 \end{align}
@@ -337,3 +337,4 @@ It is also possible to directly measure cell density using methods.
 Some species can be measured by CFU counting after plating on selective media (REFs), and ddPCR has been used to direct measure cells (@dreo2014opti, @morella2018rapi) and viruses (@pavsic2016digi, @morella2018rapi) without first performing an extraction.
 Species-specific florescent probes also make it possible to measure individual species via microscopy or flow cytometry (REFs).
 
+TODO: Argue that these methods may yield constant fold errors.
