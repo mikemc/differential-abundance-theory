@@ -165,6 +165,41 @@ Dropping OTUs with less than 200 reads has a negligible impact on the samples, s
 momspi <- momspi %>% filter_taxa2(~sum(.) >= 2e2)
 ```
 
+Finally, let's impute zeros using the Dirichlet posterior mean, with the prior respecting the average proportions across samples.
+
+```{r}
+taxa_mean_prop <- momspi %>%
+  otu_table %>%
+  transform_sample_counts(close_elts) %>%
+  orient_taxa(as = 'cols') %>%
+  as('matrix') %>%
+  colMeans
+stopifnot(sum(taxa_mean_prop) == 1)
+prior_vec <- taxa_mean_prop * ntaxa(momspi)
+stopifnot(identical(length(prior_vec), ntaxa(momspi)))
+# Note the need for the seq_along trick to get phyloseq to allow this
+# adjustment
+momspi <- momspi %>% transform_sample_counts(~ prior_vec[seq_along(.x)] + .x)
+```
+
+## Checks
+
+how many subjects?
+
+```{r}
+cts <- momspi %>% sample_data %>% as_tibble %>% count(host_subject_id)
+nrow(cts)
+```
+
+how does the number of visits vary by subject?
+
+```{r}
+cts %>% pull(n) %>% summary
+cts %>%
+  ggplot(aes(x = n)) +
+  geom_histogram(binwidth = 1)
+```
+
 # Calibrate the MOMSPI measurements
 
 Owing to the large sample size of the mock community experiment, the standard errors in the estimated bias for the control species are quite small, and
@@ -221,9 +256,6 @@ momspi_obs <- momspi %>%
 # already
 momspi_cal <- momspi_obs %>% calibrate(bias_all_vec)
 ```
-
-Note, I'm not using pseudo-props so the zeros are staying zero.
-TODO: Reconsider this choice.
 
 ## Sample summary statistics
 
@@ -403,6 +435,143 @@ p1 +
   )
 ```
 
+# Variation in mean efficiency and individual species
+
+```{r}
+focal_taxa <- momspi %>%
+  transform_sample_counts(close_elts) %>%
+  filter_taxa2(~ mean(. >= 1e-2) >= 0.05 | mean(. >= 1e-3) >= 0.15) %>%
+  taxa_names %>%
+  print
+```
+
+```{r}
+x <- momspi_cal %>%
+  transform_sample_counts(close_elts) %>%
+  filter_tax_table(.otu %in% focal_taxa) %>%
+  as_tibble
+```
+
+```{r}
+taxa_summary <- x %>%
+  mutate(across(.abundance, log)) %>%
+  with_groups(.otu, summarize,
+    across(.abundance, 
+      .fns = c(mean = mean, median = median, sd = sd, var = var),
+      .names = '{.fn}'
+    )
+  )
+taxa_summary %>% arrange(-mean) %>% print(n=Inf)
+```
+
+```{r}
+me_summary <- mean_eff1 %>%
+  mutate(across(mean_efficiency, log)) %>%
+  summarize(
+    across(mean_efficiency,
+      .fns = c(sd = sd, var = var),
+      .names = '{.fn}'
+    )
+  ) %>%
+  print
+```
+
+The mean efficiency has a smaller dispersion than individual species, but it is of a similar magnitude, so there is still potential for it to have a substantial impact.
+
+What about variation within women?
+
+```{r}
+taxa_summary_within <- x %>%
+  mutate(across(.abundance, log)) %>%
+  with_groups(c(.otu, host_subject_id), summarize,
+    across(.abundance,
+      .fns = c(mean = mean, median = median, sd = sd, var = var),
+      .names = '{.fn}'
+    ),
+    n = n()
+  ) %>%
+  filter(n >= 3) %>%
+  with_groups(.otu, summarize,
+    sd_mean = sd(mean),
+    mean_sd = mean(sd)
+  )
+taxa_summary_within %>% print(n=Inf)
+```
+
+```{r}
+me_summary_within <- mean_eff1 %>%
+  mutate(across(mean_efficiency, log)) %>%
+  with_groups(host_subject_id, summarize,
+    across(mean_efficiency,
+      .fns = c(mean = mean, sd = sd, var = var),
+      .names = '{.fn}'
+    ),
+    n = n()
+  ) %>%
+  filter(n >= 3) %>%
+  summarize(
+    sd_mean = sd(mean),
+    mean_sd = mean(sd)
+  ) %>%
+  print
+```
+
+Note, a better way to do this would perhaps be to use anova / linear modeling, or whatever method from those would properly weight the number of samples from each woman.
+
+what about the variation between the first samples from each woman?
+
+```{r}
+taxa_summary_first <- x %>%
+  with_groups(host_subject_id, slice_min, host_visit_number, n = 1) %>%
+  mutate(across(.abundance, log)) %>%
+  with_groups(.otu, summarize,
+    across(.abundance,
+      .fns = c(mean = mean, median = median, sd = sd, var = var),
+      .names = '{.fn}'
+    )
+  )
+taxa_summary_first %>% arrange(-mean) %>% print(n=Inf)
+# taxa_summary %>% arrange(-mean) %>% print(n=Inf)
+```
+
+These sd's are similar to the overall sds, which makes sense given most pairwise comparisons are between women.
+
+```{r}
+me_summary_first <- mean_eff1 %>%
+  with_groups(host_subject_id, slice_min, host_visit_number, n = 1) %>%
+  mutate(across(mean_efficiency, log)) %>%
+  summarize(
+    across(mean_efficiency,
+      .fns = c(sd = sd, var = var),
+      .names = '{.fn}'
+    )
+  ) %>%
+  print
+me_summary
+```
+
+This is somewhat larger, but again similar.
+
+Tentative: 
+We see that the (log-e) mean efficiency sd is around 0.9, while the sd of individual taxa ranges from 2-3.5 (between women and overall).
+Within women, the mean efficiency sd and that of individual taxa are both smaller, such that the relative importance of each seems similar.
+
+Visualize, for the first sample from each woman:
+
+```{r}
+bind_rows(
+  x, 
+  mean_eff1 %>% mutate(.otu = 'Mean efficiency', .abundance = mean_efficiency)
+) %>%
+  with_groups(c(.otu, host_subject_id), slice_min, host_visit_number, n = 1) %>%
+  mutate(
+    across(.abundance, log),
+    across(.otu, fct_reorder, .abundance)
+  ) %>%
+  ggplot(aes(y = .otu, x = .abundance)) +
+  ggdist::stat_slab()
+```
+
 # Fold changes in mean efficiency
 
 How often do shifts in the mean efficiency occur within a single subject?
@@ -478,36 +647,148 @@ tb %>%
   knitr::kable(digits = 3)
 ```
 
-# (TODO) Example community trajectory
+# Example community trajectory
 
-Pick a woman with multiple visits and a large change in mean efficiency
+Pick a woman with multiple visits and a large change in mean efficiency to illustrate the potential impact of bias on species trajectories.
+We expect large changes in efficiency to be drive by changes in dominance from Gard to Lactobacillus (or vice versa).
 
-```{r}
-tb %>%
-  filter(host_subject_id.1 == host_subject_id.2) %>%
-  mutate(fc = mean_efficiency.2 / mean_efficiency.1) %>%
-  arrange(desc(abs(log(fc)))) %>%
-  select(fc, host_subject_id.1, top_plot.1, top_plot.2, host_visit_rank.1)
-```
-
-# Testing
-
-how many subjects?
+To pick a woman, let's first examine the distribution of geometric standard deviations of mean efficiency across subjects, and pick a subject at the upper end who has multiple visits.
 
 ```{r}
-cts <- momspi %>% sample_data %>% as_tibble %>% count(host_subject_id)
-nrow(cts)
-#> [1] 577
-cts %>% pull(n) %>% summary
-#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#>    1.00    2.00    3.00    3.39    4.00    9.00 
-cts %>%
-  ggplot(aes(x = n)) +
-  geom_histogram(binwidth = 1)
-  # geom_dotplot(binwidth = 1)
+me <- mean_eff1 %>%
+  mutate(across(mean_efficiency, log)) %>%
+  with_groups(host_subject_id, summarize,
+    across(mean_efficiency,
+      .fns = c(mean = mean, sd = sd, var = var),
+      .names = '{.fn}'
+    ),
+    n = n()
+  ) %>%
+  filter(n >= 3)
 ```
 
-577 subjects
+```{r}
+me %>% slice_max(sd, n = 10)
+```
+
+Let's pick subject 'EP280575', who has the most visits within the top 10.
+
+```{r}
+sid <- 'EP280575'
+ps_obs <- momspi %>%
+  filter_sample_data(host_subject_id == sid) %>%
+  transform_sample_counts(close_elts) %>%
+  filter_taxa2(~max(.) > 1e-3)
+ps_cal <- momspi_cal %>%
+  filter_sample_data(host_subject_id == sid) %>%
+  transform_sample_counts(close_elts) %>%
+  prune_taxa(taxa_names(ps_obs), .)
+x <- list(Calibrated = ps_cal, Observed = ps_obs) %>%
+  map_dfr(as_tibble, .id = "type") %>%
+  mutate(across(.otu, fct_relabel, function(x) str_replace_all(x, '_', ' ')))
+```
+
+```{r, fig.dim = c(6, 15)}
+taxa_to_plot <- x %>% 
+  filter(type == 'Calibrated') %>%
+  with_groups(.otu, summarize, 
+    med = median(log10(.abundance)),
+    max = max(log10(.abundance)),
+  ) %>%
+  filter(max > -2.5) %>%
+  arrange(-max) %>%
+  pull(.otu) %>%
+  print
+x %>%
+  filter(.otu %in% taxa_to_plot) %>%
+  mutate(.otu = factor(.otu, taxa_to_plot)) %>%
+  ggplot(aes(host_visit_number, .abundance, color = type)) +
+  scale_y_log10() +
+  facet_wrap(~.otu, ncol = 1, scales = 'free_y') +
+  geom_line(aes(group = type)) +
+  labs(y = 'Proportion', title = 'Species proportions') +
+  scale_color_brewer(type = 'qual', palette = 6) +
+  theme(legend.position = 'top')
+```
+
+For the final plot, I'll pick the most abundant 3 taxa (which are driving the mean efficiency) and two more taxa that show the different behaviors.
+
+```{r trajectories-within-subject-high-var, fig.dim = c(6, 9)}
+taxa_to_plot <- c(
+  'Gardnerella_vaginalis', 'Lachnospiraceae_BVAB1', 'Lactobacillus_iners',
+  'Ureaplasma_cluster23', 'Megasphaera_OTU70_type1') %>%
+  str_replace_all('_', ' ')
+p_sp <- x %>%
+  filter(.otu %in% taxa_to_plot) %>%
+  mutate(.otu = factor(.otu, taxa_to_plot)) %>%
+  filter(as.integer(.otu) <= 6) %>%
+  ggplot(aes(host_visit_number, .abundance, color = type)) +
+  scale_y_log10() +
+  facet_wrap(~.otu, ncol = 1, scales = 'free_y') +
+  geom_line(aes(group = type)) +
+  labs(y = 'Proportion', title = 'Species proportions') +
+  scale_color_brewer(type = 'qual', palette = 6) +
+  theme(legend.position = 'top')
+p_me <- mean_eff1 %>%
+  filter(host_subject_id == sid) %>%
+  ggplot(aes(host_visit_number, mean_efficiency)) +
+  scale_y_log10() +
+  labs(y = 'Efficiency', title = 'Mean efficiency') +
+  geom_line(aes(group = 1))
+p_me / p_sp &
+  annotate('rect', xmin = 3, xmax = 4, ymin = Inf, ymax = 0, alpha = 0.1) &
+  labs(x = 'Host visit') &
+  plot_layout(heights = c(0.1, 1)) &
+  plot_annotation(tag_levels = 'A')
+```
+
+
+For comparison, let's also look at a long trajectory where there is no major change in mean efficiency.
+
+```{r}
+me %>% slice_min(sd, n = 10)
+```
+
+```{r}
+sid <- 'EP694646'
+
+ps_obs <- momspi %>%
+  filter_sample_data(host_subject_id == sid) %>%
+  transform_sample_counts(close_elts) %>%
+  filter_taxa2(~max(.) > 1e-3)
+ps_cal <- momspi_cal %>%
+  filter_sample_data(host_subject_id == sid) %>%
+  transform_sample_counts(close_elts) %>%
+  prune_taxa(taxa_names(ps_obs), .)
+x <- list(Calibrated = ps_cal, Observed = ps_obs) %>%
+  map_dfr(as_tibble, .id = "type") %>%
+  mutate(across(.otu, fct_relabel, function(x) str_replace_all(x, '_', ' ')))
+ntaxa(ps_obs)
+```
+
+```{r trajectories-within-subject-low-var, fig.dim = c(6, 9)}
+p_sp <- x %>%
+  mutate(.otu = fct_reorder(.otu, -.abundance)) %>%
+  ggplot(aes(host_visit_number, .abundance, color = type)) +
+  scale_y_log10() +
+  facet_wrap(~.otu, ncol = 1, scales = 'free_y') +
+  geom_line(aes(group = type)) +
+  labs(y = 'Proportion', title = 'Species proportions') +
+  scale_color_brewer(type = 'qual', palette = 6) +
+  theme(legend.position = 'top')
+p_me <- mean_eff1 %>%
+  filter(host_subject_id == sid) %>%
+  ggplot(aes(host_visit_number, mean_efficiency)) +
+  scale_y_log10() +
+  labs(y = 'Efficiency', title = 'Mean efficiency') +
+  geom_line(aes(group = 1))
+p_me / p_sp &
+  labs(x = 'Host visit') &
+  plot_layout(heights = c(0.1, 1)) &
+  plot_annotation(tag_levels = 'A')
+```
+
+Note that the variation in mean efficiency is very small.
 
 
 # Session info {.appendix}
