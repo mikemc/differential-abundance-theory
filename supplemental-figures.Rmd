@@ -13,7 +13,7 @@ fs::path(
 
 (ref:cap-leopold2020host-variation) **In the pre-infection samples from @leopold2020host, multiplicative variation in taxa proportions is much larger than that in the mean efficiency.** Panel A shows the distribution of the proportions of each commensal isolate (denoted by its genus) across all samples collected prior to pathogen inoculation; Panel C shows the distribution of the (estimated) sample mean efficiency across these same samples on the same scale; and Panel B shows the efficiency of each taxon estimated from DNA mock communities as point estimates and 90% bootstrap percentile confidence intervals. Efficiencies are shown relative to the most efficiently measured taxon (_Fusarium_).
 
-
+<br><br>
 
 ```{r leopold2020host-infection-mean-efficiency-dist, fig.cap = '(ref:cap-leopold2020host-infection-mean-efficiency-dist)'}
 fs::path(
@@ -26,7 +26,7 @@ fs::path(
 
 (ref:cap-leopold2020host-infection-mean-efficiency-dist) **The mean efficiency tends to increase after infection due to the high proportion of the pathogen.**
 
-
+<br><br>
 
 ```{r leopold2020host-infection-lfc, fig.cap = '(ref:cap-leopold2020host-infection-lfc)'}
 fs::path(
@@ -39,7 +39,9 @@ fs::path(
 
 (ref:cap-leopold2020host-infection-lfc) **Bias correction increases the estimated increase in log proportion in response to infection for commensal taxa across all host genotypes.** Shown are the estimated log fold change (LFC) and 95% confidence intervals from simple linear regression of log (base e) proportion against experimental timepoint for commensal taxa. Negative values indicate that the proportion of the taxon decreased on average in response to infection, which we expect due to the increase in pathogen abundance and the sum-to-one constraint. Bias leads to artificially low estimates, as the pathogen drives an increase in mean efficiency. In Western genotypes, several taxa whose proportion is observed to decrease without correction are instead found to remain stable or even increase when bias is corrected.
 
-<!-- Implications: MOMSPI -->
+<br><br>
+
+<!-- Case study: MOMSPI -->
 
 ```{r momspi-mean-efficiency-fcs, fig.cap = '(ref:cap-momspi-mean-efficiency-fcs)'}
 fs::path(
@@ -50,6 +52,30 @@ fs::path(
 ```
 
 (ref:cap-momspi-mean-efficiency-fcs) **Fold changes in the mean efficiency within and between women in the MOMS-PI study.**
+
+<br><br>
+
+```{r momspi-trajectory, fig.cap = '(ref:cap-momspi-trajectory)', out.width = '75%'}
+fs::path(
+  "notebook/_posts/2021-11-01-momspi-summary/momspi-summary_files", 
+  "figure-html5/trajectories-within-subject-high-var-1.svg"
+) %>%
+  include_svg
+```
+
+(ref:cap-momspi-trajectory) **In vaginal microbiome measurements, shifts between _Lactobacillus_ and _Gardnerella_ dominance can drive spurious fold changes in other, lower-abundance species.** The figure shows species proportions and mean efficiency trajectories over consecutive clinical visits for a subject in the MOMS-PI study whose microbiome samples showed substantial variation in mean efficiency. The subject's samples are dominated by _Gardnerella vaginalis_ and _Lachnospiraceae BVAB1_ during the first three visits before transitioning to being dominated by _Lactobacillus iners_ between visits 3 and 4. This transition drives a sharp increase in the mean efficiency, which significantly distorts the fold changes in the observed (uncalibrated) microbiome measurements for species with less dramatic fold changes. Two exemplar species are shown to illustrate the magnitude (_Ureaplasma cluster 23_) and sign (_Megasphaera OTU70 type1_) errors that can arise in this situation.
+
+<br><br>
+
+```{r momspi-regression, fig.cap = '(ref:cap-momspi-regression)'}
+fs::path(
+  "notebook/_posts/2021-12-15-momspi-regression-diversity/momspi-regression-diversity_files", 
+  "figure-html5/regression-lm-alt-1.svg"
+) %>%
+  include_svg
+```
+
+(ref:cap-momspi-regression) **Bias distorts log fold changes (LFCs) in species proportions in a regression analysis of vaginal microbiome samples from the MOMS-PI study.** Samples were split into low, medium, and high diversity groups based on Shannon diversity in observed (uncalibrated) microbiome profiles. The LFC in proportion from low- to high-diversity samples was estimated for 30 common species by simple linear regression, using calibrated (bias-corrected) and observed (uncorrected) microbiome profiles following a simple zero-replacement procedure. Panel A shows the distribution of point estimates; Panel B shows the point estimates and 95% confidence intervals for each species. The difference between the calibrated and observed estimate for each species equals the negative LFC in mean efficiency.
 
 <br><br>
 

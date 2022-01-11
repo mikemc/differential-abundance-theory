@@ -24,7 +24,7 @@ Second, the authors quantified the strength of priority effects---the advantage 
 Since these analysis are both based on proportions, bias could in principle impact their results.
 We re-ran both analyses with and without bias correction, finding nearly identical results regardless of whether bias is accounted for^[The two sets of analyses can be seen at the following links: [negative-binomial regression analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-06-leopold2020host-original-regression-analysis/index.html); [priority-effects analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-05-leopold2020host-priority-effects/index.html)].
 To understand why, we compared the multiplicative variation taxa proportions with that of the mean efficiency.
-The proportions of each taxon varied substantially across samples, much more so than the mean efficiency, which had a geometric range of 1.57X and a geometric standard deviation of just 1.06X (Figure \@ref(fig:leopold2020host-variation)).
+The proportions of each taxon varied substantially across samples, much more so than the mean efficiency, which had a geometric range of 1.57X and a geometric standard deviation of just 1.06X (SI Figure \@ref(fig:leopold2020host-variation)).
 <!-- Explanation -->
 Why does the mean efficiency vary so little despite substantial multiplicative variation in the efficiency among taxa and in the taxa proportions across samples?
 This answer relates to the fact that the mean efficiency is a weighted _arithmetic_ average of species proportions and so is insensitive to large multiplicative variation in low-proportion species.
@@ -46,9 +46,9 @@ In particular, it is interesting to consider whether any commensals are able to 
 The experiment performed by @leopold2020host does not allow absolute-abundance measurement; nevertheless, the results of the previous sections allow us to consider the impact that bias would have on an analysis of absolute genome concentration 
 measured using the total-community normalization method (Equation \@ref(eq:density-prop-meas)).
 It is first useful to consider how bias impacts the estimated change in log proportion of each commensal following infection.
-The pathogen is absent in pre-infection samples but tends to dominate the community post-infection (Figure \@ref(fig:leopold2020host-infection-mean-efficiency-dist)), leading to an average increase in mean efficiency ranging from 3.5X to 5X across host genotypes and an expectation that commensals will typically decrease in proportion due to the sum-to-one constraint.
+The pathogen is absent in pre-infection samples but tends to dominate the community post-infection (SI Figure \@ref(fig:leopold2020host-infection-mean-efficiency-dist)), leading to an average increase in mean efficiency ranging from 3.5X to 5X across host genotypes and an expectation that commensals will typically decrease in proportion due to the sum-to-one constraint.
 Without bias correction, the log proportion of commensals decrease in each host genotype, often substantially (log-e fold changes less than -2); however, bias leads to overly negative LFCs due to the higher mean efficiency in post-infection samples.
-Bias correction substantially lessens the magnitude of LFC estimates, in some cases leading to estimates that are approximately 0 or slightly positive (Figure \@ref(fig:leopold2020host-infection-lfc)).
+Bias correction substantially lessens the magnitude of LFC estimates, in some cases leading to estimates that are approximately 0 or slightly positive (SI Figure \@ref(fig:leopold2020host-infection-lfc)).
 
 Now, consider the impact this shift in mean efficiency might have on a regression analysis with log absolute genome concentration as the response, if measured using the total-community normalization method (Equation \@ref(eq:density-prop-meas)).
 We consider two scenarios.
@@ -69,61 +69,33 @@ Thus, the systematic shift in mean efficiency following infection may or may not
 
 ## Vaginal microbiomes of pregant women
 
-The vaginal microbiomes of pregnant women have been a source of intensive study due to its perceived connection with the health of both mother and her developing child.
-Many MGS studies have found associations of specific microbial species and community characteristics with rates of urinary tract and sexually-transmitted infections, bacterial vaginosis (BV), and preterm births.
-Yet these associations and the baseline, apparently healthy, community state vary across studies of different populations and using different MGS methods.
-A number of studies have experimentally probed the taxonomic bias of different MGS protocols on vaginally-associated species (@yuan2012eval,@brooks2015thet,@gill2016eval,@graspeuntner2018sele,todo ref on taxonomic resolution and also sampling methods).
-These studies have revealed substantial bias among protocols, including variation in extraction efficiency by 10-40X and an inability for certain primer sets to amplify highly-prevalent species.
-Taxonomic bias has been proposed as a potential explanation for discrepancies across studies (@callahan2017repl, Others), there has so far been little quantitative analysis of this potential explanation.
-Here we re-analyze data from published studies to examine the potential impact of taxonomic bias on DA analysis of vaginal communities of pregnant women.
+The vaginal microbiome during pregnancy has been a source of intensive study due to its apparent connection with the health of both mother and her developing child.
+Many MGS studies have found associations of specific microbial species and community characteristics with rates of urinary tract and sexually-transmitted infections, bacterial vaginosis (BV), and preterm birth.
+Yet these associations vary across studies of different populations and using different MGS methods.
+DA analyses of the vaginal microbiome are commonly based on proportions, creating an opportunity for taxonomic bias to impact results.
+A number of studies have experimentally demonstrated substantial taxonomic bias among MGS protocols and individual steps (such as extraction and PCR amplification) in vaginal samples or _in vitro_ samples of vaginally-associated species (@yuan2012eval,@brooks2015thet,@gill2016eval,@graspeuntner2018sele).
+<!-- TODO: perhaps add ref on taxonomic resolution and also sampling methods -->
+Bias has been proposed as a potential explanation for discrepancies across studies (@callahan2017repl, Others?), but there has so far been little quantitative analysis of this possibility.
+Here we use empirical bias measurements from control samples to investigate the role of bias in proportion-based DA analyses of vaginal microbiomes from a recent large-cohort study of pregnant women.
 
-- P on brooks, momspi studies + calibration
-  - GC
-  - Intro the studies
-  - intro ability to use calibration to look at impact of bias - perhaps don't explain as such
-  - how we did it given limited species composition of the mock
-
-We first examine what the taxonomic bias observed in control experiments by @brooks2015thet might imply for DA analysis of vaginal microbiomes of pregnant women reported by @fettweis2019thev.
 As part of the Multi-Omic Microbiome Study: Pregnancy Initiative (MOMS-PI) study, @fettweis2019thev collected longitudinal samples from over 1500 pregnant women, including nearly 600 that were measured by amplicon sequencing of the 16S V1-V3 hypervariable region to yield species-level bacterial taxonomic profiles.
-DA analyses of the vaginal microbiome, including those of @fettweis2019thev, are most commonly based on species proportions, creating opportunity for bias to have an impact on their results.
-Previously, the authors evaluated taxonomic bias of this MGS protocol via the construction and measurement of cellular mock communities of seven vaginal bacterial species (@brooks2015thet), but did not directly account for this bias in @fettweis2019thev.
-We used the control measurements from @brooks2015thet to infer the bias of the MOMS-PI 16S protocol and investigate its potential impact on DA analyses of vaginal profiles from the MOMS-PI study.
-To estimate the relative efficiencies among all species, we directly estimated the efficiencies in the control samples following the method of @mclaren2019cons and imputed the remaining efficiencies based on taxonomic relationships.
-We then used these imputed efficiencies to calibrate the measured taxonomic profiles from the MOMS-PI study and compare DA analyses with and without calibration.
-Such imputed efficiencies carry considerable uncertainty, which we ignore to simplify our presentation. 
-Notably, while this uncertainty can majorly impact abundances in individual samples, it has a much weaker impact on LFCs across samples (SI analysis).
+Taxonomic bias of this MGS protocol was previously investigated by @brooks2015thet and @mclaren2019cons, using measurements by @brooks2015thet of cellular mock communities of seven common, clinically-relevant vaginal bacterial species. 
+<!-- TODO: check on clinical relevance -->
+Of these, _Lactobacillus iners_ had the highest efficiency, which was nearly 30X larger than that of the species with the lowest efficiency, _Gardnerella vaginalis_.
+A second _Lactobacillus_ species, _L. crispatus_, had an efficiency that was approximately 2X less than _L. iners_ and 15X greater than _G. vaginalis_.
+These species, along with the unculturable _Lachnospiraceae BVAB1_, are the most common top (most-abundant) species (SI analysis) and can reach high proportions in individual samples, indicating that shifts between them might drive large changes in the mean efficiency which might in turn impact DA results.
 
-To assess the potential for bias to affect fold changes in species proportions, we first used the imputed efficiencies to consider how the mean efficiency varied across women.
-In contrast to the fungal experiment, the mean efficiency varies substantially across vaginal samples, primarily driven by variation in which species is most abundant (Figure \@ref(fig:momspi-mean-efficiency-dist).
-The four most common top species in the observed and calibrated profiles were _Gardnerella vaginalis_, _Lactobacillus iners_, _Lactobacillus crispatus_, and _Lachnospiraceae BVAB1_.
-All of these except _Lachnospiraceae BVAB1_ where included in the mock-community experiment, from which we estimated that _L. iners_ has an efficiency of 2X relative to _L. crispatus_ and 30X relative to _G. vaginalis_, with _L. iners_ and _G. vaginalis_ having the maximum and minimum efficiencies among the 7 control species.
+We sought to assess this possibility using a joint analysis of the control measurements from @brooks2015thet and the microbiome measurements from the MOMS-PI study.
+To obtain the taxonomic bias among all species identified in the MOMS-PI measurements, we used the taxonomic relationships with the seven control species to impute the efficiencies for the remaining species.
+We used these imputed efficiencies to calibrate (correct the effect of bias in) the MOMS-PI measurements, examine variation in the mean efficiency varied across samples, and compare the results of a DA analysis with and without bias correction.
 
-HERE
-- finish explaining how the variation is driven by changes in these taxa, esp G and L 
-- add that the importance of these taxa, and the tendency for one species to domiannt, is a gneral well-suported feature of vaginal mb studies, though the identities varies by population and mgs protocol.
-- segue into further considerations - what is the impact of this variation?
-  - trajectories
-    - impact of big shifts 
-  - DA analysis
+<!-- Such imputed efficiencies carry considerable uncertainty, which we ignore to simplify our presentation.  -->
+<!-- Notably, while this uncertainty can majorly impact abundances in individual samples, it has a much weaker impact on LFCs across samples (SI analysis TODO). -->
 
-(TODO: confirm true that often these species dominate. Also check the efficiency numbers)
-
-
-Consequently, the mean efficiency tends to track that of most dominant species, with _Lactobacillus_-dominated samples typically having an efficiency that is 3-20X greater _Gardnerella_-dominated samples (Figure \@ref(fig:momspi-mean-efficiency-dist)).
-
-Shifts between _Lactobacillus_ and _Gardnerella_ dominance are common in between-women comparisons, and also occasionally occur between subsequent sampling points in individual women (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)), and typically result in substantial fold changes in mean efficiency.
-Examination of the multiplicative trajectories in the proportions of individual species indicates that such transitions can cause spurious fold changes in lower-abundance species (SI Figure TODO).
-In contrast, bias-correction only affects the baseline value of species ratios and not the fold changes.
-
-TODO:
-- consider whether the error is significant, which depends on the species FC and not just the mean efficiency FC.
-    - would be good to somehow visualize or summarize this.
-    - should give a better interpretation/assessment of the bottom line here.
-    - one way: discuss the variation in log mean efficiency versus that in species proportions. See a contrast to the Leopold situation; here the variation is lower but similar enough to potentially matter
-- to show that variation within women is lower, compute standard deviation of log mean efficiency within women and average this (perhaps weighted by n)
-- create 1-2 trajectories to show
-- also show ratios
-- writing/main issue: Consider how often the error matters, in FCs, and make trajectories, - make sure can support the idea that it usually doesn't matter, if that is true.
+The mean efficiency varies substantially across vaginal samples (Figure \@ref(fig:momspi-mean-efficiency-dist).
+This variation appears to be primarily driven by variation in which species is most abundant, samples in which a _Lactobacillus_ species is most abundant (after calibration) typically have an efficiency that is 3-20X greater than samples in which _G. vaginalis_ is most abundant.
+Shifts between _Lactobacillus_-dominance and _Gardnerella_-dominance are common in between-women comparisons and occasionally occur between consecutive visits in individual women (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)).
+These shifts typically result in substantial fold changes in mean efficiency (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)) and can cause spurious fold changes in the trajectories of lower-abundance species (SI Figure \@ref(fig:momspi-trajectory)).
 
 <!-- begin figure -->
 
@@ -145,32 +117,23 @@ rm(svg_path, fig_path)
 
 <!-- end figure -->
 
-- P: Simulated DA analysis
-    - GC: We next sought to see how ...
-    - Methods
-    - Results
-    - Discussion/caveats
-    - notes: could do with fido as well, to show that the results are unaffected.
-    
-We next considered whether the variation in mean efficiency could cause systematic error in a DA analysis of species proportions.
-Due to privacy protections, we did not have access to subject variables that could be used as covariates in a DA analysis.
-We therefore performed a DA analysis of species proportion versus community alpha diversity.
-A low-diversity, _Lactobacillus_-dominated microbiome is frequently cited as the typical healthy microbiome and high alpha diversity is considered an indication of bacterial vaginosis and has been repeatedly found to be postively associated with risk of preterm birth.
-(Though notably diverse and low-_Lactobacillus_ microbiomes are also common in healthy women and even typical in certain populations, including segments of the MOMSPI cohort.)
-We split the samples into classes with low and high Shannon diversity in the observed (uncorrected) community composition, leaving out samples with medium diversity, and performed a DA analysis of species proportion versus diversity class.
-We evaluated several types of DA analyses: The simple linear regression model applied to log proportion (Section \@ref()); negative-binomial (or gamma-poisson) regression, which models expected log proportion with a linear model while also accounting for the random, discrete nature of sequencing read counts; and a rank-regression method that approximates the commonly-used non-parametric Wilcoxin test (TODO).
-We performed each DA method with and without correcting for bias on a set of X species passing a minimum abundance prevalence criterion and compared the effect of bias on estimated regression coefficients for individual species.
-The mean efficiency tended to be larger in the high-diversity class (presumably due to a lower proportion of Lactobacillus, CHECK); unsurprisingly, the effect of bias was therefore always to lower the regression coefficient.
-For each method, bias caused significant magnitude and sign errors for X-Y species, including creating sign errors for X, Y, and Z species respectively.
-The absolute error due to bias is the same for all species in the simple linear regression (see previous section), but for the other two methods varied substantially among species (though was always positive, corresponding to the decrease in log mean efficiency in the high-diversity class).
-The DA results also differed substantially across methods.
-Together, these variations meant that whether bias had a significant impact on a particular species was often method dependent.
+We next considered whether the observed variation in mean efficiency could cause systematic error in a DA analysis.
+In particular, we hypothesized that DA analysis of species proportions versus a covariate that is associated with _Lactobacillus_ and/or _Gardnerella_ would be particularly prone to spurious results.
+Patient metadata was not available due to privacy restrictions; we therefore sought a clinically relevant covariate to use in a regression analysis that could be determined directly from the microbiome profiles and that we _a priori_ expected to be associated with the proportions of _Lactobacillus_ and _Gardnerella_.
+Alpha diversity metrics such as species richness, the Shannon index, and the (Inverse) Simpson index have been repeatedly found to be strongly positively associated with bacterial vaginosis (BV; @srinivasan2012bact, @cartwright2018mult). @cartwright2018mult found that an observed Simpson Diversity Index of 0.82 (corresponding to an order-2 effective number of species of 5.6) classified high diversity samples as BV positive with a sensitivity of 100% and specificity of 85.1%.
+In addition, it is commonly observed that samples from women with and without BV that are dominated by _Lactobacillus spp._ tend to have higher diversity, whereas samples dominated by _Gardnerella_ tend to have lower diversity.
+We therefore chose to perform a DA analysis of species proportion versus alpha diversity, hypothesizing that _Lactobacillus_ and _Gardnerella_ would drive a negative association of mean efficiency with diversity and thereby distort DA estimates for all species.
+We split samples into low, medium, and high diversity groups based on Shannon diversity in observed (uncalibrated) microbiome profiles.
+We then estimated the LFC in proportion from low- to high-diversity samples for a 30 common species by simple linear regression, using calibrated (bias-corrected) and observed (uncorrected) microbiome profiles.
+As expected, the mean efficiency was higher in low-diversity samples due to a larger fraction of samples dominated by _Lactobacillus_ and a lower fraction with samples dominated by _Gardnerella_.
+The decline in mean efficiency in the high diversity group caused a concomitant increase in the LFCs of all species when bias was not accounted for.
+This error due to bias resulted in serious magnitude errors in nearly all species and sign errors in over one third, with errors of both types seen for several clinically relevant species.
 
-    
-- ?? P: Real application: Callahan et al, Gard bias - maybe in future
-    - what bias could explain discrepancies?
+### Notes
 
-MOVE: Decreases in mean efficiency during transitions from _Lactobacillus_ to _Gardnerella_ dominance can be expected to be even more extreme for commonly-used vaginal microbiome primers that fail to amplify _Gardnerella_.
+- It might be cleaner story-wise to redo the diversity partitioning using the threshold identified by @cartwright2018mult
+- For the DA analysis of proportions vs. diversity, I tried other types of DA analysis methods (Gamma-Poisson regression and regression on ranks, similar to Wilcoxon test) to understand how the impact of bias differs across methods. In each case bias has a big effect but the species whose estimates are most affected varies. I would need to revise and verify this analysis before including its results. One reason for doing so would be to show that our qualitative finding about how bias distorts results applies beyond the basic linear regression model.
+- Decreases in mean efficiency during transitions from _Lactobacillus_ to _Gardnerella_ dominance can be expected to be even more extreme for commonly-used vaginal microbiome primers that fail to amplify _Gardnerella_.
 
 ## Gut microbiome
 
@@ -262,6 +225,6 @@ Overall, the comparison between FRAxC and qPCR measurements gives support to the
     
 ## Conclusions
 
-Systematic error in DA regression results requires that the variation in log mean efficiency is correlated with the covariate.
-The MOMSPI regression example illustrates a case where the mean efficiency is highly variable and also correlated with the covariate (diversity class).
-The Leopold T1 example illustrates a case where the mean efficiency simply doesn't vary significantly across samples, and hence there is no room for bias to affect regression coefficients.
+<!-- Systematic error in DA regression results requires that the variation in log mean efficiency is correlated with the covariate. -->
+<!-- The MOMSPI regression example illustrates a case where the mean efficiency is highly variable and also correlated with the covariate (diversity class). -->
+<!-- The Leopold T1 example illustrates a case where the mean efficiency simply doesn't vary significantly across samples, and hence there is no room for bias to affect regression coefficients. -->
