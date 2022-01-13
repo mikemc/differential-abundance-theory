@@ -137,23 +137,6 @@ This error due to bias resulted in serious magnitude errors in nearly all specie
 - For the DA analysis of proportions vs. diversity, I tried other types of DA analysis methods (Gamma-Poisson regression and regression on ranks, similar to Wilcoxon test) to understand how the impact of bias differs across methods. In each case bias has a big effect but the species whose estimates are most affected varies. I would need to revise and verify this analysis before including its results. One reason for doing so would be to show that our qualitative finding about how bias distorts results applies beyond the basic linear regression model.
 - Decreases in mean efficiency during transitions from _Lactobacillus_ to _Gardnerella_ dominance can be expected to be even more extreme for commonly-used vaginal microbiome primers that fail to amplify _Gardnerella_.
 
-## Gut microbiome
-
-(Has not been updated)
-
-It is clear that an individual species with an unusually high or low efficiency can drive large changes in the mean efficiency when it shifts from a very large ($\sim 1$) to very small proportion ($\ll 1$) of the sample.
-Consideration of dynamics in the human gut illustrates another a way in which large shifts in higher-level taxa might create similar shifts, due to the fact that efficiencies do not vary independently among closely related species.
-Gut microbiomes are dominated by two phyla: The Bacteroidetes and the Firmicutes, the ratio of which varies substantially across individuals.
-Within a sample, there are usually multiple species contributing to the abundance of each phylum, with the median Inverse Simpson diversity being around 4 for each phylum in the HMP2 IBD study.
-Thus changes from Bacteroidetes to Firmicutes dominance are unlikely to be driven by a single species.
-However, if Firmicutes species tend to have systematically different efficiencies than Bacteroidetes species, then changes in phylum dominance can be expected to drive substantial changes in the mean efficiency even if many species contribute.
-Indeed, several studies have found DNA extraction protocols to more efficiently lyse Gram-negative Bacteroidetes species than Gram-positive Firmicutes species (though substantial variation within phyla also occurs, @mclaren2019cons).
-
-Systematic error in DA regression results requires that the variation in log mean efficiency is correlated with the covariate.
-The examples above each suggest plausible biologically-significant scenarios in which such correlations might arise.
-The Bacteroidetes-to-Firmicutes ratio has also been linked to host conditions.
-Yet in the HMP2 IBD dataset, the large variation in this ratio is largely independent of disease status, suggesting that the primary effect of any variation in mean efficiency driven by these phyla would be to increase noise rather than create systematic error in DA analysis.
-
 ## Microbial growth in marine sediments
 
 Our route for mean efficiency to become associated with the covariate is if the covariate quantifies a biological process that preferentially selects for a microbial trait that also tends to increase or decrease measurement efficiency.
@@ -225,8 +208,63 @@ Overall, the comparison between FRAxC and qPCR measurements gives support to the
 <!-- - possibility of non-genetic variation -> change in efficiency with depth. This could still lead to a change in mean efficiency, but would offset the effect for these particular species. -->
 <!-- - possible error/bias in CARD-FISH -->
     
-## Conclusions
+## Summary and conclusions
 
-<!-- Systematic error in DA regression results requires that the variation in log mean efficiency is correlated with the covariate. -->
-<!-- The MOMSPI regression example illustrates a case where the mean efficiency is highly variable and also correlated with the covariate (diversity class). -->
-<!-- The Leopold T1 example illustrates a case where the mean efficiency simply doesn't vary significantly across samples, and hence there is no room for bias to affect regression coefficients. -->
+The impact of bias can depend on protocol, biological system, and type of DA analysis being done.
+Though these case studies span a highly limited range of possibilities, when combined with the theoretical results of section X help suggest some general conclusions about how and when bias will impact DA analyses based on fold changes in proportions.
+
+<!-- P: Canceling of consistent bias does occur to an important degree -->
+
+First, the error caused by consistent taxonomic bias _can mostly cancel_ in cross-sample comparisons and so not impact DA analyses of fold changes in species proportions.
+Our theoretical results from Section @ref(differential-abundance) indicate that when the mean efficiency is roughly constant across samples, the error in proportions cancels in fold change calculations and is absorbed by the intercept term in regression models.
+We observed this scenario in the analysis of pre-infection fungal microbiome samples of @leopold2020host and when analyzing the trajectories of the vaginal microbiomes of women when the dominant species remained constant^[This point could use more support in the MOMSPI case study], and a stable mean efficiency within marine soil cores is plausible and consistent with (though unable to be fully determined by) the different growth rate estimates in the @lloyd2020evid experiment.
+Section \@ref(differential-abundance) showed that absolute DA analysis using total-community normalization are suspectible to errors as with DA analysis of proportions; yet our analysis of two (hypothetical) approaches to analyzing absolute changes in response to infection in the fungal microbiome experiment indicates that the increasingly common approach of pairing marker-gene sequencing with qPCR of the total marker density can largely mitigate this effect, since here what matters is the variation in the ratio of mean efficiencies of the MGS measurement to the total-density measurement and this ratio may remain roughly constant if bias is largely shared by the two measurements.^[This is a simple-to-state and important point that should perhaps be made in the previous theoretical section. More empirical evidence could be given by re-analysis of @tettamantiboshier2020comp or similar studies that perform qPCR of total-community 16S and of specific species. Here I expect to find a fairly good agreement in the LFCs from total-community normalization and species-specific qPCR, since much of the bias is likely shared by 16S sequencing and qPCR. However, there are various complications to interpretting these comparisons.]
+
+Yet in other cases, the mean efficiency can vary substantially and create substantial error in fold changes between pairs of samples.
+We saw examples when comparing fungal microbiomes pre- and post-infection in the foliar-fungi experiment and comparing vaginal microbiomes with different dominant species in the MOMS-PI experiment.
+The impact of these errors on results of DA regression analysis across many samples depends on whether the mean efficiency varies systematically with the covariate of interest.
+<!-- P: but bias can still cause substantial systematic error -->
+In these two examples, systematic variation of the mean efficiency arose as high-efficiency species tended to dominate samples in one of the sample conditions (post-infection foliar samples or low-diversity vaginal samples).
+Thus one way for signficant error in DA regression results to arise is when a small number of (or just one) species that have particularly high or low mean efficiencies, form a large proportion of the community in a substantial fraction of samples, and are associated with the covariate of interest.
+<!-- This dynamic was responsible for the errors observed in the DA analysis of pre- and post-infection fungal microbiomes from @leopold2020host and in the vaginal microbiome profiles of the MOMS-PI study. -->
+
+For many experimental systems, however, there may not be any one species that frequently forms a large fraction of the community.
+In these systems, systematic variation of the mean efficiency can still arise through the collective change of many species that are associated with the covariate of interest.
+We described a hypothesized scenario in the marine-sediment case study in which increased burial time (the covariate) selects for lysis-resistant (and so lower efficiency) species.
+As another example, treatment with a certain antibiotic might selectively kill easier-to-lyze Gram negative species (or harder-to-lyze Gram positives) and thereby decreasing (or increasing) the mean efficiency in samples collected from a host post-treatment.
+Such situations can arise whenever there is a microbial trait that is associated with both measurement efficiency and the biological processes of intersest.
+An example besides cell-wall structure is ribosomal copy number, which increases a species' efficiency in ribosomal amplicon measurements and is positively associated with metabolic rate.
+<!-- Even when there is not a single trait that affects efficiency and the focal biological process,  -->
+A more generic mechanism by which mean-efficiency associations might arise is from the evolutionary relationships among species.
+Species with more recent common ancestry are expected to be more similar across a wide range of heritable traits, which include traits that affect measurement efficiency (such as cell wall structure, genome size, ribosomal copy number, PCR binding sequence) as well as traits that affect the biological processes under study.
+For example, differences in the phylum-level composition of samples from two conditions might be driven by many species that show phylum-level conservation in a relevant biological trait.
+If these species also show phylum-level conservation in (potentially different) traits that affect measurement efficiency, an association of mean efficiency with the condition can arise.
+
+<!-- P: Bias can also reduce the precision and power of DA analyses -->
+
+So long as the mean efficiency does not vary systematically with the regression covariates, the error in fold changes serve primarily to reduce the precision and power of regression analyses without systematically distorting estimates and so does not necessarily lead to invalid inferences.
+But the reduction in precision could be substantial, particularly given the small sample sizes common in many microbiome studies, and thereby substantially limit the ability to draw meaningful conclusions from a study^[I suspect this non-systematic variation in the mean efficiency is the more typical situation, but we currently lack an example of it in the case studies. We can find a semi-real example by taking real microbiome data from a case-control-type design and simulating a strong degree of bias. I did this with the HMP2 IBD study, but thinnk it might be better to find a different example where there are some clear DA results.].
+
+<!-- Conclusion: Need solutions -->
+
+These observations provide reasons to both worry and hope.
+It seems likely that in many experiments the mean efficiency is consistent or is at least not associated with the covariate, so that DA inferences remain valid.
+Yet it is not obvious _a priori_ in which studies this condition holds, and there are plausible mechanisms that can create problematic associations of the mean efficiency even in ecosystems with high species diversity.
+Thus while we should not discount the large set of existing DA results, we should seek ways to better assess the robustness of results from previous studies and to measure and correct the error caused by bias in future ones.
+
+<!-- ## cut from conclusions -->
+
+<!-- ### bias can push species below the detection limit -->
+
+<!-- - Another mechanism, not considered here, by which bias can dramatically reduce precision, is by pushing speices below the sequencing detection limit. -->
+<!-- - e.g. of primers that don't detect Gard; problems with estimates of rare and/or low eff taxa on leopold -->
+<!-- - this mechanism can interact with variation in the mean efficiency - e.g. of fungal samples after Mel increases -->
+
+<!-- ### Other cases where bias can matter that we didn't consider -->
+
+<!-- Optional for this draft; may also want to leave for final 'conclusions' / discussion -->
+
+<!-- - DA analyses that aren't based on fold changes - don't get canceling, and might have bigger impact -->
+<!-- - taxonomic aggregation - e.g. of Lactobacillus in vaginal; (mabye: Firmicutes in gut) - can get a varying efficiency within the taxon -->
+<!-- - ?? zero replacement, interpretation -->
+
