@@ -1774,7 +1774,7 @@ Show code
   <span class='fu'><a href='https://mikemc.github.io/speedyseq/reference/filter-phyloseq.html'>filter_tax_table</a></span><span class='op'>(</span><span class='va'>.otu</span> <span class='op'><a href='https://rdrr.io/r/base/match.html'>%in%</a></span> <span class='va'>commensal_taxa</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
   <span class='fu'><a href='https://mikemc.github.io/speedyseq/reference/mutate-phyloseq.html'>mutate_sample_data</a></span><span class='op'>(</span><span class='va'>.</span>, 
     sample_sum <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/pkg/phyloseq/man/sample_sums.html'>sample_sums</a></span><span class='op'>(</span><span class='va'>.</span><span class='op'>)</span>,
-    mean_efficiency <span class='op'>=</span> <span class='fu'><a href='https://mikemc.github.io/speedyseq/reference/transform_sample_counts.html'>transform_sample_counts</a></span><span class='op'>(</span><span class='va'>.</span>, <span class='va'>close_elts</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+    mean_efficiency <span class='op'>=</span> <span class='fu'><a href='https://mikemc.github.io/metacal/reference/calibrate.html'>calibrate</a></span><span class='op'>(</span><span class='va'>.</span>, <span class='va'>bias_t1</span>, norm <span class='op'>=</span> <span class='st'>'close'</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
       <span class='fu'><a href='https://mikemc.github.io/metacal/reference/perturb.html'>perturb</a></span><span class='op'>(</span><span class='va'>bias_t1</span>, norm <span class='op'>=</span> <span class='st'>'none'</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> 
       <span class='va'>sample_sums</span>,
   <span class='op'>)</span>
@@ -1800,7 +1800,7 @@ Show code
 <span class='va'>ps_t1_repl</span> <span class='op'>&lt;-</span> <span class='va'>ps_t1_repl</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
   <span class='fu'><a href='https://mikemc.github.io/speedyseq/reference/mutate-phyloseq.html'>mutate_sample_data</a></span><span class='op'>(</span><span class='va'>.</span>, 
     mean_efficiency_initial <span class='op'>=</span> <span class='va'>mean_efficiency</span>,
-    mean_efficiency <span class='op'>=</span> <span class='fu'><a href='https://mikemc.github.io/speedyseq/reference/transform_sample_counts.html'>transform_sample_counts</a></span><span class='op'>(</span><span class='va'>.</span>, <span class='va'>close_elts</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+    mean_efficiency <span class='op'>=</span> <span class='fu'><a href='https://mikemc.github.io/metacal/reference/calibrate.html'>calibrate</a></span><span class='op'>(</span><span class='va'>.</span>, <span class='va'>bias_t1</span>, norm <span class='op'>=</span> <span class='st'>'close'</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
       <span class='fu'><a href='https://mikemc.github.io/metacal/reference/perturb.html'>perturb</a></span><span class='op'>(</span><span class='va'>bias_t1</span>, norm <span class='op'>=</span> <span class='st'>'none'</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> 
       <span class='va'>sample_sums</span>,
   <span class='op'>)</span>
@@ -1852,7 +1852,7 @@ Show code
 </div>
 <p><img src="leopold2020host-case-study_files/figure-html5/unnamed-chunk-11-1.svg" width="672" /></p>
 </div>
-<p>The relative efficiency has a geometric range of 13-fold and a geometric standard deviation of 2.41-fold. But the mean efficiency’s geometric range is only 1.57-fold and its geometric standard deviation is just 1.06-fold.</p>
+<p>The relative efficiency has a geometric range of 13-fold and a geometric standard deviation of 2.41-fold. But the mean efficiency’s geometric range is only 1.62-fold and its geometric standard deviation is just 1.05-fold.</p>
 <h2 id="variation-in-proportions-vs-mean-efficiency">Variation in proportions vs mean efficiency</h2>
 <p>First let’s create some summary statistics of the calibrated proportions, to compare to those of the mean efficiency.</p>
 <div class="layout-chunk" data-layout="l-body">
@@ -1996,7 +1996,7 @@ Show code
 <span class='fu'><a href='https://rdrr.io/r/base/rm.html'>rm</a></span><span class='op'>(</span><span class='va'>otu_new</span><span class='op'>)</span>
 <span class='va'>ps_inf_repl</span> <span class='op'>&lt;-</span> <span class='va'>ps_inf_repl</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
   <span class='fu'><a href='https://mikemc.github.io/speedyseq/reference/mutate-phyloseq.html'>mutate_sample_data</a></span><span class='op'>(</span><span class='va'>.</span>, 
-    mean_efficiency <span class='op'>=</span> <span class='fu'><a href='https://mikemc.github.io/speedyseq/reference/transform_sample_counts.html'>transform_sample_counts</a></span><span class='op'>(</span><span class='va'>.</span>, <span class='va'>close_elts</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+    mean_efficiency <span class='op'>=</span> <span class='fu'><a href='https://mikemc.github.io/metacal/reference/calibrate.html'>calibrate</a></span><span class='op'>(</span><span class='va'>.</span>, <span class='va'>bias_inf</span>, norm <span class='op'>=</span> <span class='st'>'close'</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
       <span class='fu'><a href='https://mikemc.github.io/metacal/reference/perturb.html'>perturb</a></span><span class='op'>(</span><span class='va'>bias_inf</span>, norm <span class='op'>=</span> <span class='st'>'none'</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> 
       <span class='va'>sample_sums</span>,
   <span class='op'>)</span>
@@ -2024,7 +2024,8 @@ Show code
   <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_brewer.html'>scale_fill_brewer</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
   <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>
     x <span class='op'>=</span> <span class='st'>"Mean efficiency"</span>, 
-    y <span class='op'>=</span> <span class='st'>"Number of samples"</span>
+    y <span class='op'>=</span> <span class='st'>"Number of samples"</span>,
+    fill <span class='op'>=</span> <span class='st'>'Timepoint'</span>
   <span class='op'>)</span>
 <span class='va'>p_mel</span> <span class='op'>&lt;-</span> <span class='va'>sam</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
   <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>y <span class='op'>=</span> <span class='va'>melampsora_prop</span>, x <span class='op'>=</span> <span class='va'>mean_efficiency</span>, color <span class='op'>=</span> <span class='va'>timepoint</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
@@ -2107,74 +2108,74 @@ Show code
 <tr class="odd">
 <td style="text-align: left;">East-1</td>
 <td style="text-align: left;">timepoint2</td>
-<td style="text-align: right;">4.838</td>
-<td style="text-align: right;">1.011</td>
+<td style="text-align: right;">4.974</td>
+<td style="text-align: right;">1.022</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">East-2</td>
 <td style="text-align: left;">timepoint2</td>
-<td style="text-align: right;">5.051</td>
-<td style="text-align: right;">1.010</td>
+<td style="text-align: right;">5.244</td>
+<td style="text-align: right;">1.020</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">East-3</td>
 <td style="text-align: left;">timepoint2</td>
-<td style="text-align: right;">4.689</td>
-<td style="text-align: right;">1.012</td>
+<td style="text-align: right;">4.466</td>
+<td style="text-align: right;">1.035</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">East-4</td>
 <td style="text-align: left;">timepoint2</td>
-<td style="text-align: right;">4.601</td>
-<td style="text-align: right;">1.063</td>
+<td style="text-align: right;">4.352</td>
+<td style="text-align: right;">1.073</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">East-5</td>
 <td style="text-align: left;">timepoint2</td>
-<td style="text-align: right;">4.669</td>
-<td style="text-align: right;">1.020</td>
+<td style="text-align: right;">4.299</td>
+<td style="text-align: right;">1.061</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">West-1</td>
 <td style="text-align: left;">timepoint2</td>
-<td style="text-align: right;">4.440</td>
-<td style="text-align: right;">1.018</td>
+<td style="text-align: right;">3.952</td>
+<td style="text-align: right;">1.049</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">West-2</td>
 <td style="text-align: left;">timepoint2</td>
-<td style="text-align: right;">3.462</td>
-<td style="text-align: right;">1.065</td>
+<td style="text-align: right;">2.490</td>
+<td style="text-align: right;">1.088</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">West-3</td>
 <td style="text-align: left;">timepoint2</td>
-<td style="text-align: right;">3.842</td>
-<td style="text-align: right;">1.064</td>
+<td style="text-align: right;">3.226</td>
+<td style="text-align: right;">1.076</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">West-4</td>
 <td style="text-align: left;">timepoint2</td>
-<td style="text-align: right;">4.159</td>
-<td style="text-align: right;">1.033</td>
+<td style="text-align: right;">3.447</td>
+<td style="text-align: right;">1.071</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">West-5</td>
 <td style="text-align: left;">timepoint2</td>
-<td style="text-align: right;">4.420</td>
-<td style="text-align: right;">1.026</td>
+<td style="text-align: right;">4.222</td>
+<td style="text-align: right;">1.048</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">West-6</td>
 <td style="text-align: left;">timepoint2</td>
-<td style="text-align: right;">3.651</td>
-<td style="text-align: right;">1.072</td>
+<td style="text-align: right;">2.620</td>
+<td style="text-align: right;">1.109</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">West-7</td>
 <td style="text-align: left;">timepoint2</td>
-<td style="text-align: right;">3.962</td>
-<td style="text-align: right;">1.066</td>
+<td style="text-align: right;">3.212</td>
+<td style="text-align: right;">1.106</td>
 </tr>
 </tbody>
 </table>
@@ -2195,7 +2196,7 @@ Show code
 </div>
 <p><img src="leopold2020host-case-study_files/figure-html5/unnamed-chunk-18-1.svg" width="624" /></p>
 </div>
-<p>The FC in mean efficiency ranges from 3.46 to 5.05.</p>
+<p>The FC in mean efficiency ranges from 2.49 to 5.24.</p>
 <h2 id="simple-linear-regression-of-log-proportion">Simple linear regression of log proportion</h2>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
@@ -2261,9 +2262,9 @@ Columns: 6
 $ .otu          &lt;chr&gt; &quot;Aureobasidium&quot;, &quot;Aureobasidium&quot;, &quot;Aureobasidi…
 $ genotype      &lt;chr&gt; &quot;West-7&quot;, &quot;East-1&quot;, &quot;East-2&quot;, &quot;West-5&quot;, &quot;West-…
 $ estimate_obs  &lt;dbl&gt; -2.320913, -4.649869, -5.158821, -3.690699, -1…
-$ estimate_cal  &lt;dbl&gt; -0.94423356, -3.07334007, -3.53915573, -2.2045…
+$ estimate_cal  &lt;dbl&gt; -1.1540542, -3.0456064, -3.5016735, -2.2503328…
 $ std.error_obs &lt;dbl&gt; 0.5799465, 0.3149781, 0.3133921, 0.4267797, 0.…
-$ std.error_cal &lt;dbl&gt; 0.5512901, 0.3127746, 0.3132525, 0.4185415, 0.…</code></pre>
+$ std.error_cal &lt;dbl&gt; 0.5161804, 0.3025285, 0.3088991, 0.4121072, 0.…</code></pre>
 </div>
 <p>Check that the corrections are the same for each taxon within a genotype, but differ by genotype.</p>
 <div class="layout-chunk" data-layout="l-body">
@@ -2365,7 +2366,7 @@ Click for session info
  collate  en_US.UTF-8
  ctype    en_US.UTF-8
  tz       America/New_York
- date     2022-01-08
+ date     2022-01-12
  pandoc   2.14.1 @ /usr/bin/ (via rmarkdown)
 
 ─ Packages ───────────────────────────────────────────────────────────────

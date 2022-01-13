@@ -37,7 +37,7 @@ fs::path(
   include_svg
 ```
 
-(ref:cap-leopold2020host-infection-lfc) **Bias correction increases the estimated increase in log proportion in response to infection for commensal taxa across all host genotypes.** Shown are the estimated log fold change (LFC) and 95% confidence intervals from simple linear regression of log (base e) proportion against experimental timepoint for commensal taxa. Negative values indicate that the proportion of the taxon decreased on average in response to infection, which we expect due to the increase in pathogen abundance and the sum-to-one constraint. Bias leads to artificially low estimates, as the pathogen drives an increase in mean efficiency. In Western genotypes, several taxa whose proportion is observed to decrease without correction are instead found to remain stable or even increase when bias is corrected.
+(ref:cap-leopold2020host-infection-lfc) **Bias correction increases the estimated increase in log proportion in response to infection for commensal taxa across all host genotypes.** Shown are the estimated log fold change (LFC) and 95% confidence intervals from simple linear regression of log (base e) proportion against experimental timepoint for commensal taxa. Negative values indicate that the proportion of the taxon decreased on average in response to infection, which we expect due to an increase in pathogen abundance and the sum-to-one constraint of proportions. Bias leads to artificially low estimates, as the increased pathogen proportion drives an increase in mean efficiency.
 
 <br><br>
 

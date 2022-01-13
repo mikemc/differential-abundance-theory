@@ -247,7 +247,7 @@ ps_t1 <- ps %>%
   filter_tax_table(.otu %in% commensal_taxa) %>%
   mutate_sample_data(., 
     sample_sum = sample_sums(.),
-    mean_efficiency = transform_sample_counts(., close_elts) %>%
+    mean_efficiency = calibrate(., bias_t1, norm = 'close') %>%
       perturb(bias_t1, norm = 'none') %>% 
       sample_sums,
   )
@@ -274,7 +274,7 @@ rm(otu_new)
 ps_t1_repl <- ps_t1_repl %>%
   mutate_sample_data(., 
     mean_efficiency_initial = mean_efficiency,
-    mean_efficiency = transform_sample_counts(., close_elts) %>%
+    mean_efficiency = calibrate(., bias_t1, norm = 'close') %>%
       perturb(bias_t1, norm = 'none') %>% 
       sample_sums,
   )
@@ -420,7 +420,7 @@ otu_table(ps_inf_repl) <- otu_table(otu_new, taxa_are_rows = FALSE)
 rm(otu_new)
 ps_inf_repl <- ps_inf_repl %>%
   mutate_sample_data(., 
-    mean_efficiency = transform_sample_counts(., close_elts) %>%
+    mean_efficiency = calibrate(., bias_inf, norm = 'close') %>%
       perturb(bias_inf, norm = 'none') %>% 
       sample_sums,
   )
@@ -449,7 +449,8 @@ p_hist <- sam %>%
   scale_fill_brewer(type = "qual") +
   labs(
     x = "Mean efficiency", 
-    y = "Number of samples"
+    y = "Number of samples",
+    fill = 'Timepoint'
   )
 p_mel <- sam %>%
   ggplot(aes(y = melampsora_prop, x = mean_efficiency, color = timepoint)) +
