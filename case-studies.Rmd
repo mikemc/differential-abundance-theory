@@ -12,7 +12,8 @@ In a study of host-commensal-pathogen interactions, @leopold2020host inoculated 
 To investigate the joint effect of colonization order and host genotype, plants varied in source location and in which commensal colonized first.
 The authors used ITS amplicon sequencing to measure communities before and after pathogen infection, along with mock communities with quantified genome concentrations of DNA from the 9 species.
 These DNA mock communities allowed the authors to directly measure the bias due to the sequencing workflow following DNA extraction and correct for it when analyzing the primary experimental samples following the method of @mclaren2019cons.
-Although extraction is not accounted for, considerable bias might still be expected due to preferential PCR binding and amplification (CITE) and the substantial ribosomal copy-number-variation (CNV) in fungi (@lofgren2019geno).
+Although extraction is not accounted for, considerable bias might still be expected due to preferential PCR binding and amplification and the substantial ribosomal copy-number-variation (CNV) in fungi (@lofgren2019geno).
+<!-- TODO: add citations -->
 The authors found a 13X difference between the most and least efficiently measured commensal, while the pathogen was measured 40X more efficiently than the least efficiently measured commensal.
 We reanalyzed this experiment to understand the impact that bias might have had on the study's analyses were it not accounted for.
 
@@ -43,7 +44,7 @@ Because the log mean efficiency varies much less than the log proportions for ea
 
 We additionally considered the potential for bias to impact analysis of how commensal taxa responded to infection.
 In particular, it is interesting to consider whether any commensals are able to increase in absolute concentration in response to infection.
-The experiment performed by @leopold2020host does not allow absolute-abundance measurement; nevertheless, the results of the previous sections allow us to consider the impact that bias would have on an analysis of absolute genome concentration measured using the total-community normalization method (Equation \@ref(eq:density-prop-meas)).
+The experiment performed by @leopold2020host does not allow absolute-abundance measurement; nevertheless, the results of the previous sections allow us to consider the impact that bias would have on an analysis of absolute genome concentration measured using the total-abundance normalization method (Equation \@ref(eq:density-prop-meas)).
 It is first useful to consider how bias impacts the estimated change in log proportion of each commensal following infection.
 The pathogen is absent in pre-infection samples but tends to dominate the community post-infection, raising the mean efficiency of post-infection samples (SI Figure \@ref(fig:leopold2020host-infection-mean-efficiency-dist)).
 Across different host genotypes, the average increase in mean efficiency ranges from 2.5X to 5.2X. 
@@ -52,16 +53,16 @@ Regardless of whether bias is accounted for, the log proportion of each commensa
 Without bias correction, however, the LFCs were lower by an amount corresponding to the inverse change in log mean efficiency.
 The magnitude errors created were substantial for a large fraction of commensal-host pairs; in several cases, the LFC estimates without bias correction were clearly negative, whereas the estimates with bias correction were close to 0.
 
-Now, consider the impact this shift in mean efficiency might have on a regression analysis with log absolute genome concentration as the response, if measured using the total-community normalization method (Equation \@ref(eq:density-prop-meas)).
+Now, consider the impact this shift in mean efficiency might have on a regression analysis with log absolute genome concentration as the response, if measured using the total-abundance normalization method (Equation \@ref(eq:density-prop-meas)).
 We consider two scenarios.
 _Scenario 1:_ Total genome concentration in each sample is perfectly known and used to measure the concentrations of individual taxa via Equation \@ref(eq:density-prop-meas).
 In this case, bias in the MGS measurements would create absolute errors in the LFCs for genome concentration identical to those for proportions.
 The scientific error, however, may be much worse.
 Since the sum-to-one constraint of proportions no longer applies, the LFCs will necessarily be larger (less negative), such that the absolute error caused by the change in mean efficiency could plausibly create substantial biological errors where some taxa that persist or increase in abundance instead appear to decrease.
-_Scenario 2:_ Total ITS concentration is measured by qPCR with the same primers and PCR protocol used for ITS sequencing, and used without any correction to measure individual taxa concentration with the total-community normalization method.
+_Scenario 2:_ Total ITS concentration is measured by qPCR with the same primers and PCR protocol used for ITS sequencing, and used without any correction to measure individual taxa concentration with the total-abundance normalization method.
 In this case, we should expect the increase in mean efficiency to have little to no impact on LFCs, since it would be offset by the increase in mean efficiency of the total-concentration measurement.
 Moreover, since the total ITS concentration and ITS sequencing are both performed on the extracted DNA, we can also expect the effect of taxonomic bias caused by DNA sequencing to be offset.
-Thus, the systematic shift in mean efficiency following infection may or may not significantly impact the LFC estimates depending on how the total-community measurement is made prior to normalization.
+Thus, the systematic shift in mean efficiency following infection may or may not significantly impact the LFC estimates depending on how the total-abundance measurement is made prior to normalization.
 
 <!-- cut text -->
 <!-- - Genome concentration was chosen as the measure of abundance, due to the tendency for fungi to grow in forms where cells are not easily demarcated. -->
@@ -144,7 +145,7 @@ We illustrate this potential mechanism with a study of microbial growth in marin
 
 The surface layers of marine sediments harbor diverse and abundant microbiomes. Total cell density and species richness decrease with depth as resources are consumed in older, deeper sediment layers; however, some taxa are able to grow and increase in density as they are slowly buried.
 @lloyd2020evid performed a systematic assessment of growth rates of bacterial and archaeal taxa over a depth of 10 cm (corresponding to ~40 years of burial time) in sediment of the White Oak River estuary.
-To estimate growth rate, the authors first measured absolute cell density of microbial taxa using the total-community normalization method (Equation \@ref(eq:density-prop-meas)), with taxa proportions measured with 16S amplicon sequencing and total community density measured by directly counting cells using epifluorescence microscopy (CARD-FISH).
+To estimate growth rate, the authors first measured absolute cell density of microbial taxa using the total-abundance normalization method (Equation \@ref(eq:density-prop-meas)), with taxa proportions measured with 16S amplicon sequencing and total community density measured by directly counting cells using epifluorescence microscopy (CARD-FISH).
 The authors refer to these absolute densities as FRAxC measurements, for 'fraction of 16S reads times total cell counts'.
 The FRAxC measurements were used to infer growth rate from the slope of a simple linear regression of log cell density against burial time over the first 3 cm below the bioirrigation layer (corresponding to $\sim 8$ years of burial).
 To validate the inference of positive growers, the authors compared the growth rates from FRAxC-based inference from two sediment cores, qPCR measurements in these cores for a few reference taxa, and FRAxC-based inference in two replicate laboratory incubation experiments.
@@ -186,7 +187,7 @@ mbgd_core32_qpcr <- x %>%
 We can test the hypothesis that systematic variation in log mean efficiency with depth distorts inferred growth rates using the qPCR measurements of two clades also collected by @lloyd2020evid.
 In Section \@ref(review-absolute-methods), we argue that taxonomic bias in targeted qPCR measurements is expected to create a roughly constant fold error and yield fold changes in absolute density that are relatively unaffected by changes in mean efficiency.
 Thus comparing qPCR to FRAxC growth rates on the same reference taxa allows us to estimate the systematic error in FRAxC growth rates.
-Because the systematic error in regression slopes due to bias is the same for each taxon (Equation \@ref(eq:regression-error)), these comparisons allow us to draw conclusions about the accuracy of FRAxC growth rates for all taxa.
+Because the systematic error in regression slopes due to bias is the same for each taxon (Section \@ref(differential-abundance)), these comparisons allow us to draw conclusions about the accuracy of FRAxC growth rates for all taxa.
 <!-- Our aim is to compare the growth rates for taxa with both FRAxC and qPCR values for the two sediment cores, as reported in Table 1. -->
 The first soil core included qPCR measurements of a single archaeal clade, _Bathyarchaeota_, for which growth rates by qPCR and FRAxC were nearly identical (doubling rates of `r round(bathy_core30_fraxc, 3)`/yr by FRAxC and `r round(bathy_core30_qpcr, 3)`/yr by qPCR).
 The second soil core included qPCR measurements of _Bathyarchaeota_ and a second clade, _Thermoprofundales_/MBG-D.
@@ -216,9 +217,9 @@ Though these case studies span a highly limited range of possibilities, when com
 <!-- P: Canceling of consistent bias does occur to an important degree -->
 
 First, the error caused by consistent taxonomic bias _can mostly cancel_ in cross-sample comparisons and so not impact DA analyses of fold changes in species proportions.
-Our theoretical results from Section @ref(differential-abundance) indicate that when the mean efficiency is roughly constant across samples, the error in proportions cancels in fold change calculations and is absorbed by the intercept term in regression models.
+Our theoretical results from Section \@ref(differential-abundance) indicate that when the mean efficiency is roughly constant across samples, the error in proportions cancels in fold change calculations and is absorbed by the intercept term in regression models.
 We observed this scenario in the analysis of pre-infection fungal microbiome samples of @leopold2020host and when analyzing the trajectories of the vaginal microbiomes of women when the dominant species remained constant^[This point could use more support in the MOMSPI case study], and a stable mean efficiency within marine soil cores is plausible and consistent with (though unable to be fully determined by) the different growth rate estimates in the @lloyd2020evid experiment.
-Section \@ref(differential-abundance) showed that absolute DA analysis using total-community normalization are suspectible to errors as with DA analysis of proportions; yet our analysis of two (hypothetical) approaches to analyzing absolute changes in response to infection in the fungal microbiome experiment indicates that the increasingly common approach of pairing marker-gene sequencing with qPCR of the total marker density can largely mitigate this effect, since here what matters is the variation in the ratio of mean efficiencies of the MGS measurement to the total-density measurement and this ratio may remain roughly constant if bias is largely shared by the two measurements.^[This is a simple-to-state and important point that should perhaps be made in the previous theoretical section. More empirical evidence could be given by re-analysis of @tettamantiboshier2020comp or similar studies that perform qPCR of total-community 16S and of specific species. Here I expect to find a fairly good agreement in the LFCs from total-community normalization and species-specific qPCR, since much of the bias is likely shared by 16S sequencing and qPCR. However, there are various complications to interpretting these comparisons.]
+Section \@ref(differential-abundance) showed that absolute DA analysis using total-abundance normalization are suspectible to errors as with DA analysis of proportions; yet our analysis of two (hypothetical) approaches to analyzing absolute changes in response to infection in the fungal microbiome experiment indicates that the increasingly common approach of pairing marker-gene sequencing with qPCR of the total marker density can largely mitigate this effect, since here what matters is the variation in the ratio of mean efficiencies of the MGS measurement to the total-density measurement and this ratio may remain roughly constant if bias is largely shared by the two measurements.
 
 Yet in other cases, the mean efficiency can vary substantially and create substantial error in fold changes between pairs of samples.
 We saw examples when comparing fungal microbiomes pre- and post-infection in the foliar-fungi experiment and comparing vaginal microbiomes with different dominant species in the MOMS-PI experiment.

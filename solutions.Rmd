@@ -2,9 +2,9 @@
 
 The theoretical results from Section \@ref(differential-abundance) suggest a number of potential methods to avoid, correct, or otherwise mitigate the errors created by taxonomic bias.
 
-## Analyses of fold changes in species ratios
+## Use ratio-based relative-abundance analyses
 
-Since the fold changes in species ratios are unaffected by consistent taxonomic bias, a natural approach to countering bias in relative DA analysis is to ratio- rather than proportion-based methods.
+Since bias creates a consistent fold error in species ratios, a natural approach to countering bias when analyzing relative abundances is to use DA methods that are based on fold changes in ratios.
 A variety of such methods have been developed for microbiome DA analysis that build on earlier work from the field of Compositional Data Analysis (CoDA).
 These methods analyze log-fold changes in the ratios among a pair of species or, more generally, some product of exponential power of multiple species, which likewise are bias-invariant.
 Besides a greater robustness to taxonomic bias, such ratio-based analyses have other advantages.
@@ -27,7 +27,7 @@ Calibration can be extended to species not in the controls using statistical met
 
 The calibrated compositions can be used for arbitrary downstream microbiome analyses, including relative and absolute DA analysis.
 To demonstrate the potential for calibration to improve fold-change measurements, we estimated bias from one sample in the mock community data from @brooks2015thet that contained all 7 species and used it to calibrate the compositions of all samples (Figure \@ref(fig:calibration-example)).
-We then estimated species' densities using the uncalibrated and calibrated proportions using the community normalization method, treating the total density as known and fixed.
+We then estimated species' densities using the uncalibrated and calibrated proportions using total-abundance normalization, treating the total density as known and fixed.
 Visual inspection shows that the bias estimated from just a single control community with all species can be sufficient to greatly reduce the effect of taxonomic bias on the measured fold change in species' proportions and densities (Figure \@ref(fig:calibration-example)).
 To demonstrate a practical application, we used the bias estimated from the full set of mock communities as the basis for calibrating the vaginal community time series measurements from the MOMS-PI study (@fettweis2019thev) that were made using the same 16S sequencing protocol.
 We imputed the efficiencies of other species using taxonomic relationships (Methods).

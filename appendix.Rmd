@@ -74,29 +74,6 @@ The ratio between the read counts of two taxa $I$ and $J$ is
 \end{align}
 Equation \@ref(eq:prop-error) for the error in a species' proportion and Equation \@ref(eq:ratio-error) for the error in the ratio between two species both follow directly from this more general expression.
 
-### Revised main text equations
-
-Let $S$ be the set of all species.
-Then
-\begin{align}
-  \text{reads}_S(a)
-    = \text{density}_S(a) \cdot \text{efficiency}_S(a) \cdot \text{effort}(a),
-\end{align}
-where 
-\begin{align}
-  \text{efficiency}_S(a) 
-  \equiv \frac{\sum_{j\in S}\text{density}_j(a)\cdot \text{efficiency}_j}{\text{density}_S(a)}
-\end{align}
-Also,
-\begin{align}
-  \widehat{\text{prop}}_{i}(a) = \frac{\text{reads}_i(a)}{\text{reads}_S(a)}.
-\end{align}
-and
-\begin{align}
-  \widehat{\text{prop}}_{i}(a)
-  &= \text{prop}_{i}(a) \cdot \frac{\text{efficiency}_{i}}{\text{efficiency}_S(a)}.
-\end{align}
-
 ## Taxonomic bias in total-density measurement {#total-density-bias}
 
 To understand the impact of taxonomic bias in the total-density measurement on community normalization, we model error in total-density measurements similarly to that for MGS measurements.
