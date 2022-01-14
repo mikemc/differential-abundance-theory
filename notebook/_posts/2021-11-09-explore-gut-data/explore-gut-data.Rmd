@@ -59,7 +59,8 @@ sam %>% dplyr::count(study_condition, disease, disease_subtype)
 
 Most subjects have many samples.
 
-
+In the HMP2 paper, they classified some samples as dysbiotic.
+We don't have that info here.
 
 ## what is dominance like?
 
@@ -168,3 +169,43 @@ div %>%
   )
 ```
 
+## Enterotypes?
+
+Work of others suggests we might be able to identify just a handul of species/genera/groups that tend to be dominant.
+
+```{r}
+
+```
+
+
+what taxa tend to reach dominance/very high abundance?
+
+```{r}
+ps.gen <- ps %>% tax_glom('genus')
+```
+
+```{r}
+ps.gen %>%
+  transform_sample_counts(close_elts) %>%
+  as_tibble %>%
+  filter(.abundance > 0.3) %>%
+  dplyr::count(phylum, family, genus) %>%
+  arrange(-n) %>%
+  print(n=20)
+```
+
+```{r}
+ps %>%
+  tax_glom('family') %>%
+  transform_sample_counts(close_elts) %>%
+  as_tibble %>%
+  filter(.abundance > 0.3) %>%
+  dplyr::count(phylum, family) %>%
+  arrange(-n) %>%
+  print(n=20)
+```
+
+
+This suggests that when we are considering phylogenetic conservation for the purposes of bias effect, then conservation within firmicutes may not be as important as that within specific sub-groups like Lachnospiraceae and Ruminococcaceae.
+
+Note, the original HMP protocol was found to be biased in favor of Bacteroidetes.
