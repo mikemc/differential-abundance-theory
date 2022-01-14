@@ -47,7 +47,6 @@ The critical assumption we make regarding sequencing effort is that it affects a
 With these assumptions in place, we can partition the multiplicative difference between the reads assigned to a taxon and its density in the source sample into a taxon-specific factor and a sample-specific factor. 
 There is an extra degree of freedom, which we settle by equating the taxon-specific factors with relative measurement efficiencies and arbitrarily choose the relative efficiency of a particular species to equal 1.
 
-
 Our model for the read counts of a species $i$ in sample $a$ can thus be expressed mathematically as
 \begin{align}
   \text{reads}_{i}(a)
