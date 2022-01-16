@@ -12,6 +12,7 @@ rmd_files: [
   "differential-abundance.Rmd",
   "case-studies.Rmd",
   "solutions.Rmd",
+  "conclusion.Rmd",
   "appendix.Rmd",
   "appendix-regression.Rmd",
   "supplemental-figures.Rmd",
