@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>C Error in estimated regression coefficients and standard errors | Inferring true changes in microbial abundance from taxonomically-biased microbiome measurements</title>
+  <meta name="description" content="C Error in estimated regression coefficients and standard errors | Inferring true changes in microbial abundance from taxonomically-biased microbiome measurements" />
+  <meta name="generator" content="bookdown 0.24 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="C Error in estimated regression coefficients and standard errors | Inferring true changes in microbial abundance from taxonomically-biased microbiome measurements" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="C Error in estimated regression coefficients and standard errors | Inferring true changes in microbial abundance from taxonomically-biased microbiome measurements" />
+  
+  
+  
+
+<meta name="author" content="Michael R. McLaren" />
+<meta name="author" content="Jacob T. Nearing" />
+<meta name="author" content="Amy D. Willis" />
+<meta name="author" content="Karen G. Lloyd" />
+<meta name="author" content="Benjamin J. Callahan" />
+
+
+<meta name="date" content="2022-01-16" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="review-absolute-methods.html"/>
+<link rel="next" href="supplemental-figures.html"/>
+<script src="libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+TeX: {extensions: ["cancel.js"]}
+});
+</script>
+
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
+<li class="chapter" data-level="1" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>1</b> Introduction</a></li>
+<li class="chapter" data-level="2" data-path="abundance-measurement.html"><a href="abundance-measurement.html"><i class="fa fa-check"></i><b>2</b> How taxonomic bias affects abundance measurements</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="abundance-measurement.html"><a href="abundance-measurement.html#relative-abundance-proportions-and-ratios"><i class="fa fa-check"></i><b>2.1</b> Relative abundance (proportions and ratios)</a></li>
+<li class="chapter" data-level="2.2" data-path="abundance-measurement.html"><a href="abundance-measurement.html#absolute-abundance"><i class="fa fa-check"></i><b>2.2</b> Absolute abundance</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="differential-abundance.html"><a href="differential-abundance.html"><i class="fa fa-check"></i><b>3</b> Taxonomic bias can cause errors in differential-abundance results</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="differential-abundance.html"><a href="differential-abundance.html#fold-changes-between-a-pair-of-samples"><i class="fa fa-check"></i><b>3.1</b> Fold changes between a pair of samples</a></li>
+<li class="chapter" data-level="3.2" data-path="differential-abundance.html"><a href="differential-abundance.html#regression-analysis-of-many-samples"><i class="fa fa-check"></i><b>3.2</b> Regression analysis of many samples</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="case-studies.html"><a href="case-studies.html"><i class="fa fa-check"></i><b>4</b> Case studies  </a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="case-studies.html"><a href="case-studies.html#foliar-fungi-experiment"><i class="fa fa-check"></i><b>4.1</b> Foliar fungi experiment</a></li>
+<li class="chapter" data-level="4.2" data-path="case-studies.html"><a href="case-studies.html#vaginal-microbiomes-of-pregnant-women"><i class="fa fa-check"></i><b>4.2</b> Vaginal microbiomes of pregnant women</a>
+<ul>
+<li class="chapter" data-level="4.2.1" data-path="case-studies.html"><a href="case-studies.html#notes"><i class="fa fa-check"></i><b>4.2.1</b> Notes</a></li>
+</ul></li>
+<li class="chapter" data-level="4.3" data-path="case-studies.html"><a href="case-studies.html#microbial-growth-in-marine-sediments"><i class="fa fa-check"></i><b>4.3</b> Microbial growth in marine sediments</a></li>
+<li class="chapter" data-level="4.4" data-path="case-studies.html"><a href="case-studies.html#summary-and-conclusions"><i class="fa fa-check"></i><b>4.4</b> Summary and conclusions</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="solutions.html"><a href="solutions.html"><i class="fa fa-check"></i><b>5</b> Potential solutions</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="solutions.html"><a href="solutions.html#use-ratio-based-relative-abundance-analyses"><i class="fa fa-check"></i><b>5.1</b> Use ratio-based relative-abundance analyses</a></li>
+<li class="chapter" data-level="5.2" data-path="solutions.html"><a href="solutions.html#calibrate-compositions"><i class="fa fa-check"></i><b>5.2</b> Calibration using community controls</a></li>
+<li class="chapter" data-level="5.3" data-path="solutions.html"><a href="solutions.html#calibration-using-reference-species"><i class="fa fa-check"></i><b>5.3</b> Calibration using reference species</a></li>
+<li class="chapter" data-level="5.4" data-path="solutions.html"><a href="solutions.html#choosing-complementary-total-density-and-metagenomics-measurements"><i class="fa fa-check"></i><b>5.4</b> Choosing complementary total-density and metagenomics measurements</a></li>
+<li class="chapter" data-level="5.5" data-path="solutions.html"><a href="solutions.html#bias-sensitivity-analysis"><i class="fa fa-check"></i><b>5.5</b> Bias-sensitivity analysis</a></li>
+<li class="chapter" data-level="5.6" data-path="solutions.html"><a href="solutions.html#bias-aware-meta-analysis"><i class="fa fa-check"></i><b>5.6</b> Bias-aware meta-analysis</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="conclusion.html"><a href="conclusion.html"><i class="fa fa-check"></i><b>6</b> Conclusion</a></li>
+<li class="appendix"><span><b>Appendix</b></span></li>
+<li class="chapter" data-level="A" data-path="model-details.html"><a href="model-details.html"><i class="fa fa-check"></i><b>A</b> Model details</a>
+<ul>
+<li class="chapter" data-level="A.1" data-path="model-details.html"><a href="model-details.html#mgs-measurement"><i class="fa fa-check"></i><b>A.1</b> MGS measurement</a></li>
+<li class="chapter" data-level="A.2" data-path="model-details.html"><a href="model-details.html#total-density-bias"><i class="fa fa-check"></i><b>A.2</b> Taxonomic bias in total-density measurement</a></li>
+<li class="chapter" data-level="A.3" data-path="model-details.html"><a href="model-details.html#total-density-ref"><i class="fa fa-check"></i><b>A.3</b> Using reference species for total-density normalization</a></li>
+<li class="chapter" data-level="A.4" data-path="model-details.html"><a href="model-details.html#linearity-of-extraction"><i class="fa fa-check"></i><b>A.4</b> Linearity of extraction</a></li>
+</ul></li>
+<li class="chapter" data-level="B" data-path="review-absolute-methods.html"><a href="review-absolute-methods.html"><i class="fa fa-check"></i><b>B</b> Review of experimental methods for obtaining absolute densities</a>
+<ul>
+<li class="chapter" data-level="B.1" data-path="review-absolute-methods.html"><a href="review-absolute-methods.html#measurement-of-total-cell-density"><i class="fa fa-check"></i><b>B.1</b> Measurement of total cell density</a></li>
+<li class="chapter" data-level="B.2" data-path="review-absolute-methods.html"><a href="review-absolute-methods.html#measurement-of-total-dna-density-post-extraction"><i class="fa fa-check"></i><b>B.2</b> Measurement of total DNA density post extraction</a></li>
+<li class="chapter" data-level="B.3" data-path="review-absolute-methods.html"><a href="review-absolute-methods.html#equivolumetric-protocol"><i class="fa fa-check"></i><b>B.3</b> Equivolumetric protocol</a></li>
+<li class="chapter" data-level="B.4" data-path="review-absolute-methods.html"><a href="review-absolute-methods.html#housekeeping-species"><i class="fa fa-check"></i><b>B.4</b> Housekeeping species</a></li>
+<li class="chapter" data-level="B.5" data-path="review-absolute-methods.html"><a href="review-absolute-methods.html#spike-ins"><i class="fa fa-check"></i><b>B.5</b> Spike-ins</a></li>
+<li class="chapter" data-level="B.6" data-path="review-absolute-methods.html"><a href="review-absolute-methods.html#targeted-measurements"><i class="fa fa-check"></i><b>B.6</b> Targeted measurements</a></li>
+</ul></li>
+<li class="chapter" data-level="C" data-path="appendix-regression.html"><a href="appendix-regression.html"><i class="fa fa-check"></i><b>C</b> Error in estimated regression coefficients and standard errors</a></li>
+<li class="chapter" data-level="D" data-path="supplemental-figures.html"><a href="supplemental-figures.html"><i class="fa fa-check"></i><b>D</b> Supplemental figures</a></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Inferring true changes in microbial abundance from taxonomically-biased microbiome measurements</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="appendix-regression" class="section level1" number="9">
+<h1><span class="header-section-number">C</span> Error in estimated regression coefficients and standard errors</h1>
+<p>Results from statistics on regression under measurement error can help us understand the effect of bias on DA regression analysis.</p>
+<p>Consider Equation <a href="differential-abundance.html#eq:regression">(3.2)</a> for the simple linear regression of log density of a species <span class="math inline">\(i\)</span> on covariate <span class="math inline">\(x\)</span>.
+Let <span class="math inline">\(y\)</span> stand for the actual log density of a focal species <span class="math inline">\(i\)</span>, <span class="math inline">\(z\)</span> stand for the log density that we’ve measured, and <span class="math inline">\(d = z - y\)</span> equal the difference between the two, which here is the log efficiency of species <span class="math inline">\(i\)</span> minus the log mean efficiency of the sample.
+Let <span class="math inline">\(s_{xy}\)</span> denote the sample covariance between variables <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span>, <span class="math inline">\(s^{2}_{x} = s_{xx}\)</span> and <span class="math inline">\(s_{x}\)</span> denote the sample variance and standard deviation, and <span class="math inline">\(r_{xy} = s_{xy}/(s_{x}s_{y})\)</span> denote the sample correlation.</p>
+<p>The ordinary least squares (OLS) and maximum likelihood (MLE) estimates of the slope of <span class="math inline">\(z\)</span> equals the sample covariance of <span class="math inline">\(z\)</span> and <span class="math inline">\(x\)</span> divided by the sample variance in <span class="math inline">\(x\)</span> or, equivalently, the sample correlation of <span class="math inline">\(z\)</span> and <span class="math inline">\(x\)</span> multiplied by the ratio of their sample standard deviations,
+<span class="math display">\[\begin{align}
+  \hat \beta_z = \frac{s_{zx}}{s^2_x} = r_{zx} \cdot \frac{s_z}{s_x}.
+\end{align}\]</span>
+From the (bi)linearity of sample covariances it follows that
+<span class="math display">\[\begin{align}
+  \hat \beta_z 
+  = \frac{s_{yx}}{s^2_x} + \frac{s_{dx}}{s^2_x} 
+  = \frac{r_{yx} s_y}{s_x} + \frac{r_{dx} s_d}{s_x} 
+  = \hat \beta_y + \hat \beta_d,
+\end{align}\]</span>
+where <span class="math inline">\(\hat \beta_y\)</span> and <span class="math inline">\(\hat \beta_d\)</span> denote the slope estimates for <span class="math inline">\(y\)</span> and <span class="math inline">\(d\)</span> (were these values to be known).
+The absolute error in the estimate <span class="math inline">\(\hat \beta_{z}\)</span> of <span class="math inline">\(\hat \beta_{y}\)</span> is therefore <span class="math inline">\(\hat \beta_{d}\)</span>; it is large in a practical sense when <span class="math inline">\(\hat \beta_{d}\)</span> is large (in absolute value) compared to <span class="math inline">\(\hat \beta_{y}\)</span>, which corresponds to the covariance of <span class="math inline">\(d\)</span> with <span class="math inline">\(x\)</span> being large compared to the covariance of <span class="math inline">\(y\)</span> with <span class="math inline">\(x\)</span>.</p>
+<p>In our case, the covariance of <span class="math inline">\(d\)</span> equals the negative of the covariance of log mean efficiency with <span class="math inline">\(x\)</span>.
+The absolute error in <span class="math inline">\(\hat \beta\)</span> equals the negative covariance of log mean efficiency scaled by the variance in <span class="math inline">\(x\)</span>.
+This absolute error is the same for all species; however, its practical significance varies depending on its magnitude relative to that of the slope of the actual log densities.
+For species that covary with <span class="math inline">\(x\)</span> more strongly than the log mean efficiency, the error will be relatively small.
+This situation might occur either because the mean efficiency varies relatively little across samples or because its variation is relatively less correlated with <span class="math inline">\(x\)</span> compared to the log density of the focal species.</p>
+<p>We can similarly understand the impact of measurement error on the precision of our slope estimates.
+The OLS and MLE estimated standard error in <span class="math inline">\(\hat \beta\)</span> are both approximately
+<span class="math display">\[\begin{align}
+  \hat{\text{se}}(\hat \beta)
+  \approx \frac{s_{\hat \varepsilon}}{s_x \sqrt{n}},
+\end{align}\]</span>
+where <span class="math inline">\(s_{\hat \varepsilon}\)</span> is the sample standard deviation of the residuals
+(<span class="citation">Wasserman (<a href="#ref-wasserman2004allo" role="doc-biblioref">2004</a>)</span> Chapter 13).
+The sample residuals of <span class="math inline">\(z\)</span>, <span class="math inline">\(y\)</span>, and <span class="math inline">\(d\)</span> have a similar relationship to the regression coefficient estimates,
+<span class="math display">\[\begin{align}
+  \hat \varepsilon_z 
+    &amp;\equiv z - \hat \beta_z x
+  \\&amp;= (y + d) - (\hat \beta_y + \hat \beta_d) x
+  \\&amp;= (y - \hat \beta_y x) + (d - \hat \beta_d x)
+  \\&amp;= \hat \varepsilon_y + \hat \varepsilon_d.
+\end{align}\]</span>
+(Note, here I’ve omitted the subscript indicating the dependence on the sample.)
+It follows that the sample variances of the residuals of <span class="math inline">\(z\)</span>, <span class="math inline">\(y\)</span>, and <span class="math inline">\(d\)</span> are related through
+<span class="math display">\[\begin{align}
+  s^2_{\hat \varepsilon_{z}} 
+  = s^2_{\hat \varepsilon_{y} + \hat \varepsilon_{d}}
+  = s^2_{\hat \varepsilon_{y}} + s^2_{\hat \varepsilon_{d}} + 2 s_{\hat \varepsilon_{y} \hat \varepsilon_{d}}.
+\end{align}\]</span>
+The standard deviation of the <span class="math inline">\(z\)</span> residuals is increased above that of the <span class="math inline">\(y\)</span> residuals when the <span class="math inline">\(d\)</span> residuals are either uncorrelated or positively correlated with the <span class="math inline">\(y\)</span> residuals, but may be decreased when the <span class="math inline">\(y\)</span> and <span class="math inline">\(d\)</span> residuals are negatively correlated.</p>
+<p>In our case, the <span class="math inline">\(d\)</span> residuals equal the negative residuals of the log mean efficiency.
+It is plausible that for most species, their residual variation will have a small covariance with log mean efficiency and the net effect of variation in the mean efficiency will be to increase the estimated standard errors, as occurs with most species in Figure <a href="differential-abundance.html#fig:regression-example">3.1</a>.
+However, high-efficiency species that vary substantially in proportion across samples may be strongly positively correlated with log mean efficiency such that the estimated standard errors decrease, as we see with Species 9 in Figure <a href="differential-abundance.html#fig:regression-example">3.1</a>.</p>
+
+</div>
+<h3>References</h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-wasserman2004allo" class="csl-entry">
+Wasserman, Larry. 2004. <em><span class="nocase">All of Statistics</span></em>. Springer Texts in Statistics. New York, NY: Springer New York. <a href="https://doi.org/10.1007/978-0-387-21736-9">https://doi.org/10.1007/978-0-387-21736-9</a>.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="review-absolute-methods.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="supplemental-figures.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": true,
+"facebook": false,
+"twitter": false,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/mikemc/differential-abundance-theory/edit/main/appendix-regression.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": "https://github.com/mikemc/differential-abundance-theory/commits/main/appendix-regression.Rmd",
+"text": null
+},
+"view": {
+"link": "https://github.com/mikemc/differential-abundance-theory/blob/main/appendix-regression.Rmd",
+"text": null
+},
+"download": ["_main.pdf"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
