@@ -36,12 +36,11 @@ Calibration then allowed us to explore the impact of bias on the measured trajec
 <!-- begin figure -->
 
 ```{r calibration-example, fig.cap = '(ref:cap-calibration-example)', out.width = '100%'}
-fig_path <- fs::path(
+fs::path(
   "notebook/_posts/2021-10-25-brooks2015thet-calibration",
   "brooks2015thet-calibration_files/figure-html5/brooks2015thet_fc_calibration-1.png"
-)
-knitr::include_graphics(fig_path)
-rm(fig_path)
+) %>%
+  knitr::include_graphics()
 ```
 
 (ref:cap-calibration-example) **Fold changes can be calibrated using community controls or reference species.** The figure compares the performance of three methods for measuring fold changes in absolute cell density in cellular mock communities of 7 vaginal species, which were constructed and measured via 16S sequencing by @brooks2015thet. The 'Uncalibrated' fold changes are derived directly from uncalibrated individual abundance measurements, which equal the product of the species' proportion by the total density (which here is be known to be constant by construction). The 'Calibrated (community)' measurements are computed from abundance measurements where the proportions are first corrected for the taxonomic bias that was estimated from a single sample that contained all 7 species. The 'Calibrated (reference)' measurements are computed from abundances measured with the reference-species method, with _Lactobacillus crispatus_ used as the reference; that is, the true abundance of _L. crispatus_ is treated as known and used to infer the abundance of the remaining 6 species. Only samples that contain _L. crispatus_ are included.

@@ -99,18 +99,12 @@ Regression analyses of log-ratios and log abundances derived from reference-spec
 <!-- Figure: Regression example -->
 
 ```{r regression-example, fig.cap = '(ref:regression-example)'}
-svg_path <- here::here(
+here::here(
   "notebook/_posts/2021-08-03-simulate-regression-example/",
   "simulate-regression-example_files/figure-html5",
   "main-figure-1.svg"
-)
-if (knitr::is_html_output()) {
-  fig_path <- svg_path
-} else if (knitr::is_latex_output()) {
-  fig_path <- svg_to_pdf(svg_path)
-}
-knitr::include_graphics(fig_path)
-rm(svg_path, fig_path)
+  ) %>%
+  include_svg
 ```
 
 (ref:regression-example) **Taxonomic bias distorts multi-sample differential abundance inference when the mean efficiency of samples is associated with the covariate of interest.** This figure shows the results of a regression analysis of simulated microbiomes consisting of 50 samples and 10 species from two environmental conditions indexed by $x=0$ and $x=1$. In this simulation, the species with the largest efficiency (Species 9) also has the largest positive LFC, which drives the positive association of the log mean efficiency with the condition (shown in Panels A and B). This positive LFC in the log mean efficiency induces a systematic negative shift in the estimated LFCs of all species (Panels C and D). Panel D shows the mean LFC (points) with 95% confidence intervals (CIs), for each species estimated from either the actual or the measured densities. The error (difference in LFC estimates on measured and actual) equals the negative LFC of the mean efficiency (shown in Panel B).

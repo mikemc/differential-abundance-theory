@@ -103,17 +103,11 @@ These shifts typically result in substantial fold changes in mean efficiency (SI
 <!-- begin figure -->
 
 ```{r momspi-mean-efficiency-dist, fig.cap = '(ref:cap-momspi-mean-efficiency-dist)'}
-svg_path <- fs::path(
+fs::path(
   "notebook/_posts/2021-11-01-momspi-summary/momspi-summary_files", 
   "figure-html5/momspi-mean-efficiency-dist-1.svg"
-)
-if (knitr::is_html_output()) {
-  fig_path <- svg_path
-} else if (knitr::is_latex_output()) {
-  fig_path <- svg_to_pdf(svg_path)
-}
-knitr::include_graphics(fig_path)
-rm(svg_path, fig_path)
+  ) %>%
+  include_svg
 ```
 
 (ref:cap-momspi-mean-efficiency-dist) **The mean efficiency in vaginal samples from the MOMS-PI study varies with the most abundant species.**

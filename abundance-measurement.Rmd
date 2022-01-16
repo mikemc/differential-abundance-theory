@@ -90,14 +90,8 @@ For instance, in Figure \@ref(fig:error-proportions), the ratio of Species 3 (wi
 <!-- begin figure -->
 
 ```{r error-proportions, out.width = '90%', fig.cap = '(ref:cap-error-proportions)', cache = TRUE}
-svg_path <- "figures/illustrations/error-proportions.svg"
-if (knitr::is_html_output()) {
-  fig_path <- svg_path
-} else if (knitr::is_latex_output()) {
-  fig_path <- svg_to_pdf(svg_path)
-}
-knitr::include_graphics(fig_path)
-rm(svg_path, fig_path)
+"figures/illustrations/error-proportions.svg" %>%
+  include_svg
 ```
 
 (ref:cap-error-proportions) **Taxonomic bias creates sample-dependent multiplicative errors in species proportions, which can lead to inaccurate fold changes between samples.** Top row: Error in proportions measured by MGS in two hypothetical microbiome samples that contain different relative abundances of three species. Bottom row: Error in the measured fold-change in the third species that is derived from these measurements. Species' proportions may be measured as too high or too low depending on sample composition. For instance, Species 3 has an efficiency of 6 and is under-measured in Sample 1 (which has a mean efficiency of 8.33) but over-measured in Sample 2 (which has a mean efficiency of 3.15). 

@@ -46,6 +46,9 @@ include_svg <- function(svg_path) {
     fig_path <- svg_path
   } else if (knitr::is_latex_output()) {
     fig_path <- svg_to_pdf(svg_path)
+  } else {
+    # For word docs
+    fig_path <- svg_path
   }
   knitr::include_graphics(fig_path)
 }

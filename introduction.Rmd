@@ -38,17 +38,11 @@ Collectively, these methods and insights may provide practical solutions to taxo
 
 ```{r basic-problem, fig.cap = '(ref:cap-basic-problem)'}
 # NOTE: call to include_graphics() has to be in top level expression
-svg_path <- fs::path(
+fs::path(
   "notebook/_posts/2021-10-27-illustrate-the-problem/illustrate-the-problem_files", 
   "figure-html5/brooks_lcrisp_prop_and_fc-1.svg"
-)
-if (knitr::is_html_output()) {
-  fig_path <- svg_path
-} else if (knitr::is_latex_output()) {
-  fig_path <- svg_to_pdf(svg_path)
-}
-knitr::include_graphics(fig_path)
-rm(svg_path, fig_path)
+  ) %>%
+  include_svg
 ```
 
 (ref:cap-basic-problem) **Mock community experiments show that taxonomic bias can distort the measured fold change in an individual species' proportion across samples.** The figure shows the measured vs. actual proportions for a single bacterial species, _Lactobacillus crispatus_, in a set of bacterial cellular mock communities, and the resulting fold changes between community samples. The inconsistent error in the measured proportions of individual samples (Panel A) leads to inaccurate measurements of fold changes (Panel B). Mock communities were constructed and measured with 16S sequencing by @brooks2015thet. The data was re-analyzed by @mclaren2019cons, who showed that despite the inconsistency of the errors in Panel A, taxonomic bias acted consistently across samples.
