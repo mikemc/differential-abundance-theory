@@ -26,7 +26,7 @@ From Equation \@ref(eq:prop-error), it follows that the measured FC in the propo
   .
 \end{align}
 The sample-independent efficiency factor cancels, but the sample-dependent mean efficiency does not, leaving an error equal to the inverse of the change in the mean efficiency.
-In contrast, when we use Equation \@ref(eq:ratio-error) to compute the error in the FC in the ratio between two species $i$ and $j$, we find that the constant error $\text{efficiency}_{i} / $\text{efficiency}_{j}$ exactly cancels, so that the measured FCs remain accurate regardless of whether the mean efficiency varies.
+In contrast, when we use Equation \@ref(eq:ratio-error) to compute the error in the FC in the ratio between two species $i$ and $j$, we find that the constant error $\text{efficiency}_{i} / \text{efficiency}_{j}$ exactly cancels, so that the measured FCs remain accurate regardless of whether the mean efficiency varies.
 
 Figure \@ref(fig:error-proportions) (bottom row) illustrates these two different behaviors for the error in the FCs of proportions versus ratios when the mean efficiency varies between samples.
 Here the mean efficiency decreases by a factor of 2.6 (FC of 0.4X) from Sample 1 to Sample 2, which causes the FC of the proportion of each species to be measured as 2.6X larger than its true value.

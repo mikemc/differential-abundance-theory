@@ -138,7 +138,7 @@ The equations \@ref(eq:total-density-error) and \@ref(eq:prop-error) for the err
 \end{align}
 
 Equation \@ref(eq:density-prop-error) indicates that the multiplicative error in the measured absolute abundance of a species equals its MGS efficiency relative to the mean MGS efficiency in the sample, multiplied by the mean efficiency of the total measurement.
-As in the case of proportions (Equation \@ref()), the error depends on sample composition through the two mean efficiency terms and so may vary across samples.
+As in the case of proportions (Equation \@ref(eq:prop-error)), the error depends on sample composition through the two mean efficiency terms and so may vary across samples.
 On the other hand, if the mean efficiency of the total-abundance measurement mirrors that of the MGS measurement, the two can offset and lead to a relatively stable error.
 We discuss how this possibility might apply to real experimental workflows below.
 

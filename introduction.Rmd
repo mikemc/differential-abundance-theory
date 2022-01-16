@@ -6,7 +6,7 @@ Marker-gene and shotgun metagenomic sequencing (jointly, MGS) can be used to mea
 In these _differential-abundance (DA) analyses_, the change in abundance of a microbial taxon across samples or conditions is used to infer ecological dynamics or find microbes that are associated with specific host diseases or environmental conditions.
 Standard MGS measurements lose information about total microbial density and so are typically used to analyze the abundances of taxa relative to each other.
 But new methods are increasingly used to provide absolute information, making it possible to analyze changes in absolute cell density.
-In its various forms, DA analysis remain one of, if not the most, common forms of analyses applied to MGS data to elucide the inner workings of microbiomes and their relationships to host and environmental health.
+In its various forms, DA analysis remain one of, if not the most, common forms of analyses applied to MGS data to elucidate the inner workings of microbiomes and their relationships to host and environmental health.
 
 <!-- P: Taxonomic bias -->
 Yet these DA analysis are built on a fundamentally flawed foundation.
