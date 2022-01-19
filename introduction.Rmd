@@ -1,5 +1,19 @@
 # Introduction {#introduction}
 
+::: {#abstract .rmdnote}
+
+**Abstract:**
+To assess how the species in microbial communities vary across conditions, researchers often measure the relative or absolute abundances of all species simultaneously using marker-gene and metagenomic sequencing.
+These measurements are taxonomically biased, with some species measured many times more efficiently than others.
+Measurement error caused by taxonomic bias is generally ignored in such _differential abundance (DA) analyses_, likely due to a combination of 1) a widespread belief that protocol standardization is sufficient to yield accurate differences between samples and 2) a lack of practical solutions for addressing it.
+Using theoretical arguments and analysis of real and simulated experiments, we show that taxonomic bias can create error in DA results that is sufficient to lead to scientifically erroneous conclusions.
+This error, however, varies by experimental context and analysis method.
+We present six approaches to addressing the error, each suited to different experimental questions and systems.
+These approaches provide practical solutions to mitigating the effect of taxonomic bias for a large fraction of DA questions.
+If adopted, they may lead to notable improvements in the reproducibility and biological interpretability of the statistical findings of microbiome studies.
+
+:::
+
 <!-- First paragraph: DA analysis -->
 One of the most basic questions we can ask about microbial communities is: How do different microbial taxa vary in abundance—across space, time, and host or environmental conditions?
 Marker-gene and shotgun metagenomic sequencing (jointly, MGS) can be used to measure the abundances of thousands of species simultaneously, making it possible to ask this question on a community-wide scale.
