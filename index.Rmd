@@ -71,7 +71,5 @@ Please post comments or questions on the [GitHub Issues page](https://github.com
 This manuscript addresses the effect that the taxonomic bias inherent in microbiome measurement has on microbial differential-abundance analysis.
 We describe the basic problem posed by taxonomic bias for measuring changes in the abundance of particular taxa across conditions and describe new strategies for mitigating the errors it induces.
 Analyses of both relative and absolute abundances are considered.
-In its current form, the manuscript sits somewhere between a standard scientific article and a monograph; 
-it consists of an article followed by a series of appendices which together give a comprehensive treatment of the implications of the @mclaren2019cons model of taxonomic bias for differential-abundance analysis and experimental design.
-It is licensed under a [CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/).
+The manuscript is licensed under a [CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/).
 See [the Zenodo record](https://doi.org/10.5281/zenodo.4552717) for how to cite the latest version.
