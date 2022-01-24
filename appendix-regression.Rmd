@@ -1,57 +1,176 @@
-# Error in estimated regression coefficients and standard errors {#appendix-regression}
+# Taxonomic bias and linear regression {#appendix-regression}
 
-Results from statistics on regression under measurement error can help us understand the effect of bias on DA regression analysis.
+This section derives the theoretical results of Section \@ref(differential-abundance) for the effect of taxonomic bias on regression-based DA analyses.
+As in Section \@ref(differential-abundance), we restrict our attention to DA analyses that can be expressed in terms of the simple linear regression model in which the response is log absolute abundance or log proportion of individual species or the log ratio of a pair of species. 
 
-Consider Equation \@ref(eq:regression) for the simple linear regression of log density of a species $i$ on covariate $x$.
-Let $y$ stand for the actual log density of a focal species $i$, $z$ stand for the log density that we've measured, and $d = z - y$ equal the difference between the two, which here is the log efficiency of species $i$ minus the log mean efficiency of the sample.
-Let $s_{xy}$ denote the sample covariance between variables $x$ and $y$, $s^{2}_{x} = s_{xx}$ and $s_{x}$ denote the sample variance and standard deviation, and $r_{xy} = s_{xy}/(s_{x}s_{y})$ denote the sample correlation.
+## Review of simple linear regression
 
-The ordinary least squares (OLS) and maximum likelihood (MLE) estimates of the slope of $z$ equals the sample covariance of $z$ and $x$ divided by the sample variance in $x$ or, equivalently, the sample correlation of $z$ and $x$ multiplied by the ratio of their sample standard deviations,
+Table: (\#tab:statistical-notation) Statistical notation used in this section.
+
+| Notation | Mathematical definition | Description |
+|:--|:----|:----|
+| $x$, $y$, $z$, $d$ |                                                     | Random variables, defined in text |
+| $x(a)$             |                                                     | Value of $x$ in sample $a$ |
+| $\bar x$           | $\frac{1}{n}\sum_a x(a)$                            | Sample mean of $x$ |
+| $s(x,y)$           | $\frac{1}{n}\sum_a (x(a) - \bar x) (y(a) - \bar y)$ | Sample covariance between $x$ and $y$ |
+| $s^{2}(x)$         | $s(x,x)$                                            | Sample variance of $x$ |
+| $s(x)$             | $\sqrt{s^{2}(x)}$                                   | Sample standard deviation of $x$ |
+| $r(x,y)$           | $\frac{s(x,y)}{s(x) s(y)}$                          | Sample correlation between $x$ and $y$ |
+| $\alpha$, $\beta$, $\sigma$                            | | Parameters of the regression model |
+| $\hat \alpha$, $\hat \beta$, $\hat \sigma$             | | Parameter estimates |
+| $\epsilon(a)$      | $y(a) - (\alpha + \beta x(a))$      | Error for sample $a$ |
+| $\hat \epsilon(a)$ | $y(a) - (\hat \alpha + \hat \beta x(a))$ | Residual for sample $a$ |
+| $\text{se}(\hat \beta)$, $\hat{\text{se}}(\hat \beta)$ | | Standard error of $\hat \beta$ and its estimate |
+
+We begin by reviewing definitions, notation, and results for the analysis of the simple linear regression model.
+Our presentation follows @wasserman2004allo Chapter 13 with additional interpretation of the estimated regression coefficients.
+<!-- to support our subsequent consideration of measurement error caused by bias. -->
+Statistical notation is defined in Table \@ref(tab:statistical-notation).
+
+Consider a response variable $y$ and a covariate $x$.
+Following @wasserman2004allo, we define the _simple linear regression model_ by
 \begin{align}
-  \hat \beta_z = \frac{s_{zx}}{s^2_x} = r_{zx} \cdot \frac{s_z}{s_x}.
+  (\#eq:lm)
+  y(a) &= \alpha + \beta x(a) + \varepsilon(a),
 \end{align}
-From the (bi)linearity of sample covariances it follows that
+where $E[\varepsilon(a) \mid x(a)] = 0$ and $V[\varepsilon(a) \mid x(a)] = \sigma^2$.
+That is, conditional on the value of $x$ in a sample $a$, the response $y$ is given by $\alpha + \beta x$ with a random error $\varepsilon$ that has an expected value of $0$ and a constant variance $\sigma^2$.
+
+<!-- Note that we distinguish between the statistical model being fit to the data, and the actual data generating process. -->
+<!-- These results for the regression model estimates hold regardless of whether the simple linear model is a good one for the data. -->
+
+Given data $(y, x)$, we _fit_ the model by finding estimates for the parameters $\alpha$, $\beta$, and $\sigma^2$ that best reflect the data under the assumption that the model is correct and according to our chosen criterion that defines 'best'.
+Here we consider the least-squares estimates for the coefficients $\alpha$ and $\beta$, which are also the maximum likelihood estimates if we further assume that the errors $\varepsilon$ are normally distributed.
+<!-- Defining the residuals as $\hat \varepsilon(a) = y(a) - (\hat \alpha + \hat \beta x(a))$,  -->
+The least-squares estimates of $\alpha$ and $\beta$ are the values that minimize the residual sum of squares, $\text{RSS} = \sum_{a} \hat \varepsilon(a)$.
+These estimates can be conveniently expressed in terms of the sample means and covariances or correlations of $x$ and $y$,
 \begin{align}
-  \hat \beta_z 
-  = \frac{s_{yx}}{s^2_x} + \frac{s_{dx}}{s^2_x} 
-  = \frac{r_{yx} s_y}{s_x} + \frac{r_{dx} s_d}{s_x} 
-  = \hat \beta_y + \hat \beta_d,
+  (\#eq:lm-hat)
+  \hat \alpha &= \bar y - \hat \beta \bar x \\
+  \hat \beta &= \frac{s(y,x)}{s^2(x)} = r(y,x) \cdot \frac{s(y)}{s(x)}.
 \end{align}
-where $\hat \beta_y$ and $\hat \beta_d$ denote the slope estimates for $y$ and $d$ (were these values to be known).
-The absolute error in the estimate $\hat \beta_{z}$ of $\hat \beta_{y}$ is therefore $\hat \beta_{d}$; it is large in a practical sense when $\hat \beta_{d}$ is large (in absolute value) compared to $\hat \beta_{y}$, which corresponds to the covariance of $d$ with $x$ being large compared to the covariance of $y$ with $x$.
-
-In our case, the covariance of $d$ equals the negative of the covariance of log mean efficiency with $x$.
-The absolute error in $\hat \beta$ equals the negative covariance of log mean efficiency scaled by the variance in $x$.
-This absolute error is the same for all species; however, its practical significance varies depending on its magnitude relative to that of the slope of the actual log densities.
-For species that covary with $x$ more strongly than the log mean efficiency, the error will be relatively small.
-This situation might occur either because the mean efficiency varies relatively little across samples or because its variation is relatively less correlated with $x$ compared to the log density of the focal species.
-
-We can similarly understand the impact of measurement error on the precision of our slope estimates.
-The OLS and MLE estimated standard error in $\hat \beta$ are both approximately
+<!-- (@wasserman2004allo Chapter 13), -->
+The estimate for the slope coefficient, $\hat \beta$, equals the ratio of the sample covariance of $y$ with $x$ relative to the variance in $x$ or, equivalently, the correlation of $y$ with $x$ multiplied by the ratio of their standard deviations.
+The estimate for the intercept, $\hat \alpha$, is the value such that the sample means follow the regression relationship, $\bar y = \hat \alpha + \hat \beta \bar x$.
+<!-- We are most interested in the estimate of the slope coefficient, $\hat \beta$ -->
+The standard unbiased and maximum likelihood estimates for the variance $\sigma^{2}$ are both approximately given by the sample variance of the residuals,
 \begin{align}
+  (\#eq:lm-var)
+  \hat{\sigma}^2(\hat \beta) \approx s^2(\hat \varepsilon).
+\end{align}
+
+We are most interested in the estimated slope coefficient, $\hat \beta$.
+Besides the point estimate indicating our best guess at the value, we also wish to understand the uncertainty or precision of the estimate. 
+This uncertainty is quantified by the standard error, $\text{se}(\hat \beta)$, estimated by
+\begin{align}
+  (\#eq:lm-se)
   \hat{\text{se}}(\hat \beta)
-  \approx \frac{s_{\hat \varepsilon}}{s_x \sqrt{n}},
+  = \frac{\hat \sigma}{s(x) \sqrt{n}}
+  \approx \frac{s(\hat \varepsilon)}{s(x) \sqrt{n}},
 \end{align}
-where $s_{\hat \varepsilon}$ is the sample standard deviation of the residuals
-(@wasserman2004allo Chapter 13).
-The sample residuals of $z$, $y$, and $d$ have a similar relationship to the regression coefficient estimates,
-\begin{align}
-  \hat \varepsilon_z 
-    &\equiv z - \hat \beta_z x
-  \\&= (y + d) - (\hat \beta_y + \hat \beta_d) x
-  \\&= (y - \hat \beta_y x) + (d - \hat \beta_d x)
-  \\&= \hat \varepsilon_y + \hat \varepsilon_d.
-\end{align}
-(Note, here I've omitted the subscript indicating the dependence on the sample.)
-It follows that the sample variances of the residuals of $z$, $y$, and $d$ are related through
-\begin{align}
-  s^2_{\hat \varepsilon_{z}} 
-  = s^2_{\hat \varepsilon_{y} + \hat \varepsilon_{d}}
-  = s^2_{\hat \varepsilon_{y}} + s^2_{\hat \varepsilon_{d}} + 2 s_{\hat \varepsilon_{y} \hat \varepsilon_{d}}.
-\end{align}
-The standard deviation of the $z$ residuals is increased above that of the $y$ residuals when the $d$ residuals are either uncorrelated or positively correlated with the $y$ residuals, but may be decreased when the $y$ and $d$ residuals are negatively correlated.
+<!-- (@wasserman2004allo Equation 13.13). -->
+Approximate 95% confidence intervals for $\beta$ are given by $\hat \beta \pm 2\; \hat{\text{se}}(\hat \beta)$.
 
+## Measurement error in the response
+
+Now consider a researcher who would like to regress a biological quantity $y$ (the response) on a second quantity $x$ (the covariate).
+But instead of $y$, they only know a proxy $z$, which is related to $y$ via the difference $d = z - y$.
+For instance, $y$ might be the log abundance of a species, $z$ is the abundance that is measured via MGS, and $x$ is a numerical quantity like pH or a boolean variable indicting case versus control.
+Lacking a direct measurement of $y$, the researcher instead regresses $z$ on $x$ and interprets the fitted model as informing them about the relationship between $y$ and $x$.
+We wish to understand the accuracy of their conclusions.
+
+To understand how the measurement error in $y$ impacts the researcher's regression analysis, consider the three linear regression equations for $y$, $z$, and $d$,
+\begin{align}
+  (\#eq:lm-y)
+  y(a) &= \alpha_y + \beta_y x(a) + \varepsilon_y(a),
+\end{align}
+\begin{align}
+  (\#eq:lm-z)
+  z(a) &= \alpha_z + \beta_z x(a) + \varepsilon_z(a),
+\end{align}
+\begin{align}
+  (\#eq:lm-d)
+  d(a) &= \alpha_d + \beta_d x(a) + \varepsilon_d(a).
+\end{align}
+The researcher would like to fit the model for $y$ (Equation \@ref(eq:lm-y)), but instead can only fit the model for $z$ (Equation \@ref(eq:lm-z)).
+The two are related via the Equation \@ref(eq:lm-z) for $d$.
+It is helpful to imagine, for the moment, that $y$ and $d$ are known and so we can fit all three models \@ref(eq:lm-y), \@ref(eq:lm-z), and \@ref(eq:lm-d).
+From Equation \@ref(eq:lm-hat) and the linearity of sample means and covariances it follows that 
+\begin{align}
+  (\#eq:lm-hat-rel)
+  \hat \alpha_z &= \hat \alpha_y + \hat \alpha_d \\
+  \hat \beta_z &= \hat \beta_y + \hat \beta_d.
+\end{align}
+That is, the estimated coefficients for $y$, $z$, and $d$ mirror the relationship between the variables themselves,  $z = y + d$.
+Consequently, we see that the measurement error $d$ creates absolute errors in the regression coefficients $\hat \alpha$ and $\hat \beta$ equal to
+\begin{align}
+  (\#eq:lm-hat-err)
+  \text{abs. error}(\hat \alpha) &\equiv \hat \alpha_z - \hat \alpha_y = \hat \alpha_d \\
+  \text{abs. error}(\hat \beta) &\equiv \hat \beta_z - \hat \beta_y = \hat \beta_d.
+\end{align}
+These absolute errors correspond to the _statistical bias_ in the coefficient estimates.
+Expressed in terms of sample means and covariances, these errors are
+\begin{align}
+  (\#eq:lm-hat-err-1)
+  \text{abs. error}(\hat \alpha) &= \bar d - \hat \beta_d \bar x \\
+  \text{abs. error}(\hat \beta)  &= \frac{s(d,x)}{s^2(x)} = r(d,x) \cdot \frac{s(d)}{s(x)}.
+\end{align}
+
+We are mainly interested in the estimated slope coefficient, $\hat \beta$.
+We see that the absolute error is large when the covariance of $d$ with $x$ is large.
+This error is large in a practical sense when $\hat \beta_{d}$ is large (in magnitude) relative to $\hat \beta_y$ (Equation \@ref(eq:lm-hat)), which occurs when $s(d,x)$ is large relative to $s(y,x)$.
+<!-- Thus the relative error in $\hat \beta$ is large when the covariance of $d$ with $x$ is large relative to the covariance of $y$ with $x$. -->
+A sign error occurs when $s(d,x)$ is larger in magnitude than $s(y,x)$ and of opposite sign.
+
+We can also consider how the measurement error affects the residual variation and the standard error of the slope estimate.
+The residuals of $y$, $z$, and $d$ are related through $\hat \varepsilon_z = \hat \varepsilon_y + \hat \varepsilon_d$.
+It follows that the sample variance of the $z$ residuals equal
+\begin{align}
+  s^2(\hat \varepsilon_{z}) 
+  = s^2(\hat \varepsilon_y + \hat \varepsilon_{d})
+  = s^2(\hat \varepsilon_y) + s^2(\hat \varepsilon_{d}) + 2 s(\hat \varepsilon_y, \hat \varepsilon_{d}).
+\end{align}
+The variance of the $z$ residuals is increased above that of the $y$ residuals when the $d$ residuals are either uncorrelated or positively correlated with the $y$ residuals, but may be decreased when the $y$ and $d$ residuals are negatively correlated.
+An increased residual variance will lead to a larger estimate for $\sigma$ as well as larger standard errors in the slope coefficient $\beta$.
+
+## Specific application to taxonomic bias
+
+These general results can be used to understand how taxonomic bias affects DA analyses that can be expressed as linear regression of log (relative or absolute) abundance.
+
+First, we illustrate for the particular example of absolute DA analysis, where species absolute abundance is measured with the total-abundance normalization method and we assume that the total abundances have been accurately measured.
+Consider the regression of log abundance of species $i$ on a covariate $x$.
+In this case, $y(a)= \log \text{abun}_{i}(a)$ is the actual log abundance of species $i$ and $z(a)=\log \widehat{\text{abun}}_i(a)$ is the log abundance we've measured.
+From Equation \@ref(eq:density-prop-error), the measurement error $d(a)$ due to taxonomic bias in the MGS measurement is
+\begin{align}
+  d(a) 
+  \equiv z(a) - y(a) 
+  = \log \text{efficiency}_i - \log \text{efficiency}_S(a).
+\end{align}
+The absolute error in $\hat \beta$ equals the scaled covariance of $d$ with $x$ (Equation \@ref(eq:lm-hat-err-1)).
+<!-- The first term, $\log \text{efficiency}_i$, is constant across samples; thus it affects $\hat \alpha_d$ (via its effect on $\bar d$) but does not affect $\hat \beta_d$. -->
+In the above expression for $d(a)$, only the second term, $- \log \text{efficiency}_S(a)$, varies across samples and thus affects the covariance, leading to
+\begin{align}
+  \text{abs. error}(\hat \beta)
+    &= - \frac{s[\log \text{efficiency}_S, x]}{s^2(x)}.
+%    = - \frac{r[\log \text{efficiency}_S, x] \cdot s[\log \text{efficiency}_S]}{s(x)}, \\
+\end{align}
+Thus the absolute error in $\hat \beta$ is the negative of the scaled covariance of the log mean efficiency.
+
+Although the absolute error is the same for each species, its practical significance varies.
+Recall from Equation \@ref(eq:lm-hat) that the correct value for $\hat \beta$ (i.e., the estimate without measurement error) is
+\begin{align}
+  \hat \beta &= \frac{s[\log \text{abun}, x]}{s^2(x)}.
+\end{align}
+For species whose log abundance covaries with $x$ much more than the log mean efficiency, the error will be relatively small.
+This situation can occur either because the mean efficiency varies relatively little across samples or because its variation is relatively uncorrelated with $x$.
+For species whose log abundance covaries with $x$ similar or less than the log mean efficiency, the error will be significant.
+A sign error occurs when the species covariance is of _equal sign and smaller in magnitude_ than the covariance of the log mean efficiency.
+
+We can also consider how the standard errors in the slope estimate are affected by bias.
 In our case, the $d$ residuals equal the negative residuals of the log mean efficiency.
 It is plausible that for most species, their residual variation will have a small covariance with log mean efficiency and the net effect of variation in the mean efficiency will be to increase the estimated standard errors, as occurs with most species in Figure \@ref(fig:regression-example).
 However, high-efficiency species that vary substantially in proportion across samples may be strongly positively correlated with log mean efficiency such that the estimated standard errors decrease, as we see with Species 9 in Figure \@ref(fig:regression-example).
 
+Now, suppose we were instead performing a DA analysis of a response whose fold error is constant across samples, such as the log ratio of two species.
+For the log ratio of species $i$ and $j$, the error is $d(a) = \log \text{efficiency}_i / \text{efficiency}_j$ and is constant across samples.
+Thus the covariance of $d$ with $x$ is 0 and taxonomic bias causes no error the slope estimate $\hat \beta$, only the intercept estimate $\hat \alpha$.
