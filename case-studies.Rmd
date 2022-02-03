@@ -134,6 +134,52 @@ Bias correction led to substantial magnitude changes for several species and sig
 These large LFCs occur in species that rarely if ever reach high proportions and so are likely driven by the sum-to-one constraint: The high diversity communities are those not dominated by _Lactobacillus_ spp. (or to a lesser extent _G. vaginalis_ and BVAB1).
 Therefore it is not clear how well it will generalize to regressions on other covariates.
 
+## Human gut microbiome
+
+The vaginal microbiome is characterised by low species diversity within and across samples, so that variation in efficiency among a few dominant species could drive large variation in the mean efficiency among samples.
+The human gut microbiome has substantially greater diversity both within and across samples, which we should expect to result in lower variation in mean efficiency.
+The reason is that the mean efficiency is a weighted average of efficiencies of individual species, and so will tend to vary less the more species that are averaged over.
+Here we use publically available gut microbiome profiles to consider how the distinct dynamics of the gut microbiome impact the variation in the mean efficiency and its potential to distort DA results.
+
+First we considered variation in healthy subjects and asked how the distinct structures of vaginal and gut communities impacted mean efficiency variation.
+We considered vaginal and stool samples from the original Human Microbiome Project (@huttenhower2012stru); these and other results in this case study are based on species-level bacterial relative-abundances produced by Metaphlan3 and made available through the curatedMetagenomicData R package (CITE).
+We simulated taxonomic bias with a geometric standard deviation of 3, with and without phylogenetic conservation, 
+by sampling from a multivariate normal distribution, with efficiencies either IID or with a covariance equal to the phylogenetic covariance matrix to simulate bias as an evolving trait.
+We then compared the distribution of mean efficiency across samples.
+We also considered how species-level diversity patterns could help explain this variation.
+
+As expected, the mean efficiency varied substantially less in the higher-diversity gut microbiome samples than in the vaginal microbiome samples (median geometric standard deviation of X versus Y); yet it remained non-negligible.
+There are several potential reasons why.
+First, although richness is typically around 100 bacterial species in the Metaphlan profiles, the order-2 effective number of species ($^2D$; equivalent to the Inverse Simpson diversity index) is typically only around 10 and often lower. 
+This number is more relevant when we consider the reduction in variation when computing a weighted average over species (Appendix; standard deviation in mean efficiency scales as $1 / \sqrt(^2D)$  when efficiencies are IID).
+A order-2 diversity that is much lower than species richness arises from the skewed distribution of abundances within a gut microbiome sample, with the most abundant 1-2 species often forming a majority of reads.
+It is these high-proportion species, captured by the order-2 diversity, that ultimately drive the variation in mean efficiency, not the large number of low-proportion species that drive the richness.
+A separate but related reason is that, although the total number of species across gut microbiomes is large, a small number of species form the vast majority of reads and tend to be the most abundant in individual samples.
+The overall effect is similar, though less extreme, as that of the dominance of a few key species in the vaginal microbiome: Variation in the efficiencies among these species has an outsized impact on the mean efficiency, again leading to a weakening of the averaging affect when we consider variation across samples.
+
+A notable aspect of gut microbiome variation, shared with with the vaginal microbiome, is that the most abundant species tend to come from a small set of groups.
+In the HMP1 gut data, these are various Bacteroides and Prevotella species; in other gut datasets, Gram positives such as X and Y are also common.
+In patients with diarrhea or infections, we may see dominance of Enterobactericeae like E. coli and Klebsiella spp.
+More generally, there is phylogenetic conservation at the level of ecological traits.
+There is also reports of phylogenetic conservation at the level of the species efficiency for a given protocol.
+An implication is that we may have less 'effective diversity' from the perspective of variation in the mean effiency.
+
+(Although this was not a big effect in the simulation)
+
+Might we see correlations between mean efficency and covariates?
+One way is for a small number of taxonomic groups to cause major shifts, and also have conserved efficiencies.
+An example occurs in an dataset we examined of accurate diarrhaea in children from Dhakka.
+Stool from children experiencing accute diarrhea were overwhelmingly dominated by Preoteobacteria, whereas stool from healthy controls were dominated by a roughly even mixture of Actinobacteria, Firmicutes, and Bacteroides.
+The Proteobacteria species in the diarrheaic stool were dominated by E. coli and to a lesser extent Klebsiella spp, all in the Enterobactericeae family.
+Hence a Gram+/- bias, a bias favoring Enterobactericeae, or a bias favoring E. coli would all be capable of driving systematic variation in the mean efficiency in this study.
+
+On the other hand, in other datasets we examined, the variation in phylum proportions that occured was primarily not associated with the clinical covariate.
+In these cases, a Gram or phylum-level bias might primary add noise rather than systematic error, depending on the sample size of the study and the magnitude of true effects.
+
+(Perhaps put this in the conclusion.)
+There is another reason to consider that the effect of bias should not be dismissed in the higher-diversity natural ecosystems like the gut.
+So far we have only considered the variation in mean efficiency; however, it is the variation in mean efficiency relative to the true effect sizes that determines the signficance of the error.
+In conditions where the mean efficiency varies less, we should also expect lower true effect sizes, so it isn't at all obvious that we should be less worried.
 
 ## Microbial growth in marine sediments
 
