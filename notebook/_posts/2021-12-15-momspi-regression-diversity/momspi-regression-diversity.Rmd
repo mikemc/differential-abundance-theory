@@ -25,6 +25,7 @@ knitr::opts_chunk$set(
   autodep = TRUE,
   cache.comments = FALSE,
   dpi = 300
+  #> cache.path = '_momspi-regression-diversity_cache/'
 )
 ```
 
@@ -41,6 +42,8 @@ library(fs)
 library(here)
 # ggplot helpers
 library(ggbeeswarm)
+library(ggforce)
+library(ggdist)
 library(cowplot)
 library(patchwork)
 library(scales)
@@ -66,6 +69,7 @@ Load the MOMS-PI profiles and estimate bias,
 
 ```{r}
 source(here('notebook/_code/momspi-setup.R'))
+bias <- bias_all_vec
 ```
 
 To simplify interpretation of some of the regression models, let's rarefy samples to 10K reads (we'll be dropping some samples that are below this limit).
@@ -79,27 +83,20 @@ momspi_rare <- xfun::cache_rds({
       replace = FALSE,
       trimOTUs = FALSE
     )
-  }, hash = momspi
-)
-# Make sure no taxa have 0 counts, in case this causes issues later on
+}, dir = '_cache/', file = 'momspi_rare', hash = list(momspi))
+# Make sure no taxa have 0 reads, in case this causes issues later on
 stopifnot(all(momspi_rare %>% taxa_sums > 0))
 ```
 
 Let's also add the new sample sums and estimated mean efficiency and 
 
 ```{r}
-mean_eff <- momspi_rare %>%
- calibrate(bias_all_vec, norm = 'close') %>%
- perturb(bias_all_vec, norm = 'none') %>% 
- sample_sums %>%
- enframe('.sample', 'mean_efficiency')
-
 momspi_rare <- momspi_rare %>% 
   mutate_sample_data(., 
     sample_sum_original = sample_sum,
     sample_sum = sample_sums(.),
-  ) %>%
-  left_join_sample_data(mean_eff, by = '.sample')
+    mean_efficiency = mean_efficiency(., bias, type = 'observed')
+  )
 ```
 
 Let's also add the top species in each sample,
@@ -117,7 +114,7 @@ get_top_species <- function(ps) {
 }
 top_species <- list(
   'obs' = momspi_rare,
-  'cal' = momspi_rare %>% calibrate(bias_all_vec)
+  'cal' = momspi_rare %>% calibrate(bias)
   ) %>%
   map_dfr(get_top_species, .id = 'type')
 top_species_wide <- top_species %>%
@@ -136,8 +133,6 @@ top_species_wide  %>% count(top_species_cal) %>% arrange(-n) %>% print(n=10)
 
 # Regression analysis
 
-NOTE: Consider saving output so can be used in other notebook files
-
 ## Classify samples into high and low diversity groups
 
 Compute Shannon and Inverse-Simpson diversity indices and add to the sample metadata.
@@ -147,7 +142,7 @@ I will exponentiate the Shannon index to convert it to the q1 Hill number so tha
 ```{r}
 div <- list(
   'obs' = momspi_rare,
-  'cal' = momspi_rare %>% calibrate(bias_all_vec)
+  'cal' = momspi_rare %>% calibrate(bias)
 ) %>%
   map(estimate_richness, measures = c('Shannon', 'InvSimpson')) %>%
   map_dfr(as_tibble, rownames = '.sample', .id = 'type') %>%
@@ -165,10 +160,10 @@ div_wide <- div %>%
 p <- div_wide %>%
   mutate(across(starts_with('div'), log2)) %>%
   ggplot() +
-  geom_point(aes(x = .panel_x, y = .panel_y), alpha = 0.5) +
-  ggforce::geom_autodensity() +
+  geom_autopoint(aes(x = .panel_x, y = .panel_y), alpha = 0.5) +
+  geom_autodensity() +
   geom_bin2d(aes(x = .panel_x, y = .panel_y)) +
-  ggforce::facet_matrix(vars(starts_with('div')), layer.diag = 2, layer.lower = 3)
+  facet_matrix(vars(starts_with('div')), layer.diag = 2, layer.lower = 3)
 ggrastr::rasterize(p, dpi = 300)
 ```
 
@@ -211,11 +206,7 @@ Add the diversity grouping information, subset to the Low and High samples, and 
 ```{r}
 momspi_div <- momspi_rare %>%
   left_join_sample_data(div_wide, by = '.sample') %>%
-  filter_sample_data(div_group %in% c('Low', 'High')) %>%
-  mutate_sample_data(
-    gp_offset_obs = log(sample_sum),
-    gp_offset_cal = log(sample_sum) - log(mean_efficiency),
-  )
+  filter_sample_data(div_group %in% c('Low', 'High'))
 ```
 
 We'll use the criterion from Fettweis et al to pick the taxa to test.
@@ -228,6 +219,20 @@ taxa_to_test <- momspi_div %>%
   filter_taxa2(~ mean(. >= 1e-2) >= 0.05 | mean(. >= 1e-3) >= 0.15) %>%
   taxa_names %>%
   print
+```
+
+What is the fraction of zeros for the tested species?
+
+```{r}
+momspi_div %>%
+  prune_taxa(taxa_to_test, .) %>%
+  as_tibble %>%
+  with_groups(.otu, summarize,
+    prev = mean(.abundance > 0),
+    frac_zero = mean(.abundance == 0),
+  ) %>%
+  arrange(prev) %>%
+  knitr::kable(digits = 2)
 ```
 
 ## Linear regression on log proportion
@@ -252,14 +257,14 @@ stat_test <- function(ps, taxa) {
     ) %>%
     select(-data)
 }
-res_div_lm <- list(
+res_lm <- list(
   'Observed' = momspi_div %>% transform_sample_counts(~. + 0.5),
   'Calibrated' = momspi_div %>% transform_sample_counts(~. + 0.5) %>%
-    calibrate(bias_all_vec)
+    calibrate(bias)
 ) %>%
   map_dfr(stat_test, taxa = taxa_to_test, .id = 'type')
-res_div_lm_tidy <- res_div_lm %>%
-  mutate(across(fit, map, broom.mixed::tidy)) %>%
+res_lm_tidy <- res_lm %>%
+  mutate(across(fit, map, broom::tidy)) %>%
   unnest(fit) %>% 
   filter(term != '(Intercept)')
 ```
@@ -291,7 +296,7 @@ plot_estimates <- function(x) {
     labs(fill = 'Sign of estimate', x = 'Estimated LFC', y = 'Meas. type')
   p2 <- x %>%
     mutate(
-      .otu_fct = fct_reorder(.otu, estimate, .fun = min) %>%
+      .otu_fct = fct_reorder(.otu, estimate, .fun = max) %>%
         fct_relabel(function(x) str_replace_all(x, '_', ' '))
     ) %>%
     ggplot(aes(y = .otu_fct, x = estimate, color = type)) +
@@ -313,7 +318,7 @@ plot_estimates <- function(x) {
 ```
 
 ```{r regression-lm, fig.dim = c(7, 7) * 1.1}
-plot_estimates(res_div_lm_tidy)
+plot_estimates(res_lm_tidy)
 ```
 
 The data is unlikely to meet the assumptions generally considered necessary for simple linear regression.
@@ -349,20 +354,20 @@ momspi_div_alt <- momspi_div %>%
 ```
 
 ```{r regression-lm-alt, fig.dim = c(7, 7) * 1.1}
-res_div_alt_lm <- list(
+res_alt_lm <- list(
   'Observed' = momspi_div_alt,
-  'Calibrated' = momspi_div_alt %>% calibrate(bias_all_vec)
+  'Calibrated' = momspi_div_alt %>% calibrate(bias)
 ) %>%
   map_dfr(stat_test, taxa = taxa_to_test, .id = 'type')
-res_div_alt_lm_tidy <- res_div_alt_lm %>%
-  mutate(across(fit, map, broom.mixed::tidy)) %>%
+res_alt_lm_tidy <- res_alt_lm %>%
+  mutate(across(fit, map, broom::tidy)) %>%
   unnest(fit) %>% 
   filter(term != '(Intercept)')
 
-plot_estimates(res_div_alt_lm_tidy)
+plot_estimates(res_alt_lm_tidy)
 ```
 
-## Interpretion
+### Interpretion
 
 Check the diversity-efficiency relationship
 
@@ -388,7 +393,7 @@ mean_eff_lfc <- mean_eff_lm %>% broom::tidy() %>%
 ```
 
 ```{r}
-res_div_lm_tidy %>%
+res_lm_tidy %>%
   select(name = type, .otu, value = estimate) %>%
   pivot_wider() %>%
   mutate(
@@ -431,3 +436,444 @@ div1 %>%
   )
 ```
 
+## Rank-based analysis
+
+Wilcoxon test and Spearman rho are popular 'non-parametric' approaches to differential abundance.
+Wilcoxon is used when the covariate is binary (case vs control) and Spearman is used when the covariate is continuous.
+Both are approximately equivalent (in terms of p value) to performing a linear regression on rank-transformed data.
+
+For the binary-variable case here, we can use a Wilcoxon test; however, I'll also use a linear model to get confidence intervals.
+
+Zeros: The rank-based tests don't require log transformation and so are ok with zeros. 
+Therefore we have at least three options: 
+
+1. leave the zeros
+2. use a 0.5 pseudocount
+3. use the Dirichlet-posterior pseudocount
+<!-- -->
+
+Based on previous experimentation and vague intuition, I suspect that we will see a big difference in the impact of calibration on #1 versus the other two approaches, but only a modest difference between #2 and #3.
+
+Note, the outcome of the rank-based tests on the 'Observed' (uncalibrated) profiles will not depend on the zero replacement strategies, since all zero entries will be set to the same small value and thus still tied for the lowest value (hence giving the same rank).
+But the 'Calibrated' profiles will differ, since the calibrated proportion of a taxon depends on the pre-calibration proportions of all taxa, which will vary from sample to sample.
+
+```{r}
+ps_set <- list(
+  'None' = momspi_div,
+  'Strategy 1' = momspi_div %>% transform_sample_counts(~. + 0.5),
+  'Strategy 2' = momspi_div_alt 
+) %>%
+  map(transform_sample_counts, close_elts) %>%
+  map(filter_sample_data, div_group %in% c('Low', 'High')) %>%
+  enframe('zero_replacement', 'Observed') %>%
+  mutate(Calibrated = map(Observed, calibrate, bias)) %>%
+  pivot_longer(c(Observed, Calibrated), names_to = 'type', values_to = 'ps')
+```
+
+```{r}
+stat_test <- function(ps, taxa, test, ...) {
+  ps %>%
+    prune_taxa(taxa, .) %>%
+    as_tibble %>%
+    with_groups(.otu, nest) %>%
+    mutate(
+      fit = map(data, function(.data) test(data = .data, ...))
+    ) %>%
+    select(-data)
+}
+#> a = stat_test(momspi_div, taxa_to_test, wilcox.test, .abundance ~ div_group)
+#> a %>% slice(1) %>% pull(fit)
+res_rank <- xfun::cache_rds({
+  ps_set %>%
+    mutate(
+      wilcox = map(ps, stat_test, taxa_to_test, wilcox.test, 
+        .abundance ~ div_group),
+      lm = map(ps, stat_test, taxa_to_test, lm, 
+        rank(.abundance)/length(.abundance) ~ div_group),
+    ) %>%
+    pivot_longer(c(wilcox, lm), names_to = 'test', values_to = 'fit') %>%
+    select(-ps) %>%
+    unnest(fit)
+}, dir = '_cache/', file = 'res_rank', 
+hash = list(ps_set, stat_test, taxa_to_test))
+
+res_rank_tidy <- res_rank %>% 
+  mutate(across(fit, map, broom::tidy, conf.int = TRUE)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)' | is.na(term))
+```
+
+Check agreement between p values - 
+
+```{r}
+res_rank_tidy %>%
+  select(zero_replacement:.otu, p.value) %>%
+  pivot_wider(names_from = test, values_from = p.value) %>%
+  ggplot(aes(wilcox, lm)) +
+  scale_x_log10() +
+  scale_y_log10() +
+  coord_fixed() +
+  facet_wrap(zero_replacement ~ type, scales = 'fixed') +
+  geom_abline(color = 'darkgrey') +
+  geom_point()
+```
+
+```{r}
+res_rank_tidy %>%
+  select(zero_replacement:.otu, p.value) %>%
+  pivot_wider(names_from = test, values_from = p.value) %>%
+  ggplot(aes(wilcox, lm)) +
+  scale_x_sqrt() +
+  scale_y_sqrt() +
+  coord_fixed() +
+  facet_wrap(zero_replacement ~ type, scales = 'fixed') +
+  geom_abline(color = 'darkgrey') +
+  geom_point()
+```
+
+See good agreement except at extremely low p values, which we have here due to the very large sample size.
+
+Plot the confidence intervals for the lm test, for the three zero-replacement strategies.
+Sort taxa by 'max' effectively sorts based on the 'Observed' value, which does not depend on the zero-replacement strategy.
+
+```{r regression-rank, fig.dim = c(7, 14) * 1.1}
+res_rank_tidy %>%
+  filter(test == 'lm') %>%
+  mutate(
+    .otu_fct = fct_reorder(.otu, estimate, .fun = max) %>%
+      fct_relabel(function(x) str_replace_all(x, '_', ' '))
+  ) %>%
+  ggplot(aes(y = .otu_fct, x = estimate, color = type)) +
+  facet_wrap(~zero_replacement, ncol = 1) +
+  colorblindr::scale_color_OkabeIto() +
+  geom_vline(xintercept = 0, color = 'grey') +
+  geom_linerange(size = 1,
+    aes(
+      xmin = estimate - 2*std.error,
+      xmax = estimate + 2*std.error
+    )) +
+  geom_point(size = 1.5) +
+  labs(y = 'Species-level OTU', x = 'Change in rank quantile', color = 'Meas. type')
+```
+
+The outcome is as expected - there is a large difference in the effect of calibration depending on whether zero-replacement is used, with a much smaller difference between the two replacement strategies.
+In particular, there is very little effect of calibration when zeros are left as zeros, and a fairly dramatic effect when zeros are set to small positive values.
+Even without zero replacement, however, we see substantial inferential differences for Ureaplasma_cluster23, Corynebacterium_cluster45, and Lactobacillus_gasseri_cluster.
+
+Let's confirm that the Wilcoxon and lm p-values agree for these taxa,
+
+```{r}
+res_rank_tidy %>%
+  filter(zero_replacement == 'None',
+    .otu %in% c('Ureaplasma_cluster23', 'Corynebacterium_cluster45',
+      'Lactobacillus_gasseri_cluster'),
+    ) %>%
+  select(type, test, .otu, p.value) %>%
+  pivot_wider(names_from = test, values_from = p.value)
+```
+
+**Why does calibration have a big effect on the estimates when zeros are first replaced with positive values?**
+There is a relatively straightforward explanation that should make us cautious about interpretting the big effect of calibration too literally.
+Recall that there is a systematic change in the mean efficiency across groups.
+Consider a taxon with a lot of zero values (which is essentially all of them).
+After zero replacement, all of the zeros are set to the same positive proportion, which will be the smallest possible for that taxon.
+Without calibration, these samples will receive the same rank (ties are resolved to the average rank, so the rank will be the number of zeros divided by 2).
+But with calibration, they will all have different proportions, given by the common value multiplied by the efficiency relative to the sample mean efficiency, and and hence will follow the inverse variation in mean efficiency.
+The mean efficiency systematically varies (lower in high-diversity samples), and so the ranks from the previously-zero entries will be lower in the high-diversity samples.
+So the systematic shift in the mean efficiency leads in a rather direct way to a systematic difference in the ranks of these previously-zero entries, where the ranks are lower in the high-diversity group.
+If there are a lot of zeros, this effect will be large and could create a big shift towards lower estimates.
+
+The same thing should be occuring in the analysis of log proportions using `lm()` above---the same argument applies, but with the log instead of the rank transform being applied.
+
+We be cautious about taking the big effect of calibration as a sign that bias has a big effect on the original results.
+We have a lot of uncertainty about what the 'observed' proportions should be in each sample with a zero (or near-zero) value.
+If we consider two samples, where the mean efficiency differs by 10X, and the taxon was a zero, then the deterministic zero imputation will say with certainty that (after calibration) the taxon is lower by 10X in the sample with the higher mean efficiency.
+But if we have uncertainty greater than 10X in the pre-calibration proportion, we'll have uncertainty after calibration about which sample has the higher value, perhaps to nearly the maximum amount (of a coin flip).
+I suspect that an analysis that accounts for this uncertainty would find a smaller expected impact of calibration.
+
+**Why does calibration typically have a minor impact when zeros are not replaced?**
+My leading hypothesis is that the answer has to do with the multimodal distribution of (log) proportions of most taxa.
+Many of these taxa are completely absent (zero) in a large fraction of samples.
+Let's consider a taxon that is zero or has a large proportion, and is zero in a substantial fraction (say over 20%) of samples.
+I suspect that for these taxa the average-rank differences are being driven by differential prevalence (fraction of non-zero samples).
+Differential prevalence is not affected by calibration when we do not replace zeros.
+
+Other taxa may have multiple modes, such as zero, small positive proportion, and large positive proportion; others might be generally present but with small and large modes.
+I suspect we could get a similar non-impact of calibration in this latter case, which would not depend on zero replacement.
+
+**Intuition check: Confirm that the mean efficiency doesn't depend on the zero-replacement strategy.**
+
+```{r}
+add_mean <- function(x, bias) {
+  sample_data(x)$mean_efficiency <- x %>%
+    transform_sample_counts(close_elts) %>%
+    perturb(bias, norm = 'none') %>% 
+    sample_sums
+  x
+}
+
+x <- ps_set %>%
+  filter(type == 'Calibrated') %>%
+  mutate(
+    across(ps, map, sample_data),
+    across(ps, map, as_tibble),
+  ) %>%
+  unnest(ps) %>%
+  pivot_wider(names_from = zero_replacement, values_from = .mean_efficiency)
+```
+
+```{r, eval = F, echo = F}
+x %>%
+  select(None, `Strategy 1`, `Strategy 2`) %>%
+  mutate(across(everything(), log10)) %>%
+  ggplot() +
+  geom_autopoint() +
+  geom_autodensity() +
+  facet_matrix(vars(None, `Strategy 1`, `Strategy 2`), 
+    layer.lower = FALSE, layer.diag = 2)
+```
+
+```{r}
+x %>%
+  select(None, `Strategy 1`, `Strategy 2`) %>%
+  mutate(across(everything(), log10)) %>%
+  cor
+```
+
+As expected, the mean efficiency is unaffected by zero replacement.
+
+## Gamma-Poisson regression
+
+I will try a third approach that circumvents the need for zero replacement.
+Count-based GLMs naturally account for the uncertainty associated with small or zero count observations.
+Gamma-Poisson (or negative binomial) regression with a suitably-chosen offset provides a count-based GLM where the response of the latent linear model is the log proportion.
+Thus we can use it to analyze the effect of sample condition on the average log proportion, treating log proportion as a truly continuous, always positive variable, while fitting the model to the discrete counts (including zeros).
+
+For the final regression analysis, we might consider skipping the rarefy step, which is not needed when doing GP regression.
+
+I'll use the rstanarm package to do the regression. 
+See https://mc-stan.org/rstanarm/reference/neg_binomial_2.html and https://mc-stan.org/docs/2_20/functions-reference/nbalt.html for information about the function and model used.
+
+```{r}
+library(rstanarm)
+options(mc.cores = parallel::detectCores())
+```
+
+Since we have subsampled to a constant 10K reads in all samples, the offset for the 'Observed' case is constant, and rstanarm will throw an error if we use a constant offset.
+Therefore we will not use an offset in this case, but rather adjust the prior mean on the intercept to account for the offset due to read depth.
+Let's check the (geometric) mean abundances across taxa to make sure they fall within this prior,
+
+```{r}
+momspi_div %>%
+  prune_taxa(taxa_to_test, .) %>%
+  as_tibble %>%
+  with_groups(.otu, summarize, across(.abundance, ~gm_mean(. + 0.3))) %>%
+  pull(.abundance) %>%
+  summary
+```
+
+I will set the mean to `log(20) = 3`, or a geometric-mean on the count scale of 20 corresponding, to a proportion of `0.002`, and set the scale to 3.
+Then the central 66% interval will span from counts of around 1 to 400.
+Since we have a larger number of samples, the prior should not have a very large effect on the posterior as long as it is fairly wide.
+
+```{r}
+tbl_gp <- momspi_div %>%
+  prune_taxa(taxa_to_test, .) %>%
+  as_tibble %>%
+  left_join(bias %>% enframe('.otu', 'efficiency'), by = '.otu') %>%
+  with_groups(.otu, nest)
+custom_prior_intercept <- normal(location = log(20), scale = 3)
+```
+
+```{r, echo = F, eval = F}
+res_gp_test <- tbl_gp %>%
+  slice(1) %>%
+  mutate(
+    Observed = map(data, 
+      ~stan_glm(data = .x, iter = 100,
+        .abundance ~ div_group,
+        prior_intercept = custom_prior_intercept,
+        family = neg_binomial_2, seed = 42, algorithm = 'sampling'
+      )
+    ),
+    Calibrated = map(data, 
+      ~stan_glm(data = .x, iter = 100,
+        .abundance ~ div_group + offset(log(efficiency/mean_efficiency)),
+        prior_intercept = custom_prior_intercept,
+        family = neg_binomial_2, seed = 42, algorithm = 'sampling'
+      )
+    ),
+  ) %>%
+  select(-data) %>%
+  pivot_longer(c(Observed, Calibrated), names_to = 'type', values_to = 'fit')
+# check the intercept priors
+res_gp_test
+res_gp_test %>%
+  pull(fit) %>%
+  map(prior_summary)
+```
+
+```{r, eval = T}
+res_gp <- xfun::cache_rds({
+  tbl_gp %>%
+    mutate(
+      Observed = map(data, 
+        ~stan_glm(data = .x, 
+          .abundance ~ div_group,
+          prior_intercept = custom_prior_intercept,
+          family = neg_binomial_2, seed = 42, algorithm = 'sampling'
+        )
+      ),
+      Calibrated = map(data, 
+        ~stan_glm(data = .x, 
+          .abundance ~ div_group + offset(log(efficiency/mean_efficiency)),
+          prior_intercept = custom_prior_intercept,
+          family = neg_binomial_2, seed = 42, algorithm = 'sampling'
+        )
+      ),
+    ) %>%
+    select(-data) %>%
+    pivot_longer(c(Observed, Calibrated), names_to = 'type', values_to = 'fit')
+}, dir = '_cache/', file = 'res_gp', 
+hash = list(tbl_gp, custom_prior_intercept))
+
+res_gp_tidy <- res_gp %>%
+  mutate(across(fit, map, broom.mixed::tidy)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)')
+```
+
+```{r regression-gp, fig.dim = c(7, 7) * 1.1}
+plot_estimates(res_gp_tidy)
+```
+
+Let's compare the impact of calibration on the slope point estimates to the LFC in the mean efficiency,
+
+```{r}
+diffs <- res_gp_tidy %>%
+  pivot_wider(names_from = type, values_from = c(estimate, std.error)) %>%
+  # pivot_wider(names_from = type, values_from = estimate) %>%
+  mutate(difference = estimate_Calibrated - estimate_Observed)
+
+diffs %>% pull(difference) %>% summary
+```
+
+```{r regression-gp-diffs}
+diffs %>%
+  ggplot(aes(difference)) +
+  geom_dots() +
+  geom_vline(xintercept = mean_eff_lfc) +
+  expand_limits(x = 0)
+```
+
+The mode is negative aligns with the negative LFC of the mean efficiency.
+But 2 to 4 taxa have substantially less negative differences, and two taxa (Gardnerella_vaginalis and Lachnospiraceae_BVAB1) have positive differences.
+
+# Sanity checks
+
+### Offsets with `lm()`
+
+Check that using offsets gives us the same result as using calibrated profiles.
+Note, I'm updating the mean efficiency and sample sums after adding the pseudocounts.
+This should tend to push the mean efficiency torwards more moderate values and so may reduce the differene between groups.
+
+```{r}
+res_lm_offset <- momspi_div %>%
+  transform_sample_counts(~. + 0.5) %>%
+  mutate_sample_data(., 
+    mean_efficiency = mean_efficiency(., bias, type = 'observed'),
+    sample_sum = sample_sums(.)
+  ) %>%
+  #> prune_taxa(taxa_to_test, .) %>%
+  as_tibble %>%
+  left_join(bias %>% enframe('.otu', 'efficiency'), by = '.otu') %>%
+  with_groups(.sample, mutate, 
+    prop = close_elts(.abundance),
+    prop_cal = close_elts(.abundance / efficiency),
+  ) %>%
+  filter(.otu %in% taxa_to_test) %>%
+  with_groups(.otu, nest) %>%
+  mutate(
+    Observed = map(data, 
+      ~lm(data = .x, log(prop) ~ div_group)
+    ),
+    Calibrated = map(data, 
+      ~lm(data = .x, log(prop_cal) ~ div_group)
+    ),
+    Observed_offset = map(data, 
+      ~lm(data = .x, log(.abundance) ~ div_group + offset(log(sample_sum)))
+    ),
+    Calibrated_offset = map(data, 
+      ~lm(data = .x, 
+        log(.abundance) ~ div_group + offset(log(sample_sum * efficiency /
+            mean_efficiency)),
+      )
+    ),
+  )
+res_lm_offset_tidy <- res_lm_offset %>%
+  select(-data) %>%
+  pivot_longer(c(starts_with('Observed'), starts_with('Calibrated')), 
+    names_to = 'type', values_to = 'fit') %>%
+  mutate(across(fit, map, broom::tidy)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)')
+```
+
+```{r, eval = F, echo = F}
+plot_estimates(res_lm_offset_tidy)
+```
+
+```{r}
+res_lm_offset_tidy %>%
+  select(.otu, type, estimate) %>%
+  pivot_wider(names_from = type, values_from = estimate) %>%
+  as_matrix(rownames = .otu) %>%
+  cor
+```
+
+### Zeros with `lm()`
+
+See what happens if use pseudocounts after calibration, instead of before.
+
+```{r}
+stat_test <- function(ps, taxa) {
+  ps %>%
+    filter_sample_data(div_group %in% c('Low', 'High')) %>%
+    transform_sample_counts(close_elts) %>%
+    prune_taxa(taxa, .) %>%
+    as_tibble %>%
+    with_groups(.otu, nest) %>%
+    mutate(
+      fit = map(data,
+        ~lm(log(.abundance) ~ div_group, data = .x)
+      ),
+    ) %>%
+    select(-data)
+}
+res_lm_after <- list(
+  'Observed' = momspi_div,
+  'Calibrated' = momspi_div %>% calibrate(bias, norm = 'keep')
+) %>%
+  map(transform_sample_counts, ~. + 0.5) %>%
+  map_dfr(stat_test, taxa = taxa_to_test, .id = 'type')
+res_lm_after_tidy <- res_lm_after %>%
+  mutate(across(fit, map, broom::tidy)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)')
+```
+
+```{r regression-lm-after, fig.dim = c(7, 7) * 1.1}
+plot_estimates(res_lm_after_tidy)
+```
+
+As expected, see smaller effects of calibration for many taxa.
+Interesting to see that some taxa, including L iners and Ureaplasma, where there remains a large effect.
+It remains that the calibrated estimates are always lower; I guess that it remains a mathematical fact that the directional change must be the same for all taxa.
+
+# Session info {.appendix}
+
+<details><summary>Click for session info</summary>
+```{r, R.options = list(width = 83)}
+sessioninfo::session_info()
+```
+</details>

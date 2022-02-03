@@ -325,3 +325,381 @@ Should also compare for a taxon where there is a larger impact.
 C
 
 
+## Wilcoxon - trying to understand dependence on zero replacement
+
+What is going on here?
+
+First, why does calibration not have much effect when zeros are not replaced?
+Hypothesis: The DA results are being driven by presence/absence, which is not affected by calibration.
+
+
+```{r}
+ps <- ps_set %>% filter(type == 'Observed', zero_replacement == 'None') %>%
+  pull(ps) %>% .[[1]]
+z <- ps %>%
+  prune_taxa(taxa_to_test, .) %>%
+  as_tibble %>%
+  with_groups(.otu, mutate, rank = rank(.abundance) / n())
+```
+
+here - how to test my hypothesis?
+
+see if get similar results in terms of average change in rank whether I look at P/A or not.
+focus on ranks / estimates? or p-values?
+
+thinking about estimates, I predict that a good approximation of the estimate is one-half of the difference in the prevalence in the high vs low diversity group.
+
+```{r}
+prev_wide <- z %>%
+  with_groups(c(.otu, div_group), summarize, prev = mean(.abundance > 0)) %>%
+  pivot_wider(names_from = div_group, values_from = prev)
+```
+
+```{r}
+tmp <- res_div_rank_tidy %>%
+  filter(type == 'Observed', test == 'lm', zero_replacement == 'None') %>%
+  left_join(prev_wide, by = '.otu')
+tmp %>%
+  ggplot(aes(estimate, (High - Low) / 2)) +
+  theme_minimal_grid() +
+  coord_fixed() +
+  geom_abline() +
+  geom_point()
+```
+
+there is a decently good concordance, but not sure if/how to say whether differential prevalence is responsible for most of the difference in rank between groups.
+
+
+visual check
+
+```{r}
+z %>%
+  ggplot(aes(div_group, rank)) +
+  facet_wrap(~.otu) +
+  scale_y_log10() +
+  geom_quasirandom()
+```
+
+Probs not the best plot, but does seem to indicate that the rank difference between present and absent is much bigger than the difference in average rank among present between the two groups.
+
+
+**Why does calibration have a big effect on the point estimates when zeros are first replaced with positive values?**
+We know there is a systematic change in the mean efficiency across groups.
+Once all the zeros for a taxon are set to a common value, this common value will (after calibration) become equal to the common value times the eff / mean eff, and hence will follow the (inverse) pattern of the mean eff.
+So the systematic shift in the mean eff will lead to a systematic diff in the ranks of these previously-zero entries.
+
+SHOW for one taxon
+
+NOTE: if this is what is going on, we perhaps can't take the result that calibration has a big effect too seriously. 
+We have a lot of uncertainty about what the 'observed' proportions should be in each sample. 
+If we consider two samples, where the mean efficiency differs by 10X, and the taxon was a zero, then the deterministic zero imputation will say with certainty that (after calibration) the taxon is lower in the sample with the higher mean efficiency.
+But if we have uncertainty greater than 10X in the pre-calibration proportion, we'll have uncertainty after calibration about which sample has the higher value, perhaps to nearly the maximum amount (of a coin flip).
+
+### maybe
+
+**Intuition check: Let's check that the computed mean efficiency doesn't much depend on the zero-replacement strategy.**
+
+
+# Cut from GP analysis
+
+this is when I hadn't fixed my bug and was like WTF
+
+
+### Gardnerella vaginalis and Lachnospiraceae BVAB1
+
+Let's see what's going on with the two taxa for which calibration actually leads to higher LFC estimates.
+These taxa are unique in that they have low efficiencies and are frequently the most abundant taxon in a sample.
+(All other common top species are Lactobacillus species and so have high efficiencies).
+
+```{r}
+x <- momspi_div %>%
+  as_tibble %>%
+  left_join(bias %>% enframe('.otu', 'efficiency'), by = '.otu') %>%
+  rename(observed = .abundance) %>%
+  with_groups(.sample, mutate,
+    calibrated = close_elts(observed / efficiency) * sample_sum
+  ) %>%
+  filter(.otu %in% taxa_to_test)
+# taxa_to_plot <- c('Atopobium_vaginae', 'Ureaplasma_cluster23',
+#   'Gardnerella_vaginalis', 'Lachnospiraceae_BVAB1')
+# x1 <- x %>%
+#   filter(.otu %in% taxa_to_plot) %>%
+#   mutate(across(.otu, factor, levels = taxa_to_plot))
+
+gard <- x %>%
+  filter(.otu == 'Gardnerella_vaginalis')
+```
+
+Note how I have to renormalize to keep the calibrated counts summing to 10K.
+Am I sure that the GP respects this? (I think it does by virtue of the offset being relative to the mean efficiency.
+
+```{r}
+gard %>%
+  pivot_longer(c(observed, calibrated), names_to = 'type') %>%
+  ggplot(aes(y = div_group, x = value, color = type)) +
+  facet_wrap(~type, ncol = 1) +
+  scale_x_continuous(
+    trans = pseudo_log_trans(sigma = 10),
+    breaks = c(0, 10, 100, 1e3, 1e4)
+    ) +
+  geom_quasirandom(groupOnX = FALSE)
+```
+
+We can see that possibility for Gard to increase is capped in the calibrated data.
+This observation suggests the reason that the effect is smaller with calibration has to do with the cap on proportions being above 1 (or the rarefied counts being above 10K).
+Why would this problem only become apparent in the GP regression and not the linear model?
+
+I suspect it has something to do with zeros.
+In the lm analysis above (with deterministic zero replacement), calibration adjusts the log-proportion is adjusted by the efficiency (relative to the mean) regardless of whether the observation is a zero or a large count.
+
+Perhaps in the GP analysis, the imprecision of the zeros as measurements of log proportion ends up leading to smaller log-scale calibration adjustments in the latent log-proportion measurement.
+
+Consider a zero observation of Gard in a Lacto-dominated sample, with a mean efficiency that is 10X that of Gard.
+There will be a range of values for the latent log porportion that are consistent with the fitted model, say from 1e-6 to 1e-3.
+After calibration, the range will be shifted upwards, but perhaps it will also be wider---perhaps the upper bound increases by 10X, but the lower bound doesn't chan ge much (very uncertain about this).
+I may need to determine what impact the prior on the intercept has, since when I used the default prior I did not see this unexpected behavior.
+
+What would happen if we computed the change in the log abundance (like lm), but zeros were set to a pseudocount after calibration, rather than before?
+
+```{r}
+gard %>%
+  pivot_longer(c(observed, calibrated), names_to = 'type') %>%
+  with_groups(c(type, div_group), summarize,
+    mean = log(value + 0.3) %>% mean) %>%
+  pivot_wider(names_from = div_group, values_from = mean) %>%
+  mutate(diff = High - Low)
+```
+
+Here, the calibrated LFC is smaller, as in the original lm analysis.
+However, the difference is a bit smaller than the negative LFC of the mean efficiency.
+
+Let's investigate the predicted counts, with and without calibration.
+
+```{r}
+fits <- res_gp %>% filter(.otu == 'Gardnerella_vaginalis') %>% 
+  select(type, fit) %>%
+  deframe()
+cfs <- fits %>% map(coef)
+```
+
+the predicted values from the two fits, before we've adjusted for bias, are
+
+```{r}
+# Low diversity
+cfs %>% map(~exp(.[1]) %>% unname)
+# High diversity
+cfs %>% map(~exp(.[1] + .[2]) %>% unname)
+```
+
+The `Calibrated` model predicts values larger than the 10K read depth; however, that is because this is the value before the sample-specific offsets are accounted for, and these will generally push the value lower.
+
+My guess as to what is going on is that there is a 'compositional bias' that is being relaxed by calibration, which pushes in the direction of beta-hat being higher, and this effect overpowers the push of the mean efficiency difference.
+Can I understand this effect more?
+
+Also, can I understand why it doesn't affect the lm method?
+First, check to see what the predicted values are.
+
+```{r}
+cfs_lm <- res_lm %>% filter(.otu == 'Gardnerella_vaginalis') %>% 
+  select(type, fit) %>%
+  deframe() %>%
+  map(coef)
+# Low diversity
+cfs_lm %>% map(~exp(.[1] + log(1e4)) %>% unname)
+# High diversity
+cfs_lm %>% map(~exp(.[1] + .[2] + log(1e4)) %>% unname)
+```
+
+We can see that the predicted values are lower and don't overshoot the read depth.
+
+But is this really a fair comparison? What if I had used offsets for calibration?
+
+### fitted values (not sure if useful)
+
+
+```{r}
+gard_fitted <- res_gp %>% filter(.otu == 'Gardnerella_vaginalis') %>% 
+  mutate(
+    data = map(fit, 'data'),
+    fitted = map(fit, fitted)
+  ) %>%
+  select(-fit) %>%
+  unnest(c(data, fitted))
+```
+
+```{r}
+gard_fitted %>%
+  ggplot(aes(fitted, .abundance, color = div_group)) +
+  facet_wrap(~type) +
+  geom_point()
+```
+
+
+
+### explore
+
+```{r}
+x <- momspi_div %>%
+  prune_taxa(taxa_to_test, .) %>%
+  as_tibble %>%
+  left_join(bias %>% enframe('.otu', 'efficiency'), by = '.otu')
+taxa_to_plot <- c('Atopobium_vaginae', 'Ureaplasma_cluster23',
+  'Gardnerella_vaginalis', 'Lachnospiraceae_BVAB1')
+x1 <- x %>%
+  filter(.otu %in% taxa_to_plot) %>%
+  mutate(across(.otu, factor, levels = taxa_to_plot))
+```
+
+```{r}
+x2 <- x1 %>%
+  mutate(
+    observed = .abundance,
+    calibrated = .abundance / (efficiency / mean_efficiency)
+  )
+```
+
+```{r}
+x2 %>%
+  pivot_longer(c(observed, calibrated), names_to = 'type') %>%
+  ggplot(aes(y = div_group, x = value, color = type)) +
+  facet_grid(.otu~type) +
+  scale_x_continuous(trans = pseudo_log_trans(sigma = 10)) +
+  geom_quasirandom(groupOnX = FALSE)
+```
+
+
+
+```{r}
+x1 %>%
+  ggplot(aes(x = 0.3 + .abundance, y = div_group)) +
+  scale_x_log10() +
+  facet_wrap(~.otu) +
+  stat_slab(slab_type = 'histogram')
+```
+
+```{r}
+x1 %>%
+  ggplot(aes(x = 0.3 + .abundance, y = .otu, fill = div_group)) +
+  scale_x_log10() +
+  stat_slab(slab_type = 'histogram', alpha = 0.5)
+```
+
+One possibility is that the difference has to do with the fraction of zeros; however, there doesn't seem to be an obvious difference between the two pairs of taxa.
+
+Or: It has to do with bimodality more generally
+
+Another possibility: It has to do with taxa who reach large proportions and so are impacted by the compositional effect.
+Gv and LB both reach near the upper limit of possible counts in the high-div group, placing a bound on how high the effect can be, but this is not the case for the other two taxa.
+
+Let's dig into L BVAB1 a bit more.
+
+```{r}
+library(tidybayes)
+
+drws <- res_gp %>% 
+  filter(.otu == 'Lachnospiraceae_BVAB1') %>%
+  mutate(
+    # draws = map(fit, gather_draws, `(Intercept)`, div_groupHigh)
+    draws = map(fit, gather_draws, `(Intercept)`, div_groupHigh, reciprocal_dispersion)
+  ) %>%
+  select(-fit) %>%
+  unnest(draws) %>%
+  group_by(type, .variable)
+drws %>% median_qi(.value)
+drws %>% filter(.variable != 'reciprocal_dispersion') %>% 
+  mutate(across(.value, exp)) %>% median_qi(.value)
+```
+
+Note, I think we have to interpret the intercept for the calibrated model somewhat differently, because of the offset.
+
+Looking at just the Observed, we have 177 * 5.64 being approximately 1000, or 0.1 of the total reads.
+
+The LFC from low to high diversity is around 1.6, corresponding to a FC of around 5.
+
+```{r}
+x2 <- x1 %>%
+  filter(.otu == 'Lachnospiraceae_BVAB1') %>%
+  mutate(
+    observed = .abundance,
+    calibrated = .abundance * efficiency / mean_efficiency
+  )
+x2 %>%
+  ggplot(aes(observed, calibrated, color = div_group)) +
+  scale_x_continuous(trans = pseudo_log_trans(sigma = 10)) +
+  scale_y_continuous(trans = pseudo_log_trans(sigma = 10)) +
+  geom_point()
+```
+
+```{r}
+x2 %>%
+  pivot_longer(c(observed, calibrated), names_to = 'type') %>%
+  ggplot(aes(y = div_group, x = value, color = type)) +
+  facet_wrap(~type) +
+  scale_x_continuous(trans = pseudo_log_trans(sigma = 10)) +
+  geom_quasirandom(groupOnX = FALSE)
+```
+
+TODO: use a density plot so that we account for different numbers of samples per group (or down sample)
+
+The data show a bimodal distribution in both high and low diversity groups, but particularly in the high diversity group.
+The 
+, with a small number of low-div, high LB samples, but these might be too few to be much affecting the mean LFC.
+
+
+Compare the impact of calibration to the change in the mean efficiency
+
+### Ureaplasma
+
+Let's look at a case where there is a 'big' effect
+
+```{r}
+drws <- res_gp %>% 
+  filter(.otu == 'Ureaplasma_cluster23') %>%
+  mutate(
+    # draws = map(fit, gather_draws, `(Intercept)`, div_groupHigh)
+    draws = map(fit, gather_draws, `(Intercept)`, div_groupHigh, reciprocal_dispersion)
+  ) %>%
+  select(-fit) %>%
+  unnest(draws) %>%
+  group_by(type, .variable)
+drws %>% median_qi(.value)
+drws %>% filter(.variable != 'reciprocal_dispersion') %>% 
+  mutate(across(.value, exp)) %>% median_qi(.value)
+```
+
+```{r}
+x2 <- x1 %>%
+  filter(.otu == 'Ureaplasma_cluster23') %>%
+  mutate(
+    observed = .abundance,
+    calibrated = .abundance * efficiency / mean_efficiency
+  )
+```
+
+```{r}
+x2 %>%
+  pivot_longer(c(observed, calibrated), names_to = 'type') %>%
+  ggplot(aes(y = div_group, x = 0.01 + value)) +
+  facet_wrap(~type) +
+  scale_x_log10() +
+  # scale_x_log10(breaks = 10^seq(-1, 4)) +
+  stat_halfeye()
+```
+
+### MCMC diagnostics
+
+Consider doing for a good subset of the fits to check.
+
+```{r, eval = F}
+f <- res_gp %>% slice(1) %>% pull(fit) %>% .[[1]]
+plot(f, plotfun = 'mcmc_dens_overlay', pars = 'div_groupHigh')
+plot(f, plotfun = 'mcmc_trace', pars = 'div_groupHigh')
+```
+
+```{r, eval = F}
+f <- res_gp %>% filter(.otu == 'Gardnerella_vaginalis') %>% pull(fit)
+f %>% map(summary)
+plot(f[[1]], plotfun = 'mcmc_dens_overlay', pars = 'div_groupHigh')
+plot(f[[2]], plotfun = 'mcmc_dens_overlay', pars = 'div_groupHigh')
+```
+
