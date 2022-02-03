@@ -70,12 +70,12 @@ fs::path(
 ```{r momspi-regression, fig.cap = '(ref:cap-momspi-regression)'}
 fs::path(
   "notebook/_posts/2021-12-15-momspi-regression-diversity/momspi-regression-diversity_files", 
-  "figure-html5/regression-lm-alt-1.svg"
+  "figure-html5/regression-gp-1.svg"
 ) %>%
   include_svg
 ```
 
-(ref:cap-momspi-regression) **Bias distorts log fold changes (LFCs) in species proportions in a regression analysis of vaginal microbiome samples from the MOMS-PI study.** Samples were split into low, medium, and high diversity groups based on Shannon diversity in observed (uncalibrated) microbiome profiles. The LFC in proportion from low- to high-diversity samples was estimated for 30 common species by simple linear regression, using calibrated (bias-corrected) and observed (uncorrected) microbiome profiles following a simple zero-replacement procedure. Panel A shows the distribution of point estimates; Panel B shows the point estimates and 95% confidence intervals for each species. The difference between the calibrated and observed estimate for each species equals the negative LFC in mean efficiency.
+(ref:cap-momspi-regression) **Bias inflates estimated log fold changes (LFCs) in species proportions with diversity in vaginal microbiome samples from the MOMS-PI study.** Samples were split into low, medium, and high diversity groups based on Shannon diversity in observed (uncalibrated) microbiome profiles. The LFC in proportion from low- to high-diversity samples was estimated for 30 common species using gamma-Poisson regression with and without bias correction. Panel A shows the distribution of point estimates; Panel B shows the point estimates and 95% Bayesian credible intervals for each species.
 
 <br><br>
 

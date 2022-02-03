@@ -23,7 +23,7 @@ First, the authors used linear regression of log species proportion (via negativ
 Second, the authors quantified the strength of priority effects---the advantage of being allowed to colonize first---in different host genotypes by the LFC in the proportion of a species when allowed to colonize first versus later with the majority of commensals.
 
 Since these analysis are both based on proportions, bias could in principle impact their results.
-We re-ran both analyses with and without bias correction, finding nearly identical results regardless of whether bias is accounted for^[The two sets of analyses can be seen at the following links: [negative-binomial regression analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-06-leopold2020host-original-regression-analysis/index.html); [priority-effects analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-05-leopold2020host-priority-effects/index.html)].
+We re-ran both analyses with and without bias correction, finding nearly identical results regardless of whether bias is accounted for.^[The two sets of analyses can be seen at the following links: [negative-binomial regression analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-06-leopold2020host-original-regression-analysis/index.html); [priority-effects analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-05-leopold2020host-priority-effects/index.html)]
 To understand why, we compared the multiplicative variation taxa proportions with that of the mean efficiency.
 The proportions of each taxon varied substantially across samples, much more so than the mean efficiency, which had a geometric range of 1.62X and a geometric standard deviation of just 1.05X (SI Figure \@ref(fig:leopold2020host-variation)).
 <!-- Explanation -->
@@ -99,6 +99,7 @@ The mean efficiency varies substantially across vaginal samples (Figure \@ref(fi
 This variation appears to be primarily driven by variation in which species is most abundant, samples in which a _Lactobacillus_ species is most abundant (after calibration) typically have an efficiency that is 3-20X greater than samples in which _G. vaginalis_ is most abundant.
 Shifts between _Lactobacillus_-dominance and _Gardnerella_-dominance are common in between-women comparisons and occasionally occur between consecutive visits in individual women (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)).
 These shifts typically result in substantial fold changes in mean efficiency (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)) and can cause spurious fold changes in the trajectories of lower-abundance species (SI Figure \@ref(fig:momspi-trajectory)).
+Decreases in mean efficiency during transitions from _Lactobacillus_ to _Gardnerella_ dominance would be more extreme for vaginal microbiome primer sets that fail to amplify _Gardnerella_ (@graspeuntner2018sele).
 
 <!-- begin figure -->
 
@@ -117,20 +118,22 @@ fs::path(
 We next considered whether the observed variation in mean efficiency could cause systematic error in a DA analysis.
 In particular, we hypothesized that DA analysis of species proportions versus a covariate that is associated with _Lactobacillus_ and/or _Gardnerella_ would be particularly prone to spurious results.
 Patient metadata was not available due to privacy restrictions; we therefore sought a clinically relevant covariate to use in a regression analysis that could be determined directly from the microbiome profiles and that we _a priori_ expected to be associated with the proportions of _Lactobacillus_ and _Gardnerella_.
-Alpha diversity metrics such as species richness, the Shannon index, and the (Inverse) Simpson index have been repeatedly found to be strongly positively associated with bacterial vaginosis (BV; @srinivasan2012bact, @cartwright2018mult). @cartwright2018mult found that an observed Simpson Diversity Index of 0.82 (corresponding to an order-2 effective number of species of 5.6) classified high diversity samples as BV positive with a sensitivity of 100% and specificity of 85.1%.
+Alpha diversity metrics such as species richness, the Shannon index, and the (Inverse) Simpson index have been repeatedly found to be strongly positively associated with bacterial vaginosis (BV; @srinivasan2012bact, @cartwright2018mult).^[@cartwright2018mult found that an observed Simpson Diversity Index of 0.82 (corresponding to an order-2 effective number of species of 5.6) classified high diversity samples as BV positive with a sensitivity of 100% and specificity of 85.1%.]
 In addition, it is commonly observed that samples from women with and without BV that are dominated by _Lactobacillus spp._ tend to have higher diversity, whereas samples dominated by _Gardnerella_ tend to have lower diversity.
 We therefore chose to perform a DA analysis of species proportion versus alpha diversity, hypothesizing that _Lactobacillus_ and _Gardnerella_ would drive a negative association of mean efficiency with diversity and thereby distort DA estimates for all species.
 We split samples into low, medium, and high diversity groups based on Shannon diversity in observed (uncalibrated) microbiome profiles.
-We then estimated the LFC in proportion from low- to high-diversity samples for a 30 common species by simple linear regression, using calibrated (bias-corrected) and observed (uncorrected) microbiome profiles.
-As expected, the mean efficiency was higher in low-diversity samples due to a larger fraction of samples dominated by _Lactobacillus_ and a lower fraction with samples dominated by _Gardnerella_.
-The decline in mean efficiency in the high diversity group caused a concomitant increase in the LFCs of all species when bias was not accounted for.
-This error due to bias resulted in serious magnitude errors in nearly all species and sign errors in over one third, with errors of both types seen for several clinically relevant species.
+We then estimated the LFC in proportion from low- to high-diversity samples for 30 species passing a basic prevalence threshold, with and without bias correction.
+A large fraction of entries in the species count matrix were small counts or zeros.
+We used therefore used gamma-Poisson (or negative-binomial) regression of the observed read counts to fit a linear model to log species proportions while accounting for uncertainty from the random sampling of reads.
+We accounted for bias by including an offset term in the linear model equal to the log ratio of the species' efficiency to the sample mean efficiency.
 
-### Notes
+The mean efficiency was on average lower in high-diversity samples due to a reduction in _Lactobacillus_ dominance (LFC of -1.6, or a 4.8X reduction). 
+Our results from the previous section therefore suggest that accounting for bias should reduce the estimated LFC for each species by about this same amount.
+We found that, as expected, bias correction reduced the LFC of each species, though the effect was variable and typically somewhat smaller.
+Bias correction led to substantial magnitude changes for several species and sign changes in 3 species; however, the relative difference between the corrected and uncorrected LFCs was modest for the 19/30 species with the largest LFCs of over 2 (corresponding to a FC of 7.4X) even after correction.
+These large LFCs occur in species that rarely if ever reach high proportions and so are likely driven by the sum-to-one constraint: The high diversity communities are those not dominated by _Lactobacillus_ spp. (or to a lesser extent _G. vaginalis_ and BVAB1).
+Therefore it is not clear how well it will generalize to regressions on other covariates.
 
-- It might be cleaner story-wise to redo the diversity partitioning using the threshold identified by @cartwright2018mult
-- For the DA analysis of proportions vs. diversity, I tried other types of DA analysis methods (Gamma-Poisson regression and regression on ranks, similar to Wilcoxon test) to understand how the impact of bias differs across methods. In each case bias has a big effect but the species whose estimates are most affected varies. I would need to revise and verify this analysis before including its results. One reason for doing so would be to show that our qualitative finding about how bias distorts results applies beyond the basic linear regression model.
-- Decreases in mean efficiency during transitions from _Lactobacillus_ to _Gardnerella_ dominance can be expected to be even more extreme for commonly-used vaginal microbiome primers that fail to amplify _Gardnerella_.
 
 ## Microbial growth in marine sediments
 
@@ -206,7 +209,7 @@ Overall, the comparison between FRAxC and qPCR measurements gives support to the
 ## Summary and conclusions
 
 The impact of bias can depend on protocol, biological system, and type of DA analysis being done.
-Though these case studies span a highly limited range of possibilities, when combined with the theoretical results of section X help suggest some general conclusions about how and when bias will impact DA analyses based on fold changes in proportions.
+Though these case studies span a highly limited range of possibilities, when combined with the theoretical results of Section \@ref(differential-abundance) suggest some general conclusions about how and when bias will impact DA analyses based on fold changes in proportions.
 
 <!-- P: Canceling of consistent bias does occur to an important degree -->
 
