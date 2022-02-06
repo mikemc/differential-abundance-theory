@@ -1,0 +1,73 @@
+---
+title: "Import gut datasets"
+description: |
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - R
+date: 2021-11-10
+draft: false
+output:
+  distill::distill_article:
+    self_contained: false
+    dev: svg
+---
+
+```{r}
+# Load bioconductor first so dplyr can mask it
+library(curatedMetagenomicData)
+library(here)
+library(tidyverse)
+library(speedyseq)
+library(fs)
+```
+
+
+```{r}
+curatedMetagenomicData("HMP") # HMP1 and HMP2
+curatedMetagenomicData("QinJ_2012") # MetaHIT
+```
+
+```{r}
+  tse <- curatedMetagenomicData(
+    str_c('HMP_2012', ".relative_abundance"),
+    dryrun = FALSE
+  )
+```
+
+
+```{r}
+import_dataset <- function(dataset, out = here('notebook/_data/gut')) {
+  tse <- curatedMetagenomicData(
+    str_c(dataset, ".relative_abundance"),
+    dryrun = FALSE
+  )
+  stopifnot(identical(length(tse), 1L))
+  nm <- names(tse)
+  tse <- tse[[1]]
+  ps <- mia::makePhyloseqFromTreeSummarizedExperiment(
+    tse,
+    abund_values = "relative_abundance"
+  ) %>%
+    rename_with_sample_data(janitor::make_clean_names) %>%
+    rename_with_tax_table(janitor::make_clean_names) %>%
+    transform_sample_counts(~. / sum(.))
+  fn <- fs::path(out, str_glue('{nm}.phyloseq.rds'))
+  saveRDS(ps, fn)
+}
+```
+
+```{r}
+dir_create(here('notebook/_data/gut'))
+
+import_dataset('HMP_2012')
+import_dataset('HMP_2019_ibdmdb')
+import_dataset('HMP_2019_t2d')
+import_dataset('QinJ_2012')
+import_dataset('ThomasAM_2018b')
+import_dataset('KieserS_2018')
+import_dataset('RaymondF_2016')
+
+dir_ls(here('notebook/_data/gut'))
+```

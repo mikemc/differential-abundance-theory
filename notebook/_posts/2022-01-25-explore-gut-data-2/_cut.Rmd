@@ -1,0 +1,26 @@
+
+
+### CHECKs
+
+```{r}
+dataset <- 'KieserS_2018'
+tse <- curatedMetagenomicData(
+  str_c(dataset, ".relative_abundance"),
+  dryrun = FALSE
+)
+stopifnot(identical(length(tse), 1L))
+nm <- names(tse)
+tse <- tse[[1]]
+ps <- mia::makePhyloseqFromTreeSummarizedExperiment(
+  tse,
+  abund_values = "relative_abundance"
+) %>%
+  rename_with_sample_data(janitor::make_clean_names) %>%
+  rename_with_tax_table(janitor::make_clean_names) %>%
+  transform_sample_counts(~. / sum(.))
+all.equal(
+  tse %>% rownames %>% str_subset('Streptococcus'),
+  ps %>% taxa_names %>% str_subset('Streptococcus')
+)
+```
+

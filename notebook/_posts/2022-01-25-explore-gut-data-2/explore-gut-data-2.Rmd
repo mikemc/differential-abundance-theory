@@ -1,0 +1,618 @@
+---
+title: "Explore gut datasets, 2"
+description: |
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - R
+date: 2022-01-25
+draft: false
+output:
+  distill::distill_article:
+    self_contained: false
+    dev: svg
+---
+
+Purpose: Examine phylum-level variation w/ clinical condition in different studies.
+
+
+```{r}
+library(here)
+library(tidyverse)
+library(speedyseq)
+library(metacal)
+
+library(cowplot)
+theme_set(theme_cowplot())
+library(ggbeeswarm)
+```
+
+# Studies
+
+```{r}
+fs::dir_ls(here('notebook/_data/gut'))
+
+study <- c(
+  'HMP_2019_ibdmdb',
+  # 'HMP_2019_t2d',
+  'KieserS_2018',
+  # 'QinJ_2012',
+  'RaymondF_2016',
+  'ThomasAM_2018b'
+)
+tbl <- tibble(study = study) %>%
+  mutate(
+    file = str_glue('2021-03-31.{study}.relative_abundance.phyloseq.rds'),
+    path = here('notebook/_data/gut/', file),
+    ps = map(path, readRDS)
+  )
+```
+
+Aim: For each study, get a tibble with the processed phyloseq object and the relevant clinical variable.
+The clinical var will usually be `study_condition`, but need to check, and also set the factor levels.
+
+Note, processing that will be applied to all ps objects will be done after.
+
+
+Thomas et al colorectal cancer
+
+```{r}
+ps <- tbl %>% filter(study == 'ThomasAM_2018b') %>% pull(ps) %>% .[[1]]
+sam <- ps %>% sample_data %>% as_tibble
+sam %>% glimpse
+sam %>% dplyr::count(body_site, study_condition, disease)
+sam %>% dplyr::count(age_category)
+sam %>% dplyr::count(gender)
+sam %>% dplyr::count(antibiotics_current_use)
+```
+
+
+HERE
+
+```{r}
+process_ps <- function(ps) {
+  ps %>%
+    filter_tax_table(kingdom == 'Bacteria') %>%
+    transform_sample_counts(close_elts) %>%
+    mutate_tax_table(.otu = species)
+}
+tbl <- tbl %>%
+  mutate(
+    ps_proc = map(ps, process_ps)
+  )
+
+```
+
+- prep each dataset
+- write some functions to do phylum level plots, compute variation, and compute effects on the phyla
+- perhaps do the same for mean eff supposing a G+/G- model.
+
+NOTE: We might want to do this case by case; or do the bias both ways (since some datasets may have a high B:F ratio, others low)
+
+## helper functions
+
+
+# Acute diarrhoea - Kieser et al 2018
+
+```{r}
+ps <- tbl %>% filter(study == 'KieserS_2018') %>% pull(ps_proc) %>% .[[1]]
+sam <- ps %>% sample_data %>% as_tibble
+sam %>% glimpse
+sam %>% dplyr::count(body_site, age_category, study_condition, disease)
+sam %>% dplyr::count(study_condition, uncurated_metadata)
+```
+
+Let's check the phylum proportions in healthy and sick kids,
+
+```{r}
+ps_phy <- ps %>% tax_glom('phylum') %>%
+  mutate_tax_table(.otu = phylum)
+x_phy <- ps_phy %>% as_tibble
+```
+
+```{r}
+ps_phy %>%
+  filter_taxa2(~median(.) > 0) %>%
+  as_tibble %>%
+  with_groups(c(phylum, study_condition), summarize,
+    across(.abundance, median)) %>%
+  pivot_wider(names_from = study_condition, values_from = .abundance)
+```
+
+```{r}
+ps_phy %>%
+  filter_taxa2(~median(.) > 0) %>%
+  as_tibble %>%
+  ggplot(aes(y = study_condition, x = 1e-5 + .abundance, color =
+      study_condition)) +
+  facet_wrap(~phylum, ncol = 1) +
+  scale_color_brewer(type = 'qual') +
+  scale_x_log10() +
+  geom_quasirandom(groupOnX = FALSE)
+```
+
+Healthy kids have high proportions of the G+ Actinobacteria and Firmicutes, as well as Bacteroidetes; sick are dominated by Proteobacteria.
+
+This finding is consistent with some of the observations of the paper.
+
+After reading the article, I learned that
+- many-most of the children were identified as having organisms that are considered gut pathogens / known causes of diarrhoea, which are all in Proteobacteria (E. coli, Vibrio, Campylobacter, Shigella, Aeromonas)
+- these samples are a random subset of samples that were sequenced by 16S sequencing.
+- 16S qPCR measurements were made to gain some absolute abundance info
+- The authors report a fairly large increase in Streptococcus proportion, which is in Firmicutes. This finding does not seem to mesh with what I'm seeing in the shotgun profiles
+- The authors report various other DA results
+
+There is still important questions and interesting things I might look into, such as the disagreement between 16s and shotgun results. However, a relatively straightforward story could already be suggested.
+
+Observations
+- large phylum+ level differences, and in particular large differences in the G+ vs G- taxa, with a high fraction of controls being the G+ Actino and Firm, and a high fraction of cases being the G- Proteobacteria.
+- Proteobacteria is known to contain many gut pathogens
+<!--  -->
+
+Things to look into
+- the alpha diversity within phyla within patients, to see the effective number of species (and genera) within phyla
+- What fraction of comm's within patients by most abundant 1 species - want to understand whether mean eff var would be driven by just one species
+  - Either way, I think I can make the point that phylum-level conservation is important when we do a cross-species analysis, since it won't always be the same species (various Proteobacteria), I'm guessing
+- Specifically dig into the Proteobacteria - see what species/genera are contributing to the Prot fraction in each individual esp. with diarrhea to see if true that it's not just one species, but various, but all within the phylum
+- Fraction of comms made up of G+ versus G- phyla
+  - perhaps use this as a proxy for mean efficiency, rather than bothering to simulate
+<!--  -->
+
+
+### Proteobacteria
+
+Question: Which Proteobacteria species are driving the high Proteobacteria proportion in sick kids?
+
+```{r}
+prot_spp <- ps %>%
+  filter_tax_table(phylum == 'Proteobacteria') %>%
+  filter_taxa2(~max(.) > 1e-2) %>%
+  as_tibble
+prot_genus <- ps %>%
+  filter_tax_table(phylum == 'Proteobacteria') %>%
+  tax_glom('genus') %>%
+  as_tibble
+```
+
+```{r}
+prot_genus %>%
+  mutate(across(genus, fct_reorder, .abundance)) %>%
+  ggplot(aes(y = genus, x = 1e-5 + .abundance, color = study_condition)) +
+  theme_minimal_hgrid() +
+  geom_vline(xintercept = c(1e-2, 0.1, 1), color = 'grey') +
+  scale_color_brewer(type = 'qual') +
+  scale_x_log10() +
+  geom_quasirandom(groupOnX = FALSE)
+```
+
+```{r}
+prot_spp %>%
+  mutate(across(.otu, fct_reorder, .abundance)) %>%
+  ggplot(aes(y = .otu, x = 1e-5 + .abundance, color = study_condition)) +
+  theme_minimal_hgrid() +
+  geom_vline(xintercept = c(1e-2, 0.1, 1), color = 'grey') +
+  scale_color_brewer(type = 'qual') +
+  scale_x_log10() +
+  geom_quasirandom(groupOnX = FALSE)
+```
+
+We can see that E. coli and Klebsiella spp. are the drivers of the high Proteobacteria proportions, with Vibrio in one patient also being substantial (10%).
+Escherichia and Klebsiella are both in the family Enterobacteriaceae.
+
+
+### Streptococcus
+
+```{r}
+strep <- ps %>%
+  filter_tax_table(genus == 'Streptococcus') %>%
+  tax_glom('genus') %>%
+  as_tibble
+strep_spp <- ps %>%
+  filter_tax_table(genus == 'Streptococcus') %>%
+  filter_taxa2(~max(.) > 3e-3) %>%
+  as_tibble
+```
+
+```{r}
+strep %>%
+  ggplot(aes(y = study_condition, x = 1e-5 + .abundance, color =
+      study_condition)) +
+  scale_color_brewer(type = 'qual') +
+  scale_x_log10() +
+  geom_quasirandom(groupOnX = FALSE)
+```
+
+```{r}
+strep_spp %>%
+  ggplot(aes(y = study_condition, x = 1e-5 + .abundance, color =
+      study_condition)) +
+  facet_wrap(~species, ncol = 1) +
+  scale_color_brewer(type = 'qual') +
+  scale_x_log10() +
+  geom_quasirandom(groupOnX = FALSE)
+```
+
+```{r}
+ps %>%
+  filter_tax_table(family == "Streptococcaceae") %>%
+  tax_glom('family') %>%
+  as_tibble %>%
+  ggplot(aes(y = study_condition, x = 1e-5 + .abundance, color =
+      study_condition)) +
+  scale_color_brewer(type = 'qual') +
+  scale_x_log10() +
+  geom_quasirandom(groupOnX = FALSE)
+```
+
+We also don't see the result at the family level.
+
+In short, the Metaphlan3 profiles do not support the Streptococcus associations reported in the study, which were found using 16S sequencing and shotgun sequencing (analyzed with Metaphlan2).
+
+
+## Check for any clades with large differences between conditions
+
+```{r}
+check_diffs <- function(ps, taxrank, fn = mean) {
+  ps %>% tax_glom(taxrank) %>% as_tibble %>%
+    with_groups(c(phylum:species, study_condition), 
+      summarize, across(.abundance, fn)) %>%
+    pivot_wider(names_from = study_condition, values_from = .abundance) %>%
+    mutate(diff = acute_diarrhoea - control) %>%
+    arrange(desc(abs(diff)))
+}
+```
+
+```{r}
+check_diffs(ps, 'species', mean) %>% slice(1:4)
+check_diffs(ps, 'genus', mean) %>% slice(1:4)
+check_diffs(ps, 'family', mean) %>% slice(1:4)
+check_diffs(ps, 'order', mean) %>% slice(1:4)
+check_diffs(ps, 'class', mean) %>% slice(1:4)
+check_diffs(ps, 'phylum', mean) %>% slice(1:4)
+```
+
+# Antibiotics - Raymond et al 2016 
+
+```{r}
+ps <- tbl %>% filter(study == 'RaymondF_2016') %>% pull(ps_proc) %>% .[[1]]
+sam <- ps %>% sample_data %>% as_tibble
+sam %>% glimpse
+sam %>% count(body_site, age_category, study_condition, disease)
+sam %>% count(study_condition, antibiotics_family)
+sam %>% count(study_condition, days_from_first_collection)
+```
+
+Note, the 'study_condition' varies by timepoint for the same subject, so isn't useful for filtering or coloring the subjects who received the antibiotic.
+We therefore need to create a new variable.
+
+```{r}
+sam <- sam %>%
+  with_groups(subject_id, mutate,
+    subject_group = case_when(
+      'yes' %in% antibiotics_current_use ~ 'antibiotics',
+      TRUE ~ 'control'
+    ),
+    days_idx = rank(days_from_first_collection) %>% as.factor
+  )
+sample_data(ps) <- sample_data(sam)
+sam %>% count(subject_group, days_from_first_collection, days_idx)
+```
+
+Let's check the phylum proportions,
+
+```{r}
+ps_phy <- ps %>% tax_glom('phylum') %>%
+  mutate_tax_table(.otu = phylum)
+x_phy <- ps_phy %>% as_tibble
+focal_phyla <- c('Actinobacteria', 'Bacteroidetes', 'Firmicutes',
+  'Proteobacteria')
+```
+
+```{r}
+x_phy %>%
+  filter(phylum %in% focal_phyla, subject_group == 'antibiotics') %>%
+  with_groups(c(phylum, study_condition), summarize,
+    across(.abundance, median)) %>%
+  pivot_wider(names_from = study_condition, values_from = .abundance)
+```
+
+```{r}
+x_phy %>%
+  filter(phylum %in% focal_phyla, subject_group == 'antibiotics') %>%
+  ggplot(aes(y = study_condition, x = 1e-5 + .abundance, color =
+      study_condition)) +
+  facet_wrap(~phylum, ncol = 1) +
+  scale_color_brewer(type = 'qual') +
+  scale_x_log10() +
+  geom_quasirandom(groupOnX = FALSE)
+```
+
+```{r}
+x_phy %>%
+  filter(phylum %in% focal_phyla, subject_group == 'antibiotics') %>%
+  ggplot(aes(days_idx, 1e-5 + .abundance, color = phylum)) +
+  facet_wrap(~phylum, scales = 'free_y', ncol = 1) +
+  scale_y_log10() +
+  scale_color_brewer(type = 'qual', palette = 2) +
+  geom_line(aes(group = interaction(subject_id, phylum))) +
+  geom_point()
+```
+
+There seems to be some increase in G- phyla with rx administration, though not a huge effect.
+I wonder if the effect would seem larger if we supposed a lysis bias favoring G-?
+
+```{r}
+bias <- ps_phy %>% tax_table %>% as_tibble %>%
+  mutate(
+    efficiency = case_when(
+      phylum %in% c('Actinobacteria', 'Firmicutes') ~ 1/10,
+      TRUE ~ 1
+    )
+  ) %>%
+  select(.otu, efficiency) %>%
+  deframe
+ps_phy_cal <- ps_phy %>% calibrate(bias)
+```
+
+```{r}
+ps_phy_cal %>% 
+  as_tibble %>%
+  filter(phylum %in% focal_phyla, subject_group == 'antibiotics') %>%
+  ggplot(aes(days_idx, .abundance, color = phylum)) +
+  facet_wrap(~phylum, scales = 'free_y', ncol = 1) +
+  scale_y_log10() +
+  scale_color_brewer(type = 'qual', palette = 2) +
+  geom_line(aes(group = interaction(subject_id, phylum))) +
+  geom_point()
+```
+
+```{r}
+ps_phy_cal %>% 
+  sample_data %>%
+  as_tibble %>%
+  ggplot(aes(days_idx, .mean_efficiency)) +
+  scale_y_log10() +
+  expand_limits(y = c(0.1, 1)) + 
+  scale_color_brewer(type = 'qual', palette = 2) +
+  stat_summary(color = 'darkred', position = position_nudge(x = -0.1)) +
+  geom_line(aes(group = subject_id), alpha = 0.5) +
+  geom_point(alpha = 0.5)
+```
+
+We see sizable variation in the mean efficiency, but just a small change in the mean during and after treatment.
+
+
+Note, the variation would be larger if we enforced a difference between the average efficiency for the phylum but also allowed for variation within a phylum.
+
+
+## Check for any clades with large differences between conditions
+
+```{r}
+check_diffs <- function(ps, taxrank, fn = mean) {
+  ps %>% tax_glom(taxrank) %>% as_tibble %>%
+    with_groups(c(phylum:species, study_condition), 
+      summarize, across(.abundance, fn)) %>%
+    pivot_wider(names_from = study_condition, values_from = .abundance) %>%
+    mutate(diff = cephalosporins - control) %>%
+    arrange(desc(abs(diff)))
+}
+```
+
+```{r}
+check_diffs(ps, 'species', mean) %>% slice(1:2)
+check_diffs(ps, 'genus', mean) %>% slice(1:2)
+check_diffs(ps, 'family', mean) %>% slice(1:2)
+check_diffs(ps, 'order', mean) %>% slice(1:2)
+check_diffs(ps, 'class', mean) %>% slice(1:2)
+check_diffs(ps, 'phylum', mean) %>% slice(1:2)
+```
+
+# Colorectal cancer
+
+```{r}
+ps <- tbl %>% filter(study == 'ThomasAM_2018b') %>% pull(ps_proc) %>% .[[1]]
+sam <- ps %>% sample_data %>% as_tibble
+sam %>% glimpse
+sam %>% count(study_condition, disease)
+sam %>% count(body_site, age_category, study_condition)
+```
+
+Let's check the phylum proportions,
+
+```{r}
+ps_phy <- ps %>% tax_glom('phylum') %>%
+  mutate_tax_table(.otu = phylum)
+x_phy <- ps_phy %>% as_tibble
+focal_phyla <- c('Actinobacteria', 'Bacteroidetes', 'Firmicutes',
+  'Proteobacteria')
+```
+
+```{r}
+x_phy %>%
+  filter(phylum %in% focal_phyla) %>%
+  with_groups(c(phylum, study_condition), summarize,
+    across(.abundance, median)) %>%
+  pivot_wider(names_from = study_condition, values_from = .abundance)
+```
+
+```{r}
+x_phy %>%
+  filter(phylum %in% focal_phyla) %>%
+  ggplot(aes(y = study_condition, x = 1e-5 + .abundance, color =
+      age_category)) +
+  facet_wrap(~phylum, ncol = 1) +
+  scale_color_brewer(type = 'qual') +
+  scale_x_log10() +
+  geom_quasirandom(groupOnX = FALSE)
+```
+
+Can see that the B:F ratio is somewhat lower in cases.
+
+```{r}
+bias <- ps_phy %>% tax_table %>% as_tibble %>%
+  mutate(
+    efficiency = case_when(
+      phylum %in% c('Actinobacteria', 'Firmicutes') ~ 1/10,
+      TRUE ~ 1
+    )
+  ) %>%
+  select(.otu, efficiency) %>%
+  deframe
+ps_phy_cal <- ps_phy %>% calibrate(bias)
+sam_cal <- ps_phy_cal %>% 
+  sample_data %>%
+  as_tibble
+```
+
+```{r}
+sam_cal %>%
+  ggplot(aes(study_condition, .mean_efficiency)) +
+  scale_y_log10() +
+  expand_limits(y = c(0.1, 0.3)) + 
+  scale_color_brewer(type = 'qual', palette = 2) +
+  stat_summary(color = 'darkred', position = position_nudge(x = -0.1)) +
+  geom_point(alpha = 0.5)
+```
+
+```{r}
+sam_cal %>%
+  lm(data = ., log(.mean_efficiency) ~ study_condition) %>%
+  summary
+```
+
+## Check for any clades with large differences between conditions
+
+```{r}
+check_diffs <- function(ps, taxrank, fn = mean) {
+  ps %>% tax_glom(taxrank) %>% as_tibble %>%
+    with_groups(c(phylum:species, study_condition), 
+      summarize, across(.abundance, fn)) %>%
+    pivot_wider(names_from = study_condition, values_from = .abundance) %>%
+    mutate(diff = CRC - control) %>%
+    arrange(desc(abs(diff)))
+}
+```
+
+```{r}
+check_diffs(ps, 'species', mean) %>% slice(1:5)
+check_diffs(ps, 'genus', mean) %>% slice(1:5)
+check_diffs(ps, 'family', mean) %>% slice(1:5)
+check_diffs(ps, 'order', mean) %>% slice(1:5)
+check_diffs(ps, 'class', mean) %>% slice(1:5)
+check_diffs(ps, 'phylum', mean) %>% slice(1:5)
+```
+
+
+# Finding available datasets
+
+note, first need to set x to the master sample data table
+
+```{r}
+x %>% dplyr::count(treatment) %>% print(n=Inf)
+x %>% dplyr::count(antibiotics_current_use)
+x %>% dplyr::count(antibiotics_family) %>% print(n=Inf)
+```
+
+studies that involve an antibiotics treatment?
+
+
+```{r}
+x %>% 
+  dplyr::filter(antibiotics_family == 'cephalosporins') %>%
+  dplyr::count(study_name)
+x %>% 
+  dplyr::filter(study_name == 'RaymondF_2016') %>%
+  dplyr::count(antibiotics_current_use, antibiotics_family)
+x %>% 
+  dplyr::filter(study_name == 'RaymondF_2016')
+```
+
+## Diarrhoea
+
+looking at study conditions shows there are two studies with accute diarrhoea
+
+```{r}
+ps1 <- curatedMetagenomicData::curatedMetagenomicData(
+  "DavidLA_2015.relative_abundance", 
+  dryrun = FALSE
+) %>% 
+  .[[1]] %>%
+  mia::makePhyloseqFromTreeSummarizedExperiment(
+    abund_values = "relative_abundance"
+  ) %>%
+  rename_with_sample_data(janitor::make_clean_names) %>%
+  rename_with_tax_table(janitor::make_clean_names)
+  
+# ps1 %>% sample_data %>% as_tibble %>% glimpse
+sam1 <- ps1 %>% sample_data %>% as_tibble
+sam1 %>% dplyr::count(study_condition)
+sam1 %>% dplyr::count(age_category)
+sam1 %>% dplyr::count(body_subsite)
+sam1 %>% dplyr::count(age_category, study_condition)
+sam1 %>% dplyr::count(age_category, study_condition, body_subsite)
+```
+
+
+
+# CUT
+
+
+
+## Phylum proportions by condition
+
+
+```{r}
+x <- ps %>%
+  transform_sample_counts(close_elts) %>%
+  tax_glom('phylum') %>%
+  as_tibble
+```
+
+```{r}
+x %>%
+  with_groups(phylum, summarize, across(.abundance, median))
+```
+
+```{r}
+focal_phyla <- c('Actinobacteria', 'Bacteroidetes', 'Firmicutes',
+  'Proteobacteria')
+x %>%
+  filter(phylum %in% focal_phyla) %>%
+  ggplot(aes(.abundance, fill = disease)) +
+  facet_wrap(~phylum, scales = 'fixed', ncol = 1) +
+  scale_x_log10() +
+  geom_histogram()
+```
+
+
+```{r}
+focal_phyla <- c('Actinobacteria', 'Bacteroidetes', 'Firmicutes',
+  'Proteobacteria')
+x %>%
+  filter(phylum %in% focal_phyla) %>%
+  # ggplot(aes(y = .abundance, x = disease)) +
+  ggplot(aes(y = .abundance, x = (disease != 'healthy') * 1L)) +
+  facet_wrap(~phylum, scales = 'free_y', ncol = 1) +
+  scale_y_log10() +
+  geom_quasirandom() +
+  stat_smooth(method = 'lm')
+```
+
+```{r}
+y <- x %>%
+  filter(phylum %in% focal_phyla) %>%
+  with_groups(phylum, nest) %>%
+  mutate(
+    fit = map(data, ~lm(data = .x, log(.abundance) ~ disease)),
+    fit = map(fit, broom::tidy)
+  ) %>%
+  select(-data) %>%
+  unnest(fit)
+y %>%
+  filter(term != '(Intercept)')
+```
+
+## Bias
+
+Let's come up with a way to simulate bias vectors with a particular property.

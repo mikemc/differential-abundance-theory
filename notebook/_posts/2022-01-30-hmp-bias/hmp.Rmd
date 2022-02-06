@@ -1,0 +1,212 @@
+
+# Setup
+
+## code to create ps object (not run)
+
+```{r, eval = FALSE}
+# It's helpful to load the Bioconductor cruft first so that it doesn't mask the
+# functions we actually want to use.
+HMP16SData::V13()
+library(speedyseq)
+
+ps_v13 <- HMP16SData::V13() %>% HMP16SData::as_phyloseq()
+ps_v35 <- HMP16SData::V35() %>% HMP16SData::as_phyloseq()
+
+ps_v13 %>% sample_data %>% glimpse
+ps_v35 %>% sample_data %>% glimpse
+
+# To merge, we first need to drop the phylogenetic tree, and adjust the sample
+# names.
+intersect(
+  sample_names(ps_v13),
+  sample_names(ps_v35)
+) %>% length
+
+ps_v13 <- ps_v13 %>% 
+  mutate_sample_data(
+    region = 'V13', 
+    specimen_id = .sample,
+    .sample = str_glue('X{specimen_id}_{region}')
+  )
+ps_v35 <- ps_v35 %>% 
+  mutate_sample_data(
+    region = 'V35', 
+    specimen_id = .sample,
+    .sample = str_glue('X{specimen_id}_{region}')
+  )
+
+ps_merge <- merge_phyloseq(
+  ps_v13 %>% {.@phy_tree <- NULL; .}, 
+  ps_v35 %>% {.@phy_tree <- NULL; .}
+)
+
+# let's clean up names and aggregate to the genus level,
+
+ps <- ps_merge %>%
+  rename_with_sample_data(janitor::make_clean_names) %>%
+  rename_with_tax_table(janitor::make_clean_names) %>%
+  tax_glom('genus')
+ps
+rm(ps_merge, ps_v13, ps_v35)
+dir.create('_output')
+saveRDS(ps, '_output/hmp-16s-genus.rds')
+```
+
+```{r}
+```
+
+
+## start here
+
+
+```{r}
+library(here)
+library(tidyverse)
+library(speedyseq)
+library(metacal)
+
+library(cowplot)
+theme_set(theme_cowplot())
+library(ggbeeswarm)
+```
+
+```{r}
+ps <- readRDS('_output/hmp-16s-genus.rds') %>%
+  mutate_sample_data(., sample_sum = sample_sums(.))
+ps
+sam <- ps %>% sample_data %>% as_tibble
+```
+
+```{r}
+sam %>% count(specimen_id) %>% count(n)
+control_specimens <- sam %>% count(specimen_id) %>% filter(n>1) %>%
+  pull(specimen_id)
+```
+
+To estimate bias, we'll work with the specimens with both regions.
+
+TODO: Filter samples to a smaller more workable set, perhaps just gut.
+
+```{r}
+sam %>% 
+  filter(specimen_id %in% control_specimens) %>%
+  count(hmp_body_site)
+```
+
+TODO: Filter genera to high prevalence ones.
+
+```{r}
+ps1 <- ps %>% 
+  filter_sample_data(
+    hmp_body_subsite == 'Stool', 
+    specimen_id %in% control_specimens
+  ) %>%
+  filter_taxa2(~sum(.) > 10)
+```
+
+```{r}
+ps1 %>% sample_sums %>% sort %>% summary
+ps1 %>% sample_sums %>% sort %>% head(20)
+```
+
+```{r}
+ps2 <- ps1 %>% filter_sample_data(sample_sum >= 3000)
+control_specimens_filt <- ps2 %>% sample_data %>% as_tibble %>% 
+  count(specimen_id) %>% filter(n>1) %>%
+  pull(specimen_id)
+```
+
+```{r}
+x <- ps2 %>%
+  transform_sample_counts(close_elts) %>%
+  as_tibble %>%
+  with_groups(.otu, summarize, 
+    across(.abundance, .names = '{.fn}',
+      .fns = list(mean = mean, median = median, max = max)
+    )
+  ) %>%
+  arrange(max)
+x %>% print(n=10)
+x %>% count(max > 1e-2)
+focal_taxa <- x %>% filter(max > 1e-2) %>% pull(.otu)
+```
+
+```{r}
+ps_fit <- ps2 %>%
+  prune_taxa(focal_taxa, .)
+```
+
+```{r}
+ps_list <- list('V13', 'V35') %>% set_names %>%
+  map(~filter_sample_data(ps_fit, region == .x)) %>%
+  map(filter_sample_data, 
+    specimen_id %in% control_specimens_filt
+  ) %>%
+  map(mutate_sample_data, .sample = str_c('X', specimen_id)) %>%
+  map(transform_sample_counts, ~. + 0.3)
+bias_fit <- estimate_bias(
+  ps_list$V13,
+  ps_list$V35,
+  boot = TRUE
+)
+bias <- bias_fit %>% coef
+```
+
+```{r}
+tax <- ps_fit %>% tax_table %>% as_tibble %>%
+  left_join(summary(bias_fit)$coefficients, by = c('.otu' = 'taxon'))
+```
+
+```{r}
+tax %>%
+  ggplot(aes(estimate, fill = phylum)) +
+  scale_x_log10() +
+  scale_fill_brewer(type = 'qual') +
+  geom_histogram()
+```
+
+
+```{r}
+tax %>%
+  mutate(.otu = fct_reorder(.otu, estimate)) %>%
+  ggplot(aes(.otu, estimate, color = phylum,
+      ymin = estimate / gm_se^2, ymax = estimate * gm_se^2)) +
+  scale_color_brewer(type = 'qual', palette = 2) +
+  geom_hline(yintercept = 1, color = "grey") +
+  geom_pointrange() +
+  scale_y_log10() +
+  coord_flip()
+```
+
+The CIs are pretty tight, but I wonder how well the model really does?
+
+
+### check model fit
+
+
+```{r}
+props <- ps_list %>%
+  map(transform_sample_counts, close_elts) %>%
+  map_dfr(as_tibble)
+```
+
+```{r}
+observed.fitted <- fitted(mc_fit) %>% otu_table(taxa_are_rows = FALSE)
+props.fitted <- bind_rows(
+  props, 
+  as_tibble(observed.fitted) %>% add_column(type = "Fitted")
+)
+```
+
+
+
+### finding better taxa names
+
+
+```{r}
+tax <- ps2 %>% tax_table %>% as_tibble
+tax %>% count(genus) %>% filter(n>1)
+tax %>% count(str_c(family, genus, sep = '_')) %>% filter(n>1)
+tax %>% filter(is.na(family))
+```
+

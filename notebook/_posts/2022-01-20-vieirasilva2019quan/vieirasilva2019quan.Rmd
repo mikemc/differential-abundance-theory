@@ -1,0 +1,625 @@
+---
+title: "Explore Vieira-Silva et al (2019) QMP profiles"
+description: |
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - vieirasilva2019quan
+date: 2022-01-20
+draft: false
+bibliography: ../../../main.bib
+output:
+  distill::distill_article:
+    self_contained: false
+    dev: svg
+    toc: true
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  cache = TRUE,
+  autodep = TRUE,
+  cache.comments = FALSE,
+  dpi = 300
+)
+```
+
+# Setup
+
+## R setup
+
+```{r libraries}
+library(here)
+# Tools for microbiome data
+library(speedyseq)
+# Tools for general purpose data manipulation and plotting
+library(tidyverse)
+library(fs)
+# ggplot helpers
+library(ggbeeswarm)
+library(cowplot)
+library(patchwork)
+library(scales)
+# stats helpers
+# library(broom)
+
+library(metacal); packageVersion("metacal")
+```
+
+```{r ggplot}
+theme_set(theme_cowplot())
+```
+
+## Data setup
+
+```{r}
+data_path <- here('notebook/_data/vieirasilva2019quan')
+dir_create(data_path)
+# Supplementary tables from the nature website; contains the metadata
+fn <- path(data_path, 'supplementary-data-1.xlsx')
+if (!file_exists(fn)) {
+  download.file(
+    'https://static-content.springer.com/esm/art%3A10.1038%2Fs41564-019-0483-9/MediaObjects/41564_2019_483_MOESM3_ESM.xlsx',
+    fn
+  )
+  file_chmod(fn, '-w')
+}
+# QMP proiles from the Raes lab website
+fn <- path(data_path, 'qmp-matrix-genus.tsv')
+if (!file_exists(fn)) {
+  download.file('http://raeslab.org/software/QMP2/QMP.matrix.tsv', fn)
+  file_chmod(fn, '-w')
+}
+```
+
+Note, there is an extra value in the BMI column of Table S1 (Excel spreadsheet).
+
+```{r}
+otu <- path(data_path, 'qmp-matrix-genus.tsv') %>%
+  read.table() %>%
+  as('matrix') %>%
+  otu_table(taxa_are_rows = FALSE)
+sam <- path(data_path, 'supplementary-data-1.xlsx') %>%
+  readxl::read_excel(sheet = 'Table S1', range = 'A2:L174', na = "NA")
+original_column_names <- names(sam)
+ps <- phyloseq(
+  otu, 
+  sam %>% janitor::clean_names() %>% sample_data
+)
+stopifnot(setequal(sample_names(ps), sample_names(otu)))
+sam <- ps %>% sample_data %>% as_tibble %>% glimpse
+```
+
+### Taxonomy
+
+
+how can I get taxonomy and/or phylogeny for the genus identifiers?
+
+First, create a file with the RDP 16 taxonomy from the DADA2 training file
+
+```
+zcat rdp_train_set_16.fa.gz | grep '^>' | sort | uniq -u | sed -e 's/^>//' -e 's/;$//' - > rdp_train_set_16_headers.txt
+```
+
+```{r}
+cns <- c('domain', 'phylum', 'class', 'order', 'family', 'genus')
+cts <- 'cccccc'
+# x <- path('~/data/16s-taxonomy-databases/dada2/rdp-trainset-16',
+#   'rdp_train_set_16_headers.txt') %>%
+#   read_delim(delim = ';', col_names = cns, col_types = cts)
+x <- path('~/data/16s-taxonomy-databases/dada2/rdp-trainset-16',
+  'rdp_train_set_16_headers.txt') %>%
+  read_lines %>%
+  enframe %>%
+  select(-name) %>%
+  separate(value, into = cns, sep = ';', fill = 'right') %>%
+  glimpse
+```
+
+```{r}
+genera <- taxa_names(ps) %>% 
+  str_subset('unclassified', negate = TRUE)
+genera %in% x$genus
+setdiff(genera, x$genus)
+
+unclassified_taxa <- taxa_names(ps) %>% 
+  str_subset('unclassified') %>%
+  str_extract('(?<=unclassified_).+')
+unclassified_taxa %in% x$family
+unclassified_taxa %in% x$order
+unclassified_taxa %in% x$phylum
+unclassified_taxa %in% x$domain
+```
+
+
+try again
+
+```{r}
+rnks <- c('domain', 'phylum', 'class', 'order', 'family', 'genus')
+x <- path('~/data/16s-taxonomy-databases/rdp/', 
+  'RDPClassifier_16S_trainsetNo16_rawtrainingdata',
+  'trainset16_022016_headers.txt') %>%
+  read_tsv(col_names = c('id', 'path'))
+y <- x %>%
+  separate(path, c('root', rnks), sep = ';', fill = 'right')
+
+```
+
+ok, giving up..
+
+
+hmm - check to see if can get from the rrndb tables?
+https://rrndb.umms.med.umich.edu/static/download/
+
+
+# Explore
+
+I think that the QMP profiles are such that the sum within a sample should equal the reported cell counts per gram in the sample data; let's check.
+
+```{r}
+all.equal(sample_sums(ps), sam$average_faecal_cell_count_cells_g)
+```
+
+This small difference may be down to rounding error, since it seems that the entires in the QMP matrix are rounded to integers.
+
+```{r}
+otu %>% c %>% {all.equal(., round(.))}
+sam$average_faecal_cell_count_cells_g %>% {all.equal(., round(.))}
+```
+
+There are `r nsamples(ps)`, with the following disease breakdown:
+
+```{r}
+sam %>% count(diagnosis)
+```
+
+Can we recover counts?
+We can't recover the raw counts without using the CNV information.
+But setting that aside for now, let's confirm that we understand the normalization that was used - 
+
+```{r}
+x <- sam %>%
+  add_column(sample_sum = sample_sums(ps))
+```
+```{r}
+x %>% pull(sample_sum) %>% summary
+x %>% transmute(sample_sum / average_faecal_cell_count_cells_g) %>% pull(1) %>% summary
+```
+
+(we already knew this - the samples sum up to the cell density).
+
+
+
+
+
+# Reproduce paper analysis
+
+Let's try to reproduce the results from the paper.
+
+> Applying QMP on the combined PSC/IBD/mHC data set, we identified 11 genera as significantly correlat-ing  with  faecal  calprotectin  concentrations  (Spearman  correlation,  n= 149, FDR < 0.05; Fig. 3a and Supplementary Table 6). Stool mois-ture content had 45 associated taxa (Spearman correlation, n= 143, FDR <    0.05;  Supplementary  Table  6).  Combining  both  variables,  only  6  out  of  11  positive(+)  or  negative(−)  calprotectin  associations  remained significant when controlling for faecal water content vari-ation: Anaerostipes(−), Escherichia(+), Fusobacterium(+), Gemmiger(−), Streptococcus(+)  and  Veillonella(+)  (nested  linear  model  on  QMP  rank  abundances,  n= 133,  FDR < 0.05;  Fig. 3a  and  Supplementary  Table  6). 
+
+First, let's look for taxa associated with faecal calprotectin concentrations 
+
+```{r}
+x <- ps %>% as_tibble
+```
+
+```{r}
+y <- ps %>%
+  filter_sample_data(!is.na(faecal_calprotectin_mg_g)) %>%
+  as_tibble %>%
+  with_groups(.otu, nest) %>%
+  mutate(
+    spearman_test = map(data, 
+      ~cor.test(data = .x,
+        ~ .abundance + faecal_calprotectin_mg_g, 
+        method = 'spearman', # exact = FALSE, continuity = TRUE,
+        )),
+    spearman_test = map(spearman_test, broom::tidy)
+  ) %>%
+  select(-data) %>%
+  unnest(spearman_test) %>%
+  mutate(p.bh = p.adjust(p.value, method = 'BH'))
+```
+
+```{r}
+y %>% arrange(p.bh) %>% print(n=20)
+```
+
+```{r}
+study_res <- path(data_path, 'supplementary-data-1.xlsx') %>%
+  readxl::read_excel(sheet = 'Table S6', na = "NA")
+study_res %>%
+  select(Genera, starts_with('Calprotectin') & ends_with('QMP'))
+y %>% arrange(p.bh) %>% filter(!str_detect(.otu, 'unclassified')) %>%
+  select(.otu, estimate, p.value, p.bh) %>%
+  print(n=15)
+```
+
+These estimates match, but the p values (and their ranking) differs.
+
+figure this out; then try to recapitulate using rank regression.
+
+Note, a decrease FDR-corrected p values can be expected if the FDR correction was done _after_ discarding the OTUs without genus classifications.
+
+
+can check the code at https://github.com/raeslab/QMP/
+
+```{r}
+study_res %>%
+  select(Genera, starts_with('Calprotectin') & ends_with('QMP')) %>%
+  arrange(4) %>%
+  print(n=15)
+y %>% 
+  arrange(p.bh) %>% 
+  filter(!str_detect(.otu, 'unclassified')) %>%
+  mutate(
+    p.bh = p.adjust(p.value, method = 'BH'),
+    across(starts_with('p.'), round, digits = 4)
+  ) %>%
+  select(.otu, estimate, p.value, p.bh) %>%
+  print(n=15)
+```
+
+ahhh - ok their's is sorted differently, which makes sense since it has many tests in one table. and the p values need to be rounded to 4 digits. then it seems like we're good.
+
+next:
+
+- also do for moisture, and perhaps RMP, to check these results as well
+- confirm I can get similar result with linear model on ranks
+<!--  -->
+
+visually inspect
+
+```{r}
+top_hits <- y %>% 
+  filter(!str_detect(.otu, 'unclassified')) %>%
+  slice_min(p.bh, n = 9)
+x <- ps %>%
+  filter_sample_data(!is.na(faecal_calprotectin_mg_g)) %>%
+  prune_taxa(top_hits$.otu, .) %>%
+  as_tibble
+
+x %>%
+  mutate(across(.otu, factor, levels = top_hits$.otu)) %>%
+  with_groups(.otu, mutate,
+    across(c(faecal_calprotectin_mg_g, .abundance), rank),
+  ) %>%
+  # mutate(across(c(faecal_calprotectin_mg_g, .abundance), rank, ties.method = 'average')) %>%
+  ggplot(aes(faecal_calprotectin_mg_g, .abundance)) +
+  facet_wrap(~.otu) +
+  geom_point() +
+  stat_smooth(method = 'lm')
+```
+
+It seems like zeros or below-detection-limit values are largely responsible for the observed results.
+
+
+```{r}
+x %>%
+  ggplot(aes(faecal_calprotectin_mg_g, .abundance)) +
+  scale_x_log10() +
+  scale_y_log10() +
+  facet_wrap(~.otu) +
+  geom_point()
+```
+
+
+### spearman versus linear modeling
+
+NOTE: The results differ when I first omit the samples with missing calprotectin measurements, or not.
+perhaps because the ranks of the abundances differ?
+
+
+```{r}
+z <- ps %>%
+  filter_sample_data(!is.na(faecal_calprotectin_mg_g)) %>%
+  as_tibble %>%
+  with_groups(.sample, mutate, proportion = close_elts(.abundance)) %>%
+  with_groups(.otu, mutate, 
+    across(c(.abundance, proportion, faecal_calprotectin_mg_g), 
+      rank, ties.method = 'average',
+      .names = '{.col}_rank')
+  ) %>%
+  with_groups(.otu, nest) %>%
+  mutate(
+    spearman = map(data, 
+      ~cor.test(data = .x,
+        ~ .abundance + faecal_calprotectin_mg_g, 
+        method = 'spearman', na.action = na.omit)),
+    lm = map(data, 
+      ~lm(data = .x, .abundance_rank ~ faecal_calprotectin_mg_g_rank,
+        na.action = na.omit)),
+  ) %>%
+  select(-data) %>%
+  pivot_longer(c(spearman, lm), names_to = 'test', values_to = 'fit') %>%
+  mutate(across(fit, map, broom::tidy)) %>%
+  unnest(fit) %>%
+  with_groups(test, mutate, p.bh = p.adjust(p.value, method = 'BH'))
+z1 <- z %>% filter(test == 'spearman' | term != '(Intercept)')
+```
+
+NOTE: The p values are nearly identical as long as I first drop the samples with missing data.
+But not if I don't.
+
+```{r}
+z1 %>%
+  select(.otu, test, p.value) %>%
+  pivot_wider(names_from = test, values_from = p.value) %>%
+  ggplot(aes(spearman, lm)) +
+  geom_abline(color = 'darkgrey') +
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_point()
+```
+
+```{r}
+z1 %>%
+  select(.otu, test, estimate) %>%
+  pivot_wider(names_from = test, values_from = estimate) %>%
+  ggplot(aes(spearman, lm)) +
+  geom_abline(color = 'darkgrey') +
+  # scale_x_log10() +
+  # scale_y_log10() +
+  geom_point()
+```
+
+The estimates are related but differ - I suspect this has to do with ties in the abundance (0s) and in the calprotectin (min values / detection limit). Perhaps the problematic taxa are very low prevalence?
+
+
+### try all tests
+
+```{r}
+y <- ps %>%
+  # filter_sample_data(!is.na(faecal_calprotectin_mg_g)) %>%
+  # prune_taxa(str_subset(taxa_names(.), 'unclassified', negate = TRUE), .) %>%
+  as_tibble %>%
+  with_groups(.sample, mutate, proportion = close_elts(.abundance)) %>%
+  with_groups(.otu, nest) %>%
+  mutate(
+    calprotectin_qmp_spearman = map(data, 
+      ~cor.test(data = .x,
+        ~ .abundance + faecal_calprotectin_mg_g, 
+        method = 'spearman')),
+    calprotectin_rmp_spearman = map(data, 
+      ~cor.test(data = .x,
+        ~ proportion + faecal_calprotectin_mg_g, 
+        method = 'spearman')),
+    moisture_qmp_spearman = map(data, 
+      ~cor.test(data = .x,
+        ~ .abundance + moisture_content_percent, 
+        method = 'spearman')),
+    moisture_rmp_spearman = map(data, 
+      ~cor.test(data = .x,
+        ~ proportion + moisture_content_percent, 
+        method = 'spearman')),
+  ) %>%
+  select(-data) %>%
+  pivot_longer(contains('spearman'), names_to = 'test', values_to = 'fit') %>%
+  mutate(across(fit, map, broom::tidy)) %>%
+  unnest(fit) %>%
+  with_groups(test, mutate, p.bh = p.adjust(p.value, method = 'BH'))
+```
+
+TODO: check that samples with NAs are handled in the spearman tests
+
+```{r}
+y.w <- y %>%
+  select(.otu, test, estimate, p.bh) %>%
+  pivot_wider(names_from = c(test), values_from = c(estimate, p.bh), 
+    names_glue = '{test}_{.value}', names_sort = TRUE) %>%
+  select(.otu, sort(tidyselect::peek_vars())) %>%
+  mutate(across(where(is.numeric), round, 4)) %>%
+  arrange(calprotectin_qmp_spearman_p.bh)
+```
+
+Note, I'm not sure what the RMP values used in the original study were.
+From the manuscript, it's not obvious if the unclassified taxa were removed before the proportions were computed, or if copy number correction was used.
+
+### Check if patterns are driven by presence/absence
+
+
+```{r}
+y <- ps %>%
+  # filter_sample_data(!is.na(faecal_calprotectin_mg_g)) %>%
+  # prune_taxa(str_subset(taxa_names(.), 'unclassified', negate = TRUE), .) %>%
+  as_tibble %>%
+  with_groups(.sample, mutate, 
+    proportion = close_elts(.abundance),
+    present = (.abundance > 0) * 1
+  ) %>%
+  with_groups(.otu, nest) %>%
+  mutate(
+    spearman = map(data, 
+      ~cor.test(data = .x,
+        ~ .abundance + faecal_calprotectin_mg_g, 
+        method = 'spearman')),
+    spearman_pa = map(data, 
+      ~cor.test(data = .x,
+        ~ present + faecal_calprotectin_mg_g, 
+        method = 'spearman')),
+  ) %>%
+  select(-data) %>%
+  pivot_longer(contains('spearman'), names_to = 'test', values_to = 'fit') %>%
+  mutate(across(fit, map, broom::tidy)) %>%
+  unnest(fit) %>%
+  with_groups(test, mutate, p.bh = p.adjust(p.value, method = 'BH'))
+```
+
+```{r}
+y.w <- y %>%
+  select(.otu, test, estimate, p.bh) %>%
+  pivot_wider(names_from = c(test), values_from = c(estimate, p.bh), 
+    names_glue = '{test}_{.value}', names_sort = TRUE) %>%
+  select(.otu, sort(tidyselect::peek_vars())) %>%
+  mutate(across(where(is.numeric), round, 4)) %>%
+  arrange(spearman_p.bh)
+```
+
+```{r}
+y.w %>%
+  ggplot(aes(spearman_estimate, spearman_pa_estimate)) +
+  geom_point()
+```
+
+For some taxa (like Veillonella, EscherichiaShigella) the two estimates are very similar;for others like Streptococcus they are quite different.
+I suspect that simulated bias will have a larger impact on Streptococcus.
+
+
+# Bias sensitivity analysis
+
+
+```{r, eval = F}
+# Perturb by bias vector - treat ps as actual
+ps.per <- perturb(ps, bias, norm = 'keep')
+# Calibrate by bias vector - treat ps as observed
+ps.cal <- calibrate(ps, bias, norm = 'keep')
+```
+
+Maintain the sample sums, but perturb the relative abundances.
+
+```{r}
+n_taxa <- ntaxa(ps)
+# Standard deviation for the distribution of log efficiencies
+sigma.log_eff <- 3
+# helper function to draw a single random bias vector
+rbias <- function() exp(rnorm(n_taxa, 0, sigma.log_eff))
+# helper function to calibrate the phyloseq object by the bias vector
+my_cal <- function(bias, ps) {
+  ps %>%
+    calibrate(bias, norm = 'keep')
+}
+
+set.seed(42)
+# Number of replicates
+R <- 3e2
+# data frame with R random bias vectors
+reps <- seq(R) %>%
+  set_names %>%
+  map(~rbias()) %>%
+  enframe("id", "bias") %>%
+  mutate(
+    actual = map(bias, my_cal, ps = ps)
+  )
+```
+
+```{r}
+my_stat <- function(ps, otu) {
+  data <- ps %>%
+    prune_taxa(otu, .) %>%
+    as_tibble
+  spearman_test <- cor.test(data = data,
+    ~ .abundance + faecal_calprotectin_mg_g, 
+    method = 'spearman', exact = FALSE
+  )
+  spearman_test %>% broom::tidy()
+}
+
+#> focal_otu <- 'Veillonella'
+original <- my_stat(ps, focal_otu)
+reps_veill <- reps %>%
+  mutate(
+    .otu = 'Veillonella',
+    fit = map2(actual, .otu, my_stat)
+  ) %>%
+  unnest(fit)
+reps_strep <- reps %>%
+  mutate(
+    .otu = 'Streptococcus',
+    fit = map2(actual, .otu, my_stat)
+  ) %>%
+  unnest(fit)
+```
+
+```{r}
+plot_bias_sens <- function(reps) {
+  est_dist <- ggplot(reps, aes(estimate)) +
+    geom_histogram() +
+    geom_vline(xintercept = original$estimate, color = "darkred") +
+    geom_vline(xintercept = 0, color = "grey") +
+    labs(title = "Distribution of point estimates", x = "Estimate", y = "Count")
+  pval_dist <- ggplot(reps, aes(p.value)) +
+    geom_histogram() +
+    geom_vline(xintercept = original$p.value, color = "darkred") +
+    geom_vline(xintercept = 0.05, color = "grey") +
+    scale_x_log10() +
+    labs(title = "Distribution of p-values", x = "p-value", y = "Count")
+  est_dist / pval_dist
+}
+# ci_reps <- ggplot(bias_reps, aes(x = estimate, y = as.integer(id))) +
+#   geom_point(size = 0.8) +
+#   geom_errorbarh(aes(xmin = conf.low, xmax = conf.high)) +
+#   geom_point(data = original, aes(y = R*1.05), 
+#     size = 0.8, color = "darkred") +
+#   geom_errorbarh(data = original, 
+#     aes(xmin = conf.low, xmax = conf.high, y = R*1.05),
+#     color = "darkred") +
+#   geom_vline(xintercept = 0, color = "grey") +
+#   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank()) +
+#   labs(title = "Replicate 95% CIs", x = "Estimate", 
+#     y = "Replicate")
+# plot_grid(
+#     plot_grid(est_dist, pval_dist, ncol = 1, labels = c("A", "B")),
+#     ci_reps,
+#     labels = c("", "C")
+#     )
+```
+
+```{r}
+plot_bias_sens(reps_veill)
+```
+
+```{r}
+plot_bias_sens(reps_strep)
+```
+
+
+
+
+Example where the bias sensitivity analysis shows little effect of varying the hypothesized bias.
+
+We can probably understand this finding because the original result is driven by the presence/absence pattern, and we have treated zeros as absolute, so that presence/absence is maintained.
+If we relaxed this assumption, then I suspect that we would see much more variation in the estimates.
+Much of this variation, however, would come from relaxing our assumption about the zeros, rather than relaxing our assumption that there is no bias.
+
+
+Challenge with this data is that we don't have the read counts, so don't know how to replace zeros with resonable values.
+
+## saved plotting stuff
+
+Mean efficiency distribution:
+
+```{r}
+x <- reps %>%
+  slice(1) %>%
+  pull(actual) %>%
+  .[[1]] %>%
+  sample_data %>%
+  as_tibble
+
+x %>%
+  ggplot(aes(x = mean_efficiency, fill = faecal_calprotectin_mg_g > 50)) +
+  scale_x_log10() +
+  geom_histogram()
+```
+
+
+```{r}
+x %>%
+  ggplot(aes(x = faecal_calprotectin_mg_g, y = mean_efficiency, color = diagnosis)) +
+  scale_y_log10() +
+  scale_x_log10() +
+  geom_point() +
+  stat_smooth(aes(group = 1), method = 'lm')
+```
+
+
+Now, redo the analysis with and without bias
+
+what assumptions to make about zeros?
+
+
+

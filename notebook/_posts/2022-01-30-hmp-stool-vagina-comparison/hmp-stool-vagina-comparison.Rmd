@@ -1,0 +1,679 @@
+---
+title: "Compare impact of bias in HMP stool and vagina samples"
+description: |
+author:
+  - name: Michael R. McLaren
+    url: {}
+categories:
+  - R
+date: 2022-01-30
+draft: false
+output:
+  distill::distill_article:
+    self_contained: false
+    dev: svg
+---
+
+
+```{r}
+library(here)
+library(tidyverse)
+library(speedyseq)
+library(metacal)
+
+library(cowplot)
+theme_set(theme_cowplot())
+library(ggbeeswarm)
+library(ggdist)
+library(ggridges)
+```
+
+HERE - refactor to match the manuscript, and add the analysis of variation in species proportions relative to mean efficiency, and also look at the bimodality/presence/absence nature of species variation.
+
+# HMP1
+
+```{r}
+#> here('notebook/_data/gut') %>% fs::dir_ls()
+ps <- here('notebook/_data/gut',
+  '2021-03-31.HMP_2012.relative_abundance.phyloseq.rds'
+) %>% readRDS %>%
+  filter_tax_table(kingdom == 'Bacteria') %>%
+  prune_samples(sample_sums(.) > 0, .) %>% # to drop samples w/o bacteria %>%
+  transform_sample_counts(close_elts) %>%
+  mutate_tax_table(.otu = species)
+# most abundant species and diversity
+x <- ps %>% as_tibble
+most_abundant <- x %>%
+  with_groups(.sample, slice_max, .abundance, n = 1) %>%
+  select(.sample, top_species = species, top_species_prop = .abundance)
+fns <- list(
+  #> richness = ~sum(.x > 0),
+  diversity_q0 = ~sum(.x > 0),
+  diversity_q1 = ~vegan::diversity(.x, index = 'shannon') %>% exp,
+  diversity_q2 = ~vegan::diversity(.x, index = 'invsimpson')
+) %>%
+  map(as_mapper)
+mat <- ps %>% otu_table %>% orient_taxa(as = 'cols') %>% as('matrix')
+div <- fns %>%
+  map_dfc(~apply(mat, 1, .x))
+div1 <- bind_cols(most_abundant, div)
+#  join w/ ps object
+ps <- ps %>%
+  left_join_sample_data(div1, by = '.sample')
+rm(most_abundant, div, div1, x)
+```
+
+
+Let's see how things vary by body site
+
+
+```{r}
+sam <- ps %>% sample_data %>% as_tibble
+sam %>% count(body_site)
+sam %>% count(body_site, body_subsite)
+```
+
+## diversity
+
+```{r}
+sam %>%
+  pivot_longer(starts_with('diversity'), names_to = 'index') %>%
+  ggplot(aes(y = body_site, x = value)) +
+  scale_x_log10() +
+  facet_grid(.~index, scales = 'free', space = 'free') +
+  geom_boxplot()
+```
+
+
+```{r}
+sam %>%
+  ggplot(aes(top_species_prop)) +
+  facet_wrap(~body_site, ncol = 1) +
+  scale_x_log10() +
+  geom_histogram() +
+  labs(x = 'Proportion')
+```
+
+
+```{r}
+sam %>%
+  with_groups(body_site, count, top_species) %>%
+  with_groups(body_site, mutate, frac = close_elts(n)) %>%
+  with_groups(body_site, slice_max, n, n = 5) %>%
+  print(n=Inf)
+```
+
+```{r}
+focal_subsites <- c('stool', 'posterior_fornix')
+sam %>%
+  filter(body_subsite %in% focal_subsites) %>%
+  with_groups(body_site, count, top_species) %>%
+  with_groups(body_site, mutate, frac = close_elts(n)) %>%
+  with_groups(body_site, slice_max, n, n = 10) %>%
+  print(n=Inf)
+```
+
+
+
+
+What about total diversity across samples (gamma diversity)?
+Check that this is much larger in the gut than the vagina.
+
+```{r}
+
+```
+
+### gamma diversity // diversity partition
+
+Can use the hillR package to compute alpha, beta, and gamma diversity as Hill numbers (effective number of species) for q = 0 (richness), q = 1 (exponential of Shannon entropy), and q = 2 (Inverse Simpson index).
+
+Note: q=0 gamma diversity is will be fairly sensitive to increasing the number of samples, and so we'd expect it to be larger for stool simply due to the larger number of samples, unless we subsample.
+
+q=0 is also sensitive to read depth, which we don't really have a way to account for here.
+
+
+#### testing
+
+```{r}
+get_site_ps <- function(body_site, ps, n ) {
+  filter_sample_data(ps, body_site == !!body_site) %>% 
+    filter_taxa2(~sum(.) > 0) %>%
+    orient_taxa(as = 'cols')
+}
+div <- crossing(q = c(0, 1, 2), body_site = c('stool', 'vagina')) %>%
+  mutate(
+    ps = map(body_site, get_site_ps, ps = ps),
+    otu = map(ps, otu_table),
+    div = map2(otu, q, hillR::hill_taxa_parti),
+    n = map_int(ps, nsamples)
+  ) %>%
+  select(-q, -otu) %>%
+  unnest(div)
+div %>% select(body_site, q, starts_with('TD'), n) %>% knitr::kable(digits = 1)
+```
+
+Can see that total (gamma) diversity and average alpha diversity are much larger in the gut than in hthe vagina, as expected, for each index.
+
+The average q=2 alpha diversity in the stool is in fact quite low (only 5.4) - check on that, since it doesn't quite match what I remember from the figures.
+
+Let's try the same thing with phylogeny diversity
+
+```{r}
+div_phy <- crossing(q = c(0, 1, 2), body_site = c('stool', 'vagina')) %>%
+  mutate(
+    ps = map(body_site, get_site_ps, ps = ps),
+    comm = map(ps, otu_table),
+    tree = map(ps, phy_tree),
+    n = map_int(ps, nsamples)
+  ) %>%
+  rowwise %>%
+  mutate(
+    hillR::hill_phylo_parti(comm, tree, q)
+  ) %>%
+  select(-ps, -comm, -tree) %>%
+  ungroup
+div_phy %>% select(body_site, q, starts_with('PD'), n) %>% knitr::kable(digits = 1)
+```
+
+NOTES/TODO
+
+- check the def of gamma diversity; does it control for the difference in the number of samples from each body-site type? I think not, and so gut will be larger simply b/c of more samples
+- consider filtering down to a final set of samples; E.g. Perhaps just the one vaginal sample type, and some quick QC filtering; Though this shouldn't make a huge difference.
+- filter taxa? or treat all as true positives
+
+
+I also need to read about these diversity metrics.
+
+#### better
+
+GOAL: For an equal number of gut and vaginal samples, compute taxa and phylo gamma/alpha/beta diversity.
+Do for q=0,1,2, though we can't really trust the q=0 numbers.
+
+First, get equal numbers of stool and vaginal (posterior fornix) samples.
+
+```{r}
+sam %>% count(body_site, body_subsite)
+ps_list <- list(
+  stool = ps %>% filter_sample_data(body_subsite == 'stool'),
+  vagina = ps %>% filter_sample_data(body_subsite == 'posterior_fornix')
+) %>%
+  # subsample to equal number of samples
+  map(filter_sample_data, row_number() <= 62) %>%
+  map(filter_taxa2, ~sum(.) > 0) %>%
+  map(orient_taxa, as = 'cols')
+```
+
+
+```{r}
+# Function that, given a phyloseq object, computes phylogenetic and species
+# diversity measures for the requested q values
+hill <- function(ps, q) {
+  ps <- ps %>% filter_taxa2(~sum(.) > 0) %>% orient_taxa(as = 'cols')
+  suppressMessages(
+    tibble(q = !!q) %>%
+      mutate(
+        div_taxa = map(q, ~hillR::hill_taxa_parti(otu_table(ps), .x)),
+        div_phylo = map(q, ~hillR::hill_phylo_parti(otu_table(ps), phy_tree(ps), .x)),
+      ) %>%
+      unnest(c(div_taxa, div_phylo), names_repair = 'universal') %>%
+      select(q = q...1, starts_with(c('TD', 'PD')))
+  )
+  }
+div <- ps_list %>%
+  map_dfr(hill, q = c(0, 1, 2), .id = 'body_site')
+```
+
+
+```{r}
+div %>% knitr::kable(digits = 1)
+```
+
+
+```{r}
+div %>%
+  pivot_longer(starts_with(c('TD', 'PD'))) %>%
+  pivot_wider(names_from = body_site)
+```
+
+## Bias simulation
+
+TODO: MAYBE: change so that we filter to the ecosystem-specific taxa before scaling the mean efficiencies
+This mainly matters for the phylogenetic sim.
+
+```{r}
+focal_subsites <- c('stool', 'posterior_fornix')
+ps_sim <- ps %>%
+  filter_sample_data(body_subsite %in% focal_subsites) %>%
+  filter_taxa2(~sum(.>0) >= 2) %>%
+  prune_samples(sample_sums(.) > 0, .) %>% # to drop samples w/o bacteria %>%
+  transform_sample_counts(close_elts) %>%
+  mutate_tax_table(
+    gram = case_when(
+      phylum %in% c('Actinobacteria', 'Firmicutes') ~ 'Positive',
+      TRUE ~ 'Negative'
+    )
+  )
+```
+
+Now, generate R bias vectors of each type, and calibrate the data by them.
+
+
+```{r}
+# Returns a matrix with taxa as columns
+sample_bias <- function(n, gsd, vcv, taxa_as = 'cols') {
+  stopifnot(isSymmetric(vcv))
+  stopifnot(n > 1)
+  n_taxa <- nrow(vcv)
+  gsd_log <- log(gsd)
+  bias <- MASS::mvrnorm(n, mu = rep(0, n_taxa), Sigma = vcv) %>%
+    t %>%
+    scale %>%
+    {. * gsd_log} %>%
+    exp
+  if (taxa_as == 'cols')
+    bias <- t(bias)
+  bias
+}
+#> x <- sample_bias(3, gsd = 3, phy_vcv)
+#> x %>% apply(1, gm_sd) %>% head
+#> x[1,] %>% qplot + scale_x_log10()
+#> sample_bias(3, gsd = 3, phy_vcv, taxa_as = 'rows') %>% head
+```
+
+```{r, eval = F}
+set.seed(42)
+R <- 300
+gsd <- 3
+reps <- list(
+  iid = diag(ntaxa(ps_sim)),
+  vcv = ps_sim %>% phy_tree %>% ape::vcv()
+  #> gram = gram_vcv
+) %>%
+  map_dfr(.id = 'sim_type',
+    ~sample_bias(n = R, gsd = gsd, vcv = .x) %>%
+      split(., row(.)) %>%
+      enframe(".idx", "bias")
+  ) %>%
+  mutate(
+    ps = map(bias, ~calibrate(ps_sim, .x))
+  )
+  # TODO: cache this, since it is a bit slow (due to large number of samples)
+reps_me <- reps %>%
+  mutate(
+    ps_sam = map(ps, ~sample_data(.) %>% as_tibble)
+  ) %>%
+  select(-bias, -ps) %>%
+  unnest(ps_sam)
+reps_me_summ <- reps_me %>%
+  with_groups(c(sim_type, body_site, .idx), summarize,
+    across(.mean_efficiency, gm_sd)
+  )
+```
+
+NOTE: The var in mean eff and var in species props might be more directly comparable if we treat the observed proportions as the truth, rather than observed.
+
+now, for each phyloseq object, compute the variation in the log mean efficiency
+
+```{r, eval = T}
+set.seed(42)
+R <- 300
+gsd_sim <- 3
+reps <- list(
+  iid = diag(ntaxa(ps_sim)),
+  vcv = ps_sim %>% phy_tree %>% ape::vcv()
+  #> gram = gram_vcv
+) %>%
+  map_dfr(.id = 'sim_type',
+    ~sample_bias(n = R, gsd = gsd_sim, vcv = .x) %>%
+      split(., row(.)) %>%
+      enframe(".idx", "bias")
+  )
+reps_me <- reps %>%
+  mutate(
+    mean_efficiency = map(bias, ~mean_efficiency(ps_sim, .x, type = 'actual')),
+    across(mean_efficiency, map, enframe, '.sample', 'mean_efficiency')
+  ) %>%
+  select(-bias) %>%
+  unnest(mean_efficiency) %>%
+  left_join(ps_sim %>% sample_data %>% as_tibble, by = '.sample')
+reps_me_summ <- reps_me %>%
+  with_groups(c(sim_type, body_site, .idx), summarize,
+    across(mean_efficiency, gm_sd)
+  )
+```
+
+```{r}
+reps_me_summ %>%
+  ggplot(aes(y = sim_type, x = mean_efficiency)) +
+  facet_wrap(~body_site, ncol = 1) +
+  #> theme_minimal_hgrid() +
+  scale_x_log10() +
+  #> expand_limits(x = c(1, 3)) +
+  geom_vline(xintercept = c(1,3), color = 'grey') +
+  geom_boxplot(outlier.shape = NA) +
+  geom_quasirandom(groupOnX = FALSE, alpha = 0.5) +
+  labs(x = 'gm. std. of mean efficiency')
+  # stat_slab(slab_type = 'histogram', breaks = 20)
+```
+
+Interesting - note that forcing a gm-sd of 3 across all species can allow for a larger variation in the mean efficiency in some cases, in the vaginal communities.
+, actually leads to a wider variation among vaginal species.
+This makes some sense: We expect the variation in the efficiency of vaginal communities to be driven by a just a few species, and the there is a non-negligible chance that they end up with a much higher/lower mean efficiency than typical.
+
+
+NOTE: I think the mean efficiency should scale with whatever we set the GSD to.
+So we might want to set it to 1 and label the units as being per GSD.
+
+When we compare this variation to that in the species proportions, the scale/value of GSD will matter.
+However, it doesn't if our main purpose is comparing to the vaginal MB.
+And if we label in units of GSD, it will be easy to read off from the graph what the correct mean eff GSD is for a given GSD.
+
+
+How much more is the var in the vaginal comms versus stool?
+
+```{r}
+reps_me_summ %>%
+  ggplot(aes(x = mean_efficiency, y = sim_type, color = body_site)) +
+  scale_x_log10() +
+  stat_summary() +
+  expand_limits(x = 1)
+```
+
+```{r}
+reps_me_summ %>%
+  with_groups(c(body_site, sim_type), summarize, 
+    across(mean_efficiency, gm_mean)) %>%
+  pivot_wider(names_from = body_site, values_from = mean_efficiency) %>%
+  mutate(vagina/stool)
+```
+
+## Variation in species 
+
+
+
+What else matters? Perhaps the variation in a species, relative to the variation in the mean efficiency.
+
+For sufficiently prevalent taxa, look at the variation.
+
+
+check: what do the min positive abundances look like for various species?
+
+```{r}
+x <- ps %>%
+  filter_sample_data(body_subsite %in% c('stool', 'posterior_fornix')) %>%
+  filter_taxa2(~ sum(.) > 0) %>%
+  as_tibble
+```
+```{r}
+x %>%
+  filter(.abundance > 0) %>%
+  with_groups(c(.otu, body_site), summarize, 
+    min_pos = min(.abundance)) %>%
+  ggplot(aes(x = min_pos, y = body_site, fill = body_site)) +
+  scale_x_log10() +
+  geom_density_ridges(stat = 'binline', alpha = 0.3, scale = 0.95)
+```
+
+how about by sample?
+
+```{r}
+x %>%
+  filter(.abundance > 0) %>%
+  with_groups(c(.sample, body_site), summarize, 
+    min_pos = min(.abundance)) %>%
+  ggplot(aes(x = min_pos, y = body_site, fill = body_site)) +
+  scale_x_log10() +
+  geom_density_ridges(stat = 'binline', alpha = 0.3, scale = 0.95)
+```
+
+get a filtered ps object for each type
+
+```{r}
+ps_list <- list(
+  stool = ps %>% filter_sample_data(body_subsite == 'stool'),
+  vagina = ps %>% filter_sample_data(body_subsite == 'posterior_fornix')
+) %>%
+  # TODO: consider filtering criterion
+  map(filter_taxa2, ~ sum(. > 0) >= 2) %>%
+  # map(filter_taxa2, ~ mean(. > 0) >= 0.05) %>%
+  # map(filter_taxa2, ~ mean(. >= 1e-4) >= 0.10) %>%
+  # map(filter_taxa2, ~ mean(. >= 1e-2) >= 0.05 | mean(. >= 1e-3) >= 0.15) %>%
+  map(orient_taxa, as = 'cols')
+ps_list %>% map_int(nsamples)
+ps_list %>% map_int(ntaxa)
+```
+
+
+### presence/absence
+
+```{r, eval = F}
+x <- ps %>%
+  filter_sample_data(body_subsite %in% c('stool', 'posterior_fornix')) %>%
+  filter_taxa2(~ sum(.) > 0) %>%
+  as_tibble
+```
+
+```{r, eval = T}
+x <- ps_list %>%
+  map_dfr(as_tibble)
+
+min_vals <- c(0, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1)
+
+prev <- x %>%
+  with_groups(c(.otu, body_site), summarize,
+    min = min_vals,
+    prevalence = map_dbl(min_vals, ~mean(.abundance > .x))
+  )
+```
+```{r}
+prev %>%
+  ggplot(aes(x = prevalence, y = as.factor(min), 
+      fill = body_site, color = body_site)) +
+  geom_density_ridges(alpha = 0.3)
+```
+
+```{r}
+prev %>%
+  ggplot(aes(x = prevalence, y = as.factor(min), 
+      fill = body_site, color = body_site)) +
+  geom_density_ridges(stat = 'binline', alpha = 0.3)
+```
+
+It's a bit hard to know what threshold to use to pick a relevant set of taxa.
+
+
+```{r}
+prev %>%
+  filter(min < 1e-3) %>%
+  ggplot(aes(x = prevalence, y = body_site,
+      fill = body_site, color = body_site)) +
+  facet_wrap(~min) +
+  geom_density_ridges(stat = 'binline', alpha = 0.3, scale = 0.95)
+```
+
+
+### multiplicative variation
+
+
+```{r}
+ps_list_filt <- ps_list %>%
+  map(filter_taxa2, ~ mean(. >= 1e-2) >= 0.05 | mean(. >= 1e-3) >= 0.15)
+ps_list_filt %>% map_int(ntaxa)
+```
+
+now, purpose is to get the geometric variation in species.
+
+Problem: I expect the pseudocount will have a massive impact here, so should check different values.
+
+```{r}
+x <- ps_list_filt %>%
+  map_dfr(as_tibble)
+
+min_vals <- c(1e-6, 1e-5, 1e-4, 1e-3)
+
+gsd <- x %>%
+  with_groups(c(.otu, body_site), summarize,
+    min = min_vals,
+    gsd = map_dbl(min_vals, ~gm_sd(.abundance + .x))
+  )
+```
+
+```{r}
+gsd %>%
+  ggplot(aes(x = gsd, y = as.factor(min), 
+      fill = body_site, color = body_site)) +
+  # facet_wrap(~body_site) +
+  scale_x_log10() +
+  expand_limits(x = 1) +
+  geom_density_ridges(stat = 'binline', alpha = 0.3, scale = 0.95)
+```
+
+Note, the GSDs tend to be larger in the vaginal microbiome, consistent with our expectation based on its lower alpha diversity.
+
+What is the difference between gut and vaginal GSDs?
+
+```{r}
+gsd %>%
+  ggplot(aes(x = gsd, y = as.factor(min), 
+      fill = body_site, color = body_site)) +
+  # facet_wrap(~body_site) +
+  scale_x_log10() +
+  stat_summary() +
+  expand_limits(x = 1)
+```
+
+```{r}
+gsd %>%
+  with_groups(c(body_site, min), summarize, across(gsd, gm_mean)) %>%
+  pivot_wider(names_from = body_site, values_from = gsd) %>%
+  mutate(vagina/stool)
+```
+
+The difference is not very dependent on the min abundance threshold.
+
+### visualize
+
+
+```{r, eval = F}
+ps_list[[2]] %>%
+  as_tibble %>%
+  ggplot(aes(y = species, x = 1e-5 + .abundance)) +
+  scale_x_log10() +
+  # stat_slab(slab_type = 'histogram')
+  stat_dots()
+```
+
+
+```{r, eval = F}
+ps_list[[2]] %>%
+  as_tibble %>%
+  ggplot(aes(x = 1e-5 + .abundance)) +
+  facet_wrap(~species, ncol = 1) +
+  scale_y_log10() +
+  scale_x_log10() +
+  # stat_slab(slab_type = 'histogram')
+  geom_histogram()
+```
+
+```{r, eval = F}
+ps_list1[[1]] %>%
+  as_tibble %>%
+  ggplot(aes(x = 1e-5 + .abundance)) +
+  facet_wrap(~species, ncol = 3) +
+  # scale_y_log10() +
+  scale_x_log10() +
+  # stat_slab(slab_type = 'histogram')
+  geom_histogram()
+```
+
+```{r}
+
+ps_list1[[1]] %>%
+  as_tibble %>%
+```
+
+HERE
+
+
+## Gut: Variation in phylum proportions
+
+If phyla vary substantially across samples, then any phylum-specific bias would drive variation in the mean efficiency.
+
+I'll restrict plots to just the four main phyla.
+
+```{r}
+focal_phyla <- c('Actinobacteria', 'Bacteroidetes', 'Firmicutes',
+  'Proteobacteria')
+ps_phy <- ps %>% 
+  subset_samples(body_subsite == 'stool') %>%
+  tax_glom('phylum') %>%
+  mutate_tax_table(.otu = phylum) %>%
+  transform_sample_counts(close_elts) %>%
+  mutate_tax_table(
+    gram = case_when(
+      phylum %in% c('Actinobacteria', 'Firmicutes') ~ 'Positive',
+      TRUE ~ 'Negative'
+    )
+  )
+x_phy <- ps_phy %>% as_tibble
+```
+
+```{r}
+x_phy %>%
+  filter(phylum %in% focal_phyla) %>%
+  ggplot(aes(.abundance + 1e-5)) +
+  facet_wrap(~phylum, scales = 'fixed', ncol = 1) +
+  scale_x_log10() +
+  geom_histogram()
+```
+
+There is substantial log-scale variation in all phyla, but the Bacteroidetes and Firmicutes are generally much more abundant than the other two.
+
+What about the B:F ratio?
+
+```{r}
+x_phy %>%
+  filter(phylum %in% c('Bacteroidetes', 'Firmicutes')) %>%
+  mutate(
+    across(.abundance, ~ . + 1e-4),
+    ratio = .abundance / .abundance[phylum == 'Firmicutes']
+  ) %>%
+  filter(phylum == 'Bacteroidetes') %>%
+  ggplot(aes(ratio)) +
+  scale_x_log10(breaks = 10^(-3:4)) +
+  geom_histogram() +
+  theme_minimal_vgrid()
+```
+
+
+Suppose that these profiles are biased to favor Gram negative phyla.
+
+```{r}
+bias <- ps_phy %>% tax_table %>% as_tibble %>%
+  mutate(
+    efficiency = case_when(
+      gram == 'Positive' ~ 1/10,
+      TRUE ~ 1
+    )
+  ) %>%
+  select(.otu, efficiency) %>%
+  deframe
+ps_phy_cal <- ps_phy %>% calibrate(bias)
+```
+
+```{r}
+ps_phy_cal %>% 
+  sample_data %>%
+  as_tibble %>%
+  ggplot(aes(.mean_efficiency)) +
+  scale_x_log10() +
+  geom_histogram()
+```
+
+```{r}
+bias %>% gm_sd
+ps_phy_cal %>% sample_data %>% as_tibble %>% pull(.mean_efficiency) %>% gm_sd
+```
+
+Consider adjusting so that the GSD is 3, like in other simulations.
+(Though should then stick to the same taxa).
