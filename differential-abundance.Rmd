@@ -1,4 +1,8 @@
-# Taxonomic bias can cause errors in differential-abundance results {#differential-abundance}
+# DA methods vary in their robustness to bias {#differential-abundance}
+
+<!-- # Differential-abundance methods vary in their robustness to taxonomic bias  -->
+
+<!-- TODO: Change the GC to be about how there are various methods; state the scope that we consider; and state the punchline that they vary, with proportion-based being more sensitive. -->
 
 How do the errors caused by taxonomic bias in the abundances measured for individual samples impact DA analysis?
 <!-- the changes in abundance that we estimate between samples or different host and environmental conditions? -->
