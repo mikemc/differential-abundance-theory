@@ -1,22 +1,25 @@
 # Conclusion
 
-Our results show that even if taxonomic bias is consistent across samples at the taxonomic level being analyzed, it can create error in DA estimates that can lead to scientifically erroneous conclusions.
-In particular, analyses based on fold-changes in proportions or in absolute abundances derived from total-abundance normalization (sometimes called 'Quantitative Microbiome Profiling') are both capable of leading to spurious results.
+It is commonly thought that analyses of the differences between samples are robust to the taxonomic bias inherent in MGS measurement as long as all samples have been subjected to the same MGS workflow.
+But our results show that consistent taxonomic bias is still capable of creating scientific errors in common forms of DA analysis.
+In particular, we showed mathematically that bias affects DA analysis methods based on proportions or in absolute abundances derived from them (using total-abundance normalization), due to variation in the mean efficiency across samples of varying taxonomic composition.
+<!-- This is assuming consistent bias at the taxonomic level of analysis; things could be worse if we're analyzing higher taxonomic units than at which bias is conserved. -->
 <!-- Perhaps state that we showed this theoretically, in mock communities, and in real case studies -->
-The error, however, varies by experimental context.
-It is negligible if the mean efficiency is stable across samples, and may be unimportant if it is not correlated with the focal covariate in a regression analysis.
-The use of reference-taxon measurement and/or community calibration controls provides a way to validate and correct DA results.
+The error, however, varies by experimental context and may often be negligible in a practical sense.
+<!-- It is negligible if the mean efficiency is stable across samples, and may be unimportant if it is not correlated with the focal covariate in a regression analysis. -->
+Moreover, it can be quantified and corrected through the use of reference-taxon measurements and/or community calibration controls.
 In addition, bias-aware sensitivity and meta-analyses make it possible to rigorously account for bias even in the absence of such controls.
-Over time, use of these methods will lead to a collective understanding of the experimental contexts in which these errors are likely.
+Applications of these methods will gradually improve our understanding of the experimental contexts in which variation in the mean efficiency is likely to be problematic and should be accounted for.
 
-We also showed that other DA methods are nearly or entirely invariant to consistent bias.
-Analyses based on fold changes in ratios, including analysis of absolute abundance via reference-species normalization, are invariant to consistent bias in the MGS measurement.
-In addition, careful pairing of total-abundance and MGS method may remove most of the bias-driven error.
-Important questions remain about the true bias-invariance of these methods, including the extent to which bias is consistent across samples at the taxonomic resolution of the given MGS method and the interaction of bias with analytical assumptions such as how zeros are interpreted and the possibility of taxonomic misassignment and cross-sample contamination.
-Nevertheless, these are straightforward, immediately implementable methods to addressing bias in fold-change analysis.
+We also showed that other DA methods are more robust---perhaps even entirely invariant---to consistent taxonomic bias.
+In particular, analyses based on multiplicative variation in ratios and of absolute abundances derived from them (using reference-species normalization) are invariant to bias in the MGS measurement, as bias causes a constant multiplicative error that cancels in cross-sample comparisons.
+In addition, careful pairing of total-abundance and MGS measurement methods may remove most of the bias-driven error in absolute abundances from total-abundance normalization.
 
-<!-- Placeholder for potential paragraph on limitations and open questions -->
+Important open questions and future research directions remain.
+<!-- Taxonomic aggregation and non-FC analyses are left out because I'm assuming they will be addressed in the manuscript -->
+Key open questions include 1) determining the extent to which bias is consistent across samples at the species level for a given MGS method and sample type; 2) assessing the validity of post-extraction absolute-abundance controls as measures of pre-extraction abundance; 3) understanding how the multiplicative error from bias interacts with the non-multiplicative error from contamination and taxonomic misassignment; and 4) understanding how our assumptions about underlying community dynamics, and in particular what information zero counts provide, affect bias sensitivity.
+In addition, while we have showed some simple methods for incorporating bias and control measurements into DA analyses, better statistical tools are needed that are capable of including taxonomic bias and uncertainty in the MGS and supplemental non-MGS measurements.
+Finally, more concrete experimental recommendations and user-friendly statistical workflows are needed for implementing the solutions we propose in various experimental contexts.
 
-In summary, our results show that protocol standardization is insufficient to nullify the effect of taxonomic bias in DA results, but that there are a range of practical solutions to mitigate it for an important subset of experimental questions and contexts.
-The theoretical framework we present can be further used to rigorously analyze the effect of bias on other variations of DA analysis and of microbiome analyses more generally.
-With this work, we look to a future in which microbiome researchers routinely choose an appropriate combination of experimental and data-analytic methods capable of answering their fundamental question while accounting for taxonomic bias and the other inherent limitations of MGS measurements---and in this way, gaining the confidence needed to codify statistical findings into true scientific knowledge.
+Our theoretical framework and example analyses provide a foundation for addressing these open questions and developing a practical experimental protocols and statistical tools.
+We look to a future in which microbiome researchers routinely choose an appropriate combination of experimental and data-analytic methods capable of answering their fundamental question while accounting for taxonomic bias and the other inherent limitations of MGS measurements---and in this way, gaining the confidence needed to codify statistical findings into true scientific knowledge.
