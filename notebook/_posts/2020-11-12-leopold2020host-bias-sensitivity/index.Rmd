@@ -2,10 +2,9 @@
 title: >
   Exploring the effect of bias in Leopold and Busby (2020)
 author: Michael McLaren
-date: '2019-10-21'
+date: '2020-11-10'
 categories:
   - bias sensitivity
-  - R
   - ref:leopold2020host
 description:
 bibliography: _references.bib
@@ -51,7 +50,7 @@ library(metacal); packageVersion("metacal")
 ```{r load-data, include = FALSE}
 ## From the metacal 2.0 tutorial
 # Download data from https://zenodo.org/record/3872145
-data_path <- here::here("_data", "leopold2020host")
+data_path <- here::here("notebook/_data", "leopold2020host")
 # To use a temporary directory:
 # data_path <- file.path(tempdir(), "leopold2020")
 if (!dir.exists(data_path)) {
