@@ -1,0 +1,30 @@
+---
+title: "Case studies"
+description: |
+  Overview of case-study analyses.
+author:
+  - name: Michael R. McLaren
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Foliar fungi experiment
+
+[All posts](case-study-fungi.html)
+
+# Vaginal microbiomes of pregnant women
+
+[All posts](case-study-momspi.html)
+
+# Human gut microbiomes
+
+[All posts](case-study-gut.html)
+
+# Microbial growth in marine sediments
+
+[Case study analysis](posts/2022-01-08-lloyd2020evi-case-study/index.html)
+

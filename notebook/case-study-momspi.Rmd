@@ -1,0 +1,8 @@
+---
+title: "Case study: MOMS-PI study"
+listing:
+  posts:
+    - 2021-10-09-momspi-patient-exploration-and-summary
+    - 2021-11-01-momspi-summary
+    - 2021-12-15-momspi-regression-diversity
+---

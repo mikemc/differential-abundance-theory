@@ -1,0 +1,9 @@
+---
+title: "Case study: Human gut microbiome"
+listing:
+  posts:
+    - 2021-11-09-explore-gut-data
+    - 2022-01-20-vieirasilva2019quan
+    - 2022-01-25-explore-gut-data-2
+    - 2022-01-30-hmp-stool-vagina-comparison
+---

@@ -9,4 +9,6 @@ navbar:
       href: index.html
     - text: "About"
       href: about.html
+    - text: "Case studies"
+      href: case-studies.html
 output: distill::distill_article

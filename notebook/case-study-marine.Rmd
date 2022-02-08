@@ -1,0 +1,6 @@
+---
+title: "Case study: Marine sediments"
+listing:
+  posts:
+    - 2022-01-08-lloyd2020evi-case-study
+---

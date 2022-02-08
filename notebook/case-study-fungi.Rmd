@@ -1,0 +1,10 @@
+---
+title: "Case study: Foliar fungi experiment"
+listing:
+  posts:
+    - 2020-11-12-leopold2020host-bias-sensitivity
+    - 2021-04-26-illustration-of-a-spurious-differential-abundance-result-due-to-bias
+    - 2022-01-05-leopold2020host-priority-effects
+    - 2022-01-06-leopold2020host-original-regression-analysis
+    - 2022-01-08-leopold2020host-case-study
+---
