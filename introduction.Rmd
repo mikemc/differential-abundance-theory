@@ -37,8 +37,8 @@ For example, if taxonomic bias were to cause the measured proportion of a specie
 Unfortunately, mathematical arguments and analysis of experiments with artificially constructed ('mock') communities demonstrate that this assumption is not always warranted: 
 Consistent taxonomic bias can lead to variable fold errors in species' proportions (Figure \@ref(fig:basic-problem), @mclaren2019cons).
 These varying errors can lead to spurious conclusions for how the proportion of a taxon varies across samples, even in the direction of change (for example, causing a taxon that decreases appear to increase) (@mclaren2019cons).
-Yet @mclaren2019cons also found that certain types of DA analysis---those based on fold changes in the ratios among species---where robust to bias.
-The implications of these findings for DA analysis of absolute abundances and for the joint analysis of variation of many species across many samples, as typically done in microbiome association testing, have yet to be investigated.
+Yet @mclaren2019cons also found that certain types of DA analysis---those based on fold changes in the ratios among species---were robust to bias.
+The implications of these findings for DA analysis of absolute abundances and for the joint analysis of variation of many species across many samples, as is typical in microbiome association testing, have yet to be investigated.
 
 <!-- P: Objective and summary of the present article -->
 

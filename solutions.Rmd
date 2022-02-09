@@ -66,8 +66,9 @@ A variety of methods for measuring total community density have been paired with
 Each of these methods is subject to its own taxonomic bias: Cells from different species are likely to contribute more or less efficiently to the total abundance measurement.
 Consider the popular method of assessing bacterial abundance with total-16S qPCR measurement.
 Even an ideal qPCR protocol that perfectly amplifies all species remains a biased measurement of cell density, since the total 16S copies in the extracted DNA contributed by each species will be proportional to its (species-specific) lysis efficiency and 16S copy-number.
+Empirical evidence supports this, as qPCR measurements of total 16S copies are rarely equivalent to total cell counts, even when multiple copy numbers are taken into account ()@lloyd2013meta).
 16S qPCR is commonly paired with 16S amplicon sequencing, with which these sources of bias are shared, perhaps along with variation in primer binding and amplification efficiency.
-Methods like using flow cytometry that directly measures cell density lacks these biases but likely have their own that are more likely to be orthogonal to the 16S sequencing measurement.
+Methods like flow cytometry that directly measure cell density lack these biases but likely have their own that are more likely to be orthogonal to the 16S sequencing measurement.
 By extending the analysis of Section \@ref(differential-abundance) to include consistent taxonomic bias in the total-density measurement, we find that pairings of total-density and sequencing measurements that share large sources of taxonomic bias can lead to an offsetting of errors that reduces the error in fold-change measurement and DA inference (Appendix \@ref(total-density-bias)).
 This finding suggests that methods of total-density measurement that are more accurate as measures of total cell density may actually perform worse than less accurate methods for the purposes of absolute DA inference.
 

@@ -166,13 +166,13 @@ We illustrate this potential mechanism with a study of microbial growth in marin
 
 The surface layers of marine sediments harbor diverse and abundant microbiomes. Total cell density and species richness decrease with depth as resources are consumed in older, deeper sediment layers; however, some taxa are able to grow and increase in density as they are slowly buried.
 @lloyd2020evid performed a systematic assessment of growth rates of bacterial and archaeal taxa over a depth of 10 cm (corresponding to ~40 years of burial time) in sediment of the White Oak River estuary.
-To estimate growth rate, the authors first measured absolute cell density of microbial taxa using the total-abundance normalization method (Equation \@ref(eq:density-prop-meas)), with taxa proportions measured with 16S amplicon sequencing and total community density measured by directly counting cells using epifluorescence microscopy (CARD-FISH).
+To estimate growth rate, the authors first measured absolute cell density of microbial taxa using the total-abundance normalization method (Equation \@ref(eq:density-prop-meas)), with taxa proportions measured with 16S amplicon sequencing and total community density measured by directly counting cells using epifluorescence microscopy.
 The authors refer to these absolute densities as FRAxC measurements, for 'fraction of 16S reads times total cell counts'.
 The FRAxC measurements were used to infer growth rate from the slope of a simple linear regression of log cell density against burial time over the first 3 cm below the bioirrigation layer (corresponding to $\sim 8$ years of burial).
-To validate the inference of positive growers, the authors compared the growth rates from FRAxC-based inference from two sediment cores, qPCR measurements in these cores for a few reference taxa, and FRAxC-based inference in two replicate laboratory incubation experiments.
+To validate the inference of positive growers, the authors compared the growth rates from FRAxC-based inference from two sediment cores, qPCR measurements in these cores for a few reference taxa, and FRAxC-based inference in two replicate two-year laboratory incubation experiments.
 
 Taxonomic bias could lead to systematic error in FRAxC-derived growth rates if sample mean efficiency tends to systematically vary with burial time (or equivalently, depth).
-One possibility is that microbes with tougher cell walls tend to persist longer (alive or dead) in the sediment, while at the same time being more difficult to extract DNA from than microbes with weaker cell walls.
+One possibility is that microbes with tougher cell walls may persist longer (alive or dead) in the sediment, while at the same time being more difficult to extract DNA from than microbes with weaker cell walls.
 In this case, we would expect the relative abundance of tougher species to increase with depth and hence the mean extraction efficiency to decrease, which in turn would lead to inflated growth-rate estimates for all taxa; a possible end result would be that taxa that decay sufficiently slowly would be mistakenly inferred to have positive growth.
 
 ```{r}
@@ -253,7 +253,7 @@ Thus one way for significant error in DA regression results to arise is when a s
 For many experimental systems, however, there may not be any one species that frequently forms a large fraction of the community.
 In these systems, systematic variation of the mean efficiency can still arise through the collective change of many species that are associated with the covariate of interest.
 We described a hypothesized scenario in the marine-sediment case study in which increased burial time (the covariate) selects for lysis-resistant (and so lower efficiency) species.
-As another example, treatment with a certain antibiotic might selectively kill easier-to-lyze Gram negative species (or harder-to-lyse Gram positives) and thereby decreasing (or increasing) the mean efficiency in samples collected from a host post-treatment.
+As another example, treatment with a certain antibiotic might selectively kill easier-to-lyse Gram negative species (or harder-to-lyse Gram positives) and thereby decrease (or increase) the mean efficiency in samples collected from a host post-treatment.
 Such situations can arise whenever there is a microbial trait that is associated with both measurement efficiency and the biological processes of interest.
 An example besides cell-wall structure is ribosomal copy number, which increases a species' efficiency in ribosomal amplicon measurements and is positively associated with metabolic rate.
 <!-- Even when there is not a single trait that affects efficiency and the focal biological process,  -->
@@ -264,7 +264,7 @@ If these species also show phylum-level conservation in (potentially different) 
 
 <!-- P: Bias can also reduce the precision and power of DA analyses -->
 
-So long as the mean efficiency does not vary systematically with the regression covariates, the error in fold changes serve primarily to reduce the precision and power of regression analyses without systematically distorting estimates and so does not necessarily lead to invalid inferences.
+So long as the mean efficiency does not vary systematically with the regression covariates, the measurement error from bias primarily reduces the precision and power of regression analyses without systematically distorting estimates and so does not necessarily lead to invalid inferences.
 But the reduction in precision could be substantial, particularly given the small sample sizes common in many microbiome studies, and thereby substantially limit the ability to draw meaningful conclusions from a study^[I suspect this non-systematic variation in the mean efficiency is the more typical situation, but we currently lack an example of it in the case studies. We can find a semi-real example by taking real microbiome data from a case-control-type design and simulating a strong degree of bias. I did this with the HMP2 IBD study, but thinnk it might be better to find a different example where there are some clear DA results.].
 
 <!-- Conclusion: Need solutions -->

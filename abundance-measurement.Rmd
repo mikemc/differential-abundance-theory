@@ -4,7 +4,7 @@ We begin by considering how taxonomic bias affects the relative- and absolute-ab
 
 Our primary tool for understanding the impact of taxonomic bias on MGS measurement is the theoretical model of MGS measurement developed and empirically validated by @mclaren2019cons.
 This model is the simplest that respects the multiplicative nature of taxonomic bias and the *compositional* nature of MGS measurements, in which the total read count for a sample is unrelated to its total cell number or density (@gloor2017micr).
-We consider a set of microbiome samples measured by a specific MGS protocol that extracts, sequences, and bioinformatically analyzes to taxonomically assign reads to a set of microbial species $S$.
+We consider a set of microbiome samples measured by a specific MGS protocol that extracts, sequences, and taxonomically assigns reads to a set of microbial species $S$.
 Various forms of taxonomic assignment are possible; for simplicity, we suppose that reads are assigned to the species level, with reads that cannot be uniquely assigned being discarded.
 We ignore the possibility that reads are incorrectly assigned to the wrong species or sample.
 Unless otherwise stated, we treat the sequencing measurement as deterministic, ignoring the 'random' variation in read counts that arise from the sampling of sequencing reads and other aspects of the MGS process.
