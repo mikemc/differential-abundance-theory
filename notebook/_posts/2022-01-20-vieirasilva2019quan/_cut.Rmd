@@ -1,0 +1,314 @@
+### Taxonomy
+
+how can I get taxonomy and/or phylogeny for the genus identifiers?
+
+First, create a file with the RDP 16 taxonomy from the DADA2 training file
+
+```
+zcat rdp_train_set_16.fa.gz | grep '^>' | sort | uniq -u | sed -e 's/^>//' -e 's/;$//' - > rdp_train_set_16_headers.txt
+```
+
+```{r}
+cns <- c('domain', 'phylum', 'class', 'order', 'family', 'genus')
+cts <- 'cccccc'
+# x <- path('~/data/16s-taxonomy-databases/dada2/rdp-trainset-16',
+#   'rdp_train_set_16_headers.txt') %>%
+#   read_delim(delim = ';', col_names = cns, col_types = cts)
+x <- path('~/data/16s-taxonomy-databases/dada2/rdp-trainset-16',
+  'rdp_train_set_16_headers.txt') %>%
+  read_lines %>%
+  enframe %>%
+  select(-name) %>%
+  separate(value, into = cns, sep = ';', fill = 'right') %>%
+  glimpse
+```
+
+```{r}
+genera <- taxa_names(ps) %>% 
+  str_subset('unclassified', negate = TRUE)
+genera %in% x$genus
+setdiff(genera, x$genus)
+
+unclassified_taxa <- taxa_names(ps) %>% 
+  str_subset('unclassified') %>%
+  str_extract('(?<=unclassified_).+')
+unclassified_taxa %in% x$family
+unclassified_taxa %in% x$order
+unclassified_taxa %in% x$phylum
+unclassified_taxa %in% x$domain
+```
+
+
+try again
+
+```{r}
+rnks <- c('domain', 'phylum', 'class', 'order', 'family', 'genus')
+x <- path('~/data/16s-taxonomy-databases/rdp/', 
+  'RDPClassifier_16S_trainsetNo16_rawtrainingdata',
+  'trainset16_022016_headers.txt') %>%
+  read_tsv(col_names = c('id', 'path'))
+y <- x %>%
+  separate(path, c('root', rnks), sep = ';', fill = 'right')
+
+```
+
+ok, giving up..
+
+
+hmm - check to see if can get from the rrndb tables?
+https://rrndb.umms.med.umich.edu/static/download/
+
+
+### spearman versus linear modeling
+
+NOTE: The results differ when I first omit the samples with missing calprotectin measurements, or not.
+perhaps because the ranks of the abundances differ?
+
+
+```{r}
+z <- ps %>%
+  filter_sample_data(!is.na(faecal_calprotectin_mg_g)) %>%
+  as_tibble %>%
+  with_groups(.sample, mutate, proportion = close_elts(.abundance)) %>%
+  with_groups(.otu, mutate, 
+    across(c(.abundance, proportion, faecal_calprotectin_mg_g), 
+      rank, ties.method = 'average',
+      .names = '{.col}_rank')
+  ) %>%
+  with_groups(.otu, nest) %>%
+  mutate(
+    spearman = map(data, 
+      ~cor.test(data = .x,
+        ~ .abundance + faecal_calprotectin_mg_g, 
+        method = 'spearman', na.action = na.omit)),
+    lm = map(data, 
+      ~lm(data = .x, .abundance_rank ~ faecal_calprotectin_mg_g_rank,
+        na.action = na.omit)),
+  ) %>%
+  select(-data) %>%
+  pivot_longer(c(spearman, lm), names_to = 'test', values_to = 'fit') %>%
+  mutate(across(fit, map, broom::tidy)) %>%
+  unnest(fit) %>%
+  with_groups(test, mutate, p.bh = p.adjust(p.value, method = 'BH'))
+z1 <- z %>% filter(test == 'spearman' | term != '(Intercept)')
+```
+
+NOTE: The p values are nearly identical as long as I first drop the samples with missing data.
+But not if I don't.
+
+```{r}
+z1 %>%
+  select(.otu, test, p.value) %>%
+  pivot_wider(names_from = test, values_from = p.value) %>%
+  ggplot(aes(spearman, lm)) +
+  geom_abline(color = 'darkgrey') +
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_point()
+```
+
+```{r}
+z1 %>%
+  select(.otu, test, estimate) %>%
+  pivot_wider(names_from = test, values_from = estimate) %>%
+  ggplot(aes(spearman, lm)) +
+  geom_abline(color = 'darkgrey') +
+  # scale_x_log10() +
+  # scale_y_log10() +
+  geom_point()
+```
+
+The estimates are related but differ - I suspect this has to do with ties in the abundance (0s) and in the calprotectin (min values / detection limit). Perhaps the problematic taxa are very low prevalence?
+
+### try all tests
+
+```{r}
+y <- ps %>%
+  # filter_sample_data(!is.na(faecal_calprotectin_mg_g)) %>%
+  # prune_taxa(str_subset(taxa_names(.), 'unclassified', negate = TRUE), .) %>%
+  as_tibble %>%
+  with_groups(.sample, mutate, proportion = close_elts(.abundance)) %>%
+  with_groups(.otu, nest) %>%
+  mutate(
+    calprotectin_qmp_spearman = map(data, 
+      ~cor.test(data = .x,
+        ~ .abundance + faecal_calprotectin_mg_g, 
+        method = 'spearman')),
+    calprotectin_rmp_spearman = map(data, 
+      ~cor.test(data = .x,
+        ~ proportion + faecal_calprotectin_mg_g, 
+        method = 'spearman')),
+    moisture_qmp_spearman = map(data, 
+      ~cor.test(data = .x,
+        ~ .abundance + moisture_content_percent, 
+        method = 'spearman')),
+    moisture_rmp_spearman = map(data, 
+      ~cor.test(data = .x,
+        ~ proportion + moisture_content_percent, 
+        method = 'spearman')),
+  ) %>%
+  select(-data) %>%
+  pivot_longer(contains('spearman'), names_to = 'test', values_to = 'fit') %>%
+  mutate(across(fit, map, broom::tidy)) %>%
+  unnest(fit) %>%
+  with_groups(test, mutate, p.bh = p.adjust(p.value, method = 'BH'))
+```
+
+TODO: check that samples with NAs are handled in the spearman tests
+
+```{r}
+y.w <- y %>%
+  select(.otu, test, estimate, p.bh) %>%
+  pivot_wider(names_from = c(test), values_from = c(estimate, p.bh), 
+    names_glue = '{test}_{.value}', names_sort = TRUE) %>%
+  select(.otu, sort(tidyselect::peek_vars())) %>%
+  mutate(across(where(is.numeric), round, 4)) %>%
+  arrange(calprotectin_qmp_spearman_p.bh)
+```
+
+Note, I'm not sure what the RMP values used in the original study were.
+From the manuscript, it's not obvious if the unclassified taxa were removed before the proportions were computed, or if copy number correction was used.
+
+
+# saved plotting stuff
+
+Mean efficiency distribution:
+
+```{r}
+x <- reps %>%
+  slice(1) %>%
+  pull(actual) %>%
+  .[[1]] %>%
+  sample_data %>%
+  as_tibble
+
+x %>%
+  ggplot(aes(x = mean_efficiency, fill = faecal_calprotectin> 50)) +
+  scale_x_log10() +
+  geom_histogram()
+```
+
+
+```{r}
+x %>%
+  ggplot(aes(x = faecal_calprotectin, y = mean_efficiency, color = diagnosis)) +
+  scale_y_log10() +
+  scale_x_log10() +
+  geom_point() +
+  stat_smooth(aes(group = 1), method = 'lm')
+```
+
+# Checks and notes
+
+```{r}
+# check na handling
+x = tibble(a = c(1,2,3,NA,4,5), b = c(6,5,4,3,2,NA))
+cor.test(~a + b, data = x, method = 'spearman') %>% broom::tidy()
+cor.test(~a + b, data = x %>% drop_na, method = 'spearman') %>% broom::tidy()
+```
+
+
+Note, I'm not sure what the RMP values used in the original study were.
+From the manuscript, it's not obvious if the unclassified taxa were removed before the proportions were computed, or if copy number correction was used.
+
+
+
+## Original bias sens analysis
+
+Maintain the sample sums, but perturb the relative abundances.
+
+```{r}
+n_taxa <- ntaxa(ps)
+# Standard deviation for the distribution of log efficiencies
+sigma.log_eff <- 3
+# helper function to draw a single random bias vector
+rbias <- function() exp(rnorm(n_taxa, 0, sigma.log_eff))
+# helper function to calibrate the phyloseq object by the bias vector
+my_cal <- function(bias, ps) {
+  ps %>%
+    calibrate(bias, norm = 'keep')
+}
+
+set.seed(42)
+# Number of replicates
+R <- 3e2
+# data frame with R random bias vectors
+reps <- seq(R) %>%
+  set_names %>%
+  map(~rbias()) %>%
+  enframe("id", "bias") %>%
+  mutate(
+    actual = map(bias, my_cal, ps = ps)
+  )
+```
+
+```{r}
+my_stat <- function(ps, otu) {
+  data <- ps %>%
+    prune_taxa(otu, .) %>%
+    as_tibble
+  spearman_test <- cor.test(data = data,
+    ~ .abundance + faecal_calprotectin, 
+    method = 'spearman', exact = FALSE
+  )
+  spearman_test %>% broom::tidy()
+}
+
+#> focal_otu <- 'Veillonella'
+original <- my_stat(ps, focal_otu)
+reps_veill <- reps %>%
+  mutate(
+    .otu = 'Veillonella',
+    fit = map2(actual, .otu, my_stat)
+  ) %>%
+  unnest(fit)
+reps_strep <- reps %>%
+  mutate(
+    .otu = 'Streptococcus',
+    fit = map2(actual, .otu, my_stat)
+  ) %>%
+  unnest(fit)
+```
+
+```{r}
+plot_bias_sens <- function(reps) {
+  est_dist <- ggplot(reps, aes(estimate)) +
+    geom_histogram() +
+    geom_vline(xintercept = original$estimate, color = "darkred") +
+    geom_vline(xintercept = 0, color = "grey") +
+    labs(title = "Distribution of point estimates", x = "Estimate", y = "Count")
+  pval_dist <- ggplot(reps, aes(p.value)) +
+    geom_histogram() +
+    geom_vline(xintercept = original$p.value, color = "darkred") +
+    geom_vline(xintercept = 0.05, color = "grey") +
+    scale_x_log10() +
+    labs(title = "Distribution of p-values", x = "p-value", y = "Count")
+  est_dist / pval_dist
+}
+# ci_reps <- ggplot(bias_reps, aes(x = estimate, y = as.integer(id))) +
+#   geom_point(size = 0.8) +
+#   geom_errorbarh(aes(xmin = conf.low, xmax = conf.high)) +
+#   geom_point(data = original, aes(y = R*1.05), 
+#     size = 0.8, color = "darkred") +
+#   geom_errorbarh(data = original, 
+#     aes(xmin = conf.low, xmax = conf.high, y = R*1.05),
+#     color = "darkred") +
+#   geom_vline(xintercept = 0, color = "grey") +
+#   theme(axis.ticks.y = element_blank(), axis.text.y = element_blank()) +
+#   labs(title = "Replicate 95% CIs", x = "Estimate", 
+#     y = "Replicate")
+# plot_grid(
+#     plot_grid(est_dist, pval_dist, ncol = 1, labels = c("A", "B")),
+#     ci_reps,
+#     labels = c("", "C")
+#     )
+```
+
+```{r}
+plot_bias_sens(reps_veill)
+```
+
+```{r}
+plot_bias_sens(reps_strep)
+```
+
