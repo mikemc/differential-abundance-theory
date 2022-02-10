@@ -113,6 +113,22 @@ For instance, in Figure \@ref(fig:error-proportions), the ratio of Species 3 (wi
 Thus taxonomic bias creates variable fold errors in species proportions, but constant fold errors in species ratios.
 Consequently, a perfect cancellation of errors can only occur in ratio-based DA analysis.
 
+**Higher-order taxa:** How does bias affect the proportions and ratios of higher-order taxa, such as a genera, phyla, or even all organisms?
+More generally, we can identify an higher-order taxon $I$ with a set of species, $\{i \in I\}$.
+The abundance and reads of a taxon $I$ in a sample $a$ equal the sums over its constituent species, $\text{abun}_{I}(a) = \sum_{i \in I}\text{abun}_{i}(a)$ and $\text{reads}_{I}(a) = \sum_{i \in I}\text{reads}_{i}(a)$.
+The efficiency of taxon $I$ equals the weighted average of its constituent species,
+\begin{align}
+  (\#eq:efficiency-general)
+  \text{efficiency}_I(a) 
+    \equiv \frac{\sum_{i\in I}\text{abun}_i(a)\cdot \text{efficiency}_i}{\text{abun}_I(a)}.
+\end{align}
+Thus the efficiency of a higher-level taxon may vary across samples (@mclaren2019cons).
+An exception is if the constituent species have the same efficiency or always appear in the same abundances relative to each other, in which case the efficiency of the higher-order taxon would stay constant.
+As an example, suppose that Species 1 and Species 2 in Figure \@ref(fig:error-proportions) were in the same phylum.
+The efficiency of the phylum would then be $\tfrac{1}{2} \cdot 1 + \tfrac{1}{2} \cdot 18 = 9.5$ in Sample 1 and $\tfrac{15}{16} \cdot 1 + \tfrac{1}{16} \cdot 18 \approx 2.1$ in Sample 2.
+Equations \@ref(eq:prop-error) and \@ref(eq:ratio-error) continue to describe the measurement error in proportions and ratios involving higher-order taxa, so long as the sample-dependent taxon efficiency defined by Equation \@ref(eq:efficiency-general) is used.
+In this way, we can see that both proportions and ratios among higher-order taxa may have inconsistent fold errors.
+
 ## Absolute abundance
 
 Various methods can be used to convert the relative abundances from MGS into absolute abundances.
