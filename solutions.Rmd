@@ -6,16 +6,18 @@ The theoretical results from Section \@ref(differential-abundance) suggest a num
 
 Since bias creates a consistent fold error in species ratios, a natural approach to countering bias when analyzing relative abundances is to use DA methods that are based on fold changes in ratios.
 A variety of such methods have been developed for microbiome DA analysis that build on earlier work from the field of Compositional Data Analysis (CoDA).
-These methods analyze log-fold changes in the ratios among a pair of species or, more generally, some product of exponential power of multiple species, which likewise are bias-invariant.
-Besides a greater robustness to taxonomic bias, such ratio-based analyses have other advantages.
-First, analysis of ratios avoids other standard criticisms leveled at proportion-based analysis—namely that the change in proportion of a species is affected by change in the density of all other species and the set of species used in the denominator of the proportion calculation (@gloor2017micr).
-Second, ratios may be more informative than absolute density in some cases, such as for swabs or other sample types for which the absolute density in the sample may be an unreliable indicator of the absolute density of the sampled ecosystem.
+These methods analyze (log) fold changes in the ratio between species or, more generally, between the products of multiple species.
+Taking the product or geometric mean of multiple species provides a approach to aggregating species into a higher-level taxonomic units such that the ratios between units maintain proportional errors, in contrast to the standard approach of additively aggregating species.
+Besides a greater robustness to taxonomic bias, analyses of ratios have other advantages over analyses of proportions and absolute abundances.
+Analyses of ratios avoid the standard criticism leveled at proportion-based analysis—namely that the changes in the proportion of one species depend in a non-transparent way on the changes in abundance of all other species (@gloor2017micr), including unidentified contaminants.
+In many experiments, the total abundance in a sample may be a poor indicator of the total abundance of the sampled ecosystem; unless this relationship can be characterized and accounted for, changes in ratios may be more informative than changes in absolute abundance for the underlying biology of interest.
 
 Ratios come with their limitations, however.
 First, there are a vast number of species ratios (and derivatives) to potentially consider, none of which provide direct information about absolute densities, which can make choosing and interpreting a ratio-based DA analysis challenging.
 Second, ratio measurements are impacted by noise in both the numerator and denominator and so can be noisier than proportion measurements, particularly when the read counts in the denominator are small.
 A related problem is that, due to the discrete nature of biological organisms and the reads that are generated during sequencing, species in the denominator are commonly observed to have 0 reads; the assumptions that made by different methods about the meaning of these 0 counts can have a major impact on DA results.
-Finally, bias invariance at the level of ratios among species does not extend to ratios of additive aggregates of species, such as between bacterial phyla, unless further conditions are met (@mclaren2019cons).
+Finally, bias invariance at the level of ratios among species does not extend to ratios between additive aggregates of species, such as between bacterial phyla, unless further conditions are met (@mclaren2019cons).
+Multiplicative aggregates of species provides a bias-invariant alternative that has proven useful in biomarker discovery but are harder to interpret.
 
 ## Calibration using community controls {#calibrate-compositions}
 
@@ -51,14 +53,32 @@ fs::path(
 
 Obtaining control communities that span the taxa of interest is often not practical.
 Moreover, the bias that is measured from controls may differ from that in the primary samples due to differences in cell state or sample preparation.
-These problems may be overcome for the purpose of species-level absolute DA analysis by using the reference-species approach to absolute-density measurement that was described in Section \@ref(differential-abundance).
+These problems may be overcome for the purpose of species-level absolute DA analysis by using the reference-species approach to absolute-abundance measurement that was described in Section \@ref(differential-abundance).
 This *reference-species calibration* allows one to simultaneously account for changes in total density and the sample mean efficiency, obtaining accurate fold changes in absolute density from taxonomically biased, relative metagenomics measurements.
-
-Recall that densities estimated by the reference-species approach have a constant fold error, provided that the fold error in the reference species is also constant (Equation \@ref(eq:density-ratio-error)).
-Three categories of reference species are reviewed for this purpose in Appendix \@ref(review-absolute-methods), including why they might be expected to produce constant fold errors: housekeeping species assumed to have constant abundance, spike-in species added at known or constant abundance, and species whose abundance has been measured with a targeted method like species-specific qPCR.
 
 To demonstrate the ability for reference calibration to improve fold changes, we treated the abundance of one species (_Lactobacillus crispatus_) in the @brooks2015thet mock community data as known, and used it to calibrate the abundances of all species. 
 Doing so improved the resulting measurements of fold changes in density for all species (Figure \@ref(fig:calibration-example)).
+
+Two categories of reference species have so far been used: Housekeeping species assumed to have constant abundance and spike-in species added at known (and typically constant) abundance.
+The implications of bias for these methods hadn't been previously investigated.
+Our results show that, provided that taxonomic bias among all species (including the housekeeping or spike-in species) is consistent across samples, then the fold error in species abundances is constant and does not impact DA analysis of log- or rank-transformed species abundances.
+These methods have downsides: Housekeeping species are not always available/known, and spike-ins have the downside of needing to determine species not present in the samples and an appropriate concentration in which to add them so that they form a moderate fraction of reads across samples with potentially widely varying produce of mean efficiency and total abundance.
+
+Section \@ref(abundance-measurement) presents an additional type of reference species: naturally-occurring species whose abundance has been directly measured.
+For most natural ecosystems, there is unlikely to be a single species or genus that is found in all samples.
+Sample coverage can be increased by measuring multiple species with complementary presence-absence patterns (Appendix [TODO]).
+Coverage can also be increased by using higher-order taxa as references---for example, performing qPCR measurements targeted to a particular family rather than a particular species.
+Higher-order taxa necessarily have higher prevalence than species, though may be more prone to errors from a varying efficiency across samples.
+Targeted measurements of taxa that only span a subset of samples can still provide useful validation for methods.
+
+<!-- TODO: Add paragraph: Pre- versus post- extraction; linearity of DNA extraction. -->
+<!-- Applies to spike-ins and targeted measurements. -->
+
+Housekeeping taxa and spike-ins have also been used to measure changes in total-community abundance.
+Our results show that the bias invariance does not apply for this purpose---the measured fold change in total abundance have an error equal to the inverse change in the sample mean efficiency.
+A similar problem arises when attempting to infer changes in abundance of any higher-order taxon, unless measurement efficiency is conserved among its species.
+<!-- If the purpose is to assess changes in the total community abundance rather than individual species, we recommend researchers either directly measure total abundance or, if using reference species, then explicitly acknowledge that their results are contingent on constant or at least non-systematically varying mean efficiency. -->
+<!-- In the second case, confidence in the results can be bolstered by a bias-sensitivity analysis. -->
 
 ## Choosing complementary total-density and metagenomics measurements
 
@@ -113,3 +133,5 @@ A potential solution is to perform a bias-aware meta-analysis that that explicit
 Parametric microbiome meta-analysis models include sets of species-specific latent parameters to model "batch effects"—amorphous differences in the measurements of each study.
 By configuring these models so that these latent parameters correspond to study-specific species efficiencies, we can improve their biological interpretability and gain the ability to directly assess whether disagreements in DA results across studies can be explained by differences in taxonomic bias.
 To the extent that taxonomic bias truly is consistent within studies, meta-analyses that directly account for it can have greater statistical power to extract the truly consistent and inconsistent microbial patterns across studies.
+
+## [TODO] Summary
