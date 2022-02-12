@@ -13,6 +13,7 @@ rmd_files: [
   "case-studies.Rmd",
   "solutions.Rmd",
   "conclusion.Rmd",
+  "appendix.Rmd",
   "appendix-old.Rmd",
   "appendix-regression.Rmd",
   "supplemental-figures.Rmd",
