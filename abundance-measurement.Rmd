@@ -1,5 +1,12 @@
 # How taxonomic bias affects abundance measurements {#abundance-measurement}
 
+Taxonomic bias is fundamentally multiplicative.
+Species vary in how easily their cells are lysed, and the number of lysed cells for a given species following DNA extraction equals the number of input cells multiplied by the probability of lysis per cell, or lysis efficiency, of the species.
+Similarly, prokaryotic species vary in their number of 16S genes, such that the numbers of 16S sequencing reads for various species in a 16S amplicon experiment is expected to be proportional to the numbers of 16S genes in their genomes.
+Nevertheless, the nature of MGS experiments are such that consistent taxonomic bias creates non-proportional error in common forms of relative and absolute abundance measurements---error that varies across samples and hence distort cross-sample comparisons.
+This section reviews the theoretical results of @mclaren2019cons for how taxonomic bias affects MGS measurements of relative abundance and extends them to include measurements of absolute abundance.
+We show that only some of the measurement methods currently in use have proportional errors, making these methods intrinsically more robust to bias than the others which do not.
+
 ## Model of MGS measurement
 
 Our primary tool for understanding the impact of taxonomic bias on MGS measurement is the theoretical model of MGS measurement developed and empirically validated by @mclaren2019cons.
@@ -15,8 +22,8 @@ First, we consider only species-level assignment, and suppose that reads that ca
 Second, we ignore the possibility that reads are misassigned to either the wrong species or sample.
 Third, we suppose that taxonomic bias acts consistently across samples at the level of species---that is, a given species is always measured more efficiently than another to the same degree, regardless of variation in changes in sub-species-level composition or the sample matrix.
 Finally, unless otherwise stated, we treat the sequencing measurement as deterministic, ignoring the 'random' variation in read counts that arise from the sampling of sequencing reads and other aspects of the MGS process.
-These assumptions, though unrealistic descriptions of most MGS experiments, serve our purpose of clearly demonstrating when and why consistent taxonomic bias creates errors in DA analysis.
-The results we derive from them form the basis for understanding the impact of bias in more complex scenarios.
+These assumptions, though unrealistic descriptions of most MGS experiments, serve the purpose of clearly demonstrating when and why consistent taxonomic bias creates errors in DA analysis.
+<!-- The results we derive from them form the basis for understanding the impact of bias in more complex scenarios. -->
 
 Our model describes the mathematical relationship between the read counts obtained by MGS and the true absolute abundances of each species in a sample.
 For concreteness, we take _absolute abundance_, or simply _abundance_, to refer to cell concentration, or number of cells per unit volume, in a sample.
@@ -34,7 +41,8 @@ Our model stipulates that the assigned read count of a species $i$ in a sample $
 The species-specific factor, $\text{efficiency}_{i}$, equals the *relative measurement efficiency* (or simply *efficiency*) of the species---how much more easily that species is measured (converted from cells to assigned reads) relative to a arbitrary fixed reference species (@mclaren2019cons).
 We assume the efficiencies of particular species are consistent across samples.
 The variation in efficiency among species corresponds to the taxonomic bias of the MGS protocol.
-The sample-specific factor, $\text{effort}(a)$, we call the *sequencing effort* for that sample; it captures the variation in the total number of assigned reads due to experimental features such as library normalization and total sequencing-run output.
+The sample-specific factor, $\text{effort}(a)$, quantifies the *effective experimental effort* per unit abundance in measuring the sample.
+<!-- It accounts for variation in sample input volume and total sequencing run output, as well as the mean species efficiency within the sample. -->
 Equation \@ref(eq:measurement-model) implies that the total number of assigned reads in sample $a$ equals
 \begin{align}
   (\#eq:total-reads)
@@ -47,12 +55,11 @@ where $\text{abun}_{S}(a) \equiv \sum_{j\in S}\text{abun}_j(a)$ is the total abu
   \text{efficiency}_S(a) 
     \equiv \frac{\sum_{j\in S}\text{abun}_j(a) \cdot \text{efficiency}_j}{\text{abun}_S(a)}
 \end{align}
-is the _mean efficiency_ over all species in $S$.
+is the _mean efficiency_ over all species in $S$ weighted by their abundance.
 <!-- The subscript $S$ serves as a reminder that many reads may not be assigned---for example, reads that fail to pass quality control or that come from the host or other taxonomic domains than what is being studied. -->
 
-## Relative abundance (proportions and ratios)
+## Relative abundance (proportions and ratios) {#relative-abundance}
 
-We first review results from @mclaren2019cons on how bias affects measurements of relative abundance, which are essential to understanding both relative and absolute DA analysis.
 We distinguish between two types of species-level *relative abundances* within a sample.
 The *proportion* of species $i$ in sample $a$ equals its abundance relative to the total abundance of all species in $S$,
 \begin{align}
@@ -83,6 +90,7 @@ Taxonomic bias creates a multiplicative error in the species' proportion equal t
 Consequently, the species's proportion is measured as too high in samples that are dominated by species with lower efficiencies, and measured as too low in samples that are dominated by species with higher efficiencies.
 This phenomenon is illustrated in two hypothetical communities in Figure \@ref(fig:error-proportions). 
 Species 3 has an efficiency of 6; it is under-measured in Sample 1, which has a mean efficiency of 8.33, but over-measured in Sample 2, which has a mean efficiency of 3.15.
+A demonstration in artificially constructed ('mock') communities of bacterial cells is shown in [Figure 3C](https://doi.org/10.7554/eLife.46923.004) of @mclaren2019cons.
 
 The measured ratio between species $i$ and $j$ is given by the ratio of their read counts, 
 \begin{align}
@@ -98,6 +106,10 @@ From Equations \@ref(eq:measurement-model) and \@ref(eq:ratio-meas), it follows 
 \end{align}
 Taxonomic bias creates a multiplicative measurement error in the ratio that is equal to the ratio in their efficiencies; the error is therefore constant across samples.
 For instance, in Figure \@ref(fig:error-proportions), the ratio of Species 3 (with an efficiency of 6) to Species 1 (with an efficiency of 1) is over-estimated by a factor of 6 in both communities despite their varying compositions.
+A demonstration in artificially constructed ('mock') communities of bacterial cells is shown in [Figure 3D](https://doi.org/10.7554/eLife.46923.004) of @mclaren2019cons.
+
+Thus taxonomic bias creates variable fold errors in species proportions, but constant fold errors in species ratios.
+Consequently, a perfect cancellation of errors can only occur in ratio-based DA analysis.
 
 <!-- begin figure -->
 
@@ -109,9 +121,6 @@ For instance, in Figure \@ref(fig:error-proportions), the ratio of Species 3 (wi
 (ref:cap-error-proportions) **Taxonomic bias creates sample-dependent multiplicative errors in species proportions, which can lead to inaccurate fold changes between samples.** Top row: Error in proportions measured by MGS in two hypothetical microbiome samples that contain different relative abundances of three species. Bottom row: Error in the measured fold-change in the third species that is derived from these measurements. Species' proportions may be measured as too high or too low depending on sample composition. For instance, Species 3 has an efficiency of 6 and is under-measured in Sample 1 (which has a mean efficiency of 8.33) but over-measured in Sample 2 (which has a mean efficiency of 3.15). 
 
 <!-- end figure -->
-
-Thus taxonomic bias creates variable fold errors in species proportions, but constant fold errors in species ratios.
-Consequently, a perfect cancellation of errors can only occur in ratio-based DA analysis.
 
 **Higher-order taxa:** How does bias affect the proportions and ratios of higher-order taxa, such as a genera, phyla, or even all organisms?
 More generally, we can identify an higher-order taxon $I$ with a set of species, $\{i \in I\}$.
@@ -129,24 +138,30 @@ The efficiency of the phylum would then be $\tfrac{1}{2} \cdot 1 + \tfrac{1}{2} 
 Equations \@ref(eq:prop-error) and \@ref(eq:ratio-error) continue to describe the measurement error in proportions and ratios involving higher-order taxa, so long as the sample-dependent taxon efficiency defined by Equation \@ref(eq:efficiency-general) is used.
 In this way, we can see that both proportions and ratios among higher-order taxa may have inconsistent fold errors.
 
-## Absolute abundance
+## Absolute abundance {#absolute-abundance}
 
 Various methods can be used to convert the relative abundances from MGS into absolute abundances.
-These methods are subject to taxonomic bias in the MGS measurements and, in some cases, in supplemental non-MGS measurements used for the conversion.
-Here we describe how various methods for measuring absolute abundance are predicted to be affected by taxonomic bias, with an eye towards determining whether the measurement error is variable or constant.
-We consider two general classes of methods: Those in which absolute-abundance information is derived from measurement of the aggregate abundance of the total community, and those in which it is derived from targeted measurement (or prior knowledge) of one or more particular species.
+These methods are subject to taxonomic bias in the MGS measurements and in any supplemental, non-MGS measurements that may be used for the conversion.
+Appendix [REF] develops a general framework to understand how bias affects absolute-abundance measurements for species and higher-order taxa across these methods.
+Here we present our main results as they apply to currently-used methods.
 
-### Total-community normalization
+### Methods that measure total-community abundance
 
-Measurements of species absolute abundances are often obtained by making a (non-MGS) measurement of total community abundance, equating it with the aggregate abundance of the species $S$ measured by MGS, and multiplying this total by the proportions from MGS,
+The definition \@ref(eq:prop) for the proportion of a species indicates that we can convert proportions to absolute abundances were we to know the absolute abundance of the total community.
+Given our measured proportions from MGS and a measure of total abundance from a supplemental, non-MGS measurement, $\widehat{\text{abun}}_{S}(a)$, one can measure the abundances of individual species by
 \begin{align}
   (\#eq:density-prop-meas)
   \widehat{\text{abun}}_{i}(a) 
   &= \widehat{\text{prop}}_{i}(a) \cdot \widehat{\text{abun}}_S(a).
 \end{align}
-This measurement is affected by taxonomic bias in the MGS measurement as well as in the total-abundance measurement.
-For example, measurement of total community abundance by 16S qPCR is affected by variation among species in extraction efficiency, 16S copy number, and PCR binding and amplification bias.
-If the species-level efficiencies of the total-abundance measurement are constant across samples and we neglect other sources, then we can express the total-abundance measurement as
+Total-abundance measurements that have recently used for this purpose include counting cells with microscopy (@lloyd2020evid) or flow cytometry (@props2017abso,@vandeputte2017quan,@galazzo2020howt), measuring the concentration of a marker-gene with qPCR or ddPCR (@zhang2017soil,@barlow2020aqau, @galazzo2020howt,@tettamantiboshier2020comp), and measuring bulk DNA concentration with a florescence-based DNA quantification method (@contijoch2019gutm).
+
+Importantly, these methods of measuring total abundance are themselves subject to taxonomic bias.
+Flow cytometry may, for example, yield lower cell counts for species whose cells tend to clump together or are prone to lysis during steps involved in sample collection, storage, and preparation.
+The marker-gene concentration measured by qPCR is affected by variation among species in extraction efficiency, marker-gene copy number, and PCR binding and amplification efficiency.
+We can easily understand the impact of taxonomic bias on the total-abundance measurement under simplifying assumptions analogous to those in our MGS model.
+Suppose that each species has an _absolute efficiency_ for the total-abundance measurement that is constant across samples.
+Neglecting other sources of random and systematic error, the total-abundance measurement equals
 \begin{align}
   (\#eq:total-density-error)
   \widehat{\text{abun}}_S(a) 
@@ -155,50 +170,84 @@ If the species-level efficiencies of the total-abundance measurement are constan
 \end{align}
 where $\text{efficiency}_{i}^{\text{tot}}(a)$ is the absolute measurement efficiency of species $i$ for the total-abundance measurement and $\text{efficiency}^{\text{tot}}_S(a)$ is the mean efficiency of the total-abundance measurement in the sample.
 <!-- Note, we have assumed that the total-abundance and MGS measurements are sensitive to the same species -->
-The equations \@ref(eq:total-density-error) and \@ref(eq:prop-error) for the error in total-abundance and proportion measurements imply that the species abundance measurement \@ref(eq:density-prop-meas) has error given by
+
+The species abundance measurements are affected by taxonomic bias in both the MGS and total-abundance measurement.
+We can compute this effect by substituting Equations \@ref(eq:prop-error) and \@ref(eq:total-density-error) into Equation \@ref(eq:density-prop-meas), yielding
 \begin{align}
   (\#eq:density-prop-error)
   \widehat{\text{abun}}_{i}(a) 
   = \text{abun}_{i}(a) \cdot \frac{\text{efficiency}_{i} \cdot \text{efficiency}^{\text{tot}}_S(a)}{\text{efficiency}_S(a)}.
 \end{align}
-
 Equation \@ref(eq:density-prop-error) indicates that the multiplicative error in the measured absolute abundance of a species equals its MGS efficiency relative to the mean MGS efficiency in the sample, multiplied by the mean efficiency of the total measurement.
 As in the case of proportions (Equation \@ref(eq:prop-error)), the error depends on sample composition through the two mean efficiency terms and so may vary across samples.
-On the other hand, if the mean efficiency of the total-abundance measurement mirrors that of the MGS measurement, the two can offset and lead to a relatively stable error.
-We discuss how this possibility might apply to real experimental workflows below.
+On the other hand, if the mean efficiency of the total-abundance measurement mirrors that of the MGS measurement, the two can offset and lead to more stable errors.
+We discuss how this possibility might be exploited in real experimental workflows in Section \@ref(solutions).
 
-### Reference-species normalization
-
-Suppose we had a measurement of the (absolute) abundance of a _reference species_ $r$.
-In the absence of taxonomic bias, all species are expected to have the same ratio of reads to abundance in a sample (Equation \@ref(eq:measurement-model)).
-Thus the abundance-to-reads ratio for species $r$ can serve as a conversion factor allowing us to obtain the abundance of an arbitrary species $i$,
+### Methods that determine or measure a reference species
+  
+The definition \@ref(eq:ratio) for the ratio between two species suggests another method to convert relative to absolute abundances: 
+By knowing the ratio of species $i$ to a _reference species_ $r$ and the abundance of species $r$, we can determine the abundance of species $i$.
+Thus given an MGS measurement and a measurement $\widehat{\text{abun}}_{r}(a)$ of the abundance of species $r$, we can measure the abundance of an arbitrary species $i$ as
 \begin{align}
   (\#eq:density-ratio-meas)
   \widehat{\text{abun}}_{i}(a) = \text{reads}_{i}(a) \cdot \frac{\widehat{\text{abun}}_{r}(a)}{\text{reads}_{r}(a)}.
 \end{align}
-The abundance of one or more reference species can be directly measured using targeted measurement methods like species-specific qPCR and used with Equation 
-\@ref(eq:density-ratio-meas) to obtain absolute abundance for all species.
-To our knowledge, this approach has not previously been suggested.
-<!-- (Appendix \@ref(model-details) considers possible extensions to multiple reference species.) -->
-Instead, reference-based measurement has been used in the context of spike-in experiments or normalization to a species (such as the host) which is treated as having a constant abundance.
-In a spike-in experiment, the abundance of reference species are added in known (up to experimental error) abundances to each sample.
-When normalizing to a species that is treated as having a constant but unknown abundance, we set $\widehat{\text{abun}}_{r}(a)$ in Equation \@ref(eq:density-ratio-meas) equal to 1 and interpret the abundances as having fixed but unknown units, which is sufficient for multiplicative DA analysis.
+Here we consider some practical applications of this method and how their measurements are affected by bias in the MGS measurement and error in $\widehat{\text{abun}}_{r}(a)$.
+Appendix [REF] describes the general case where there is a set $R$ of multiple reference species; here we restrict our attention to a single reference species $r$.
 
-The error in the abundance measurement \@ref(eq:density-ratio-meas) due to taxonomic bias in the MGS measurement is given by
+This approach has so far been solely or primarily used with reference species that have been determined to have an abundance that is constant across samples.
+In a spike-in experiment, researchers deliberately add (or 'spike in') one or more reference species at a known, constant abundance.
+For a single spike-in species $r$, the abundances of other species can be estimated by Equation \@ref(eq:density-ratio-meas).
+In the absence of spike-ins, researchers may be able to determine one or more native species whose abundances are thought to be constant across samples; we refer to such species as _housekeeping species_ by analogy with the housekeeping genes used for absolute-abundance conversion in studies of gene expression.
+Housekeeping species can sometimes be identified using prior scientific knowledge; for example, in shotgun sequencing experiments, researchers have used sequencing reads from the plant or animal host as a reference.
+A related approach involves computationally identifying species that are constant between pairs of samples (@david2014host) or between sample conditions (@mandal2015anal, @kumar2018anal) under added statistical assumptions about the existence of such species.
+The abundance of a housekeeping species is typically unknown; therefore, to estimate the abundances of other species, we simply set $\widehat{\text{abun}}_{r}(a)$ to 1 in Equation \@ref(eq:density-ratio-meas).
+The resulting abundance measurements have unknown but fixed units, which is sufficient for measuring fold changes across samples.
+
+Equation \@ref(eq:density-ratio-meas) makes clear that the reference species need not be constant so long as we can directly measure it.
+This observation suggests a new approach to obtaining species absolute abundances, by combining MGS measurements of the community with targeted measurements of the absolute abundance of one or more individual species.
+Common targeted measurements include using qPCR or ddPCR to measure the concentration of a marker-gene in the extracted DNA, using primers tailored to a particular species.
+Other methods that are capable of measuring cells (rather than extracted DNA) include applying ddPCR directly to cells, performing CFU counting on selective media, and using flow cytometry with species-specific florescent probes.
+The measurements from any of these methods could be used for $\widehat{\text{abun}}_{r}(a)$ in Equation \@ref(eq:density-ratio-meas) to obtain the absolute abundance for all species.
+Appendix [REF] describes how using multiple reference species and/or statistical modeling can address the fact that any one native reference species is unlikely to be found in all samples.
+
+Despite the diversity of these methods, each can be represented by Equation (\#eq:density-ratio-meas), making it straightforward to understand the impact of taxonomic bias in the MGS measurement.
+It follows from Equation \@ref(eq:ratio-error) that the measured abundance of species $i$ is 
 \begin{align}
   (\#eq:density-ratio-error)
   \widehat{\text{abun}}_{i}(a) 
   = \text{abun}_{i}(a) \cdot \frac{\text{efficiency}_{i}}{\text{efficiency}_{r}}
-  \cdot \begin{array}{c} \text{fold error in} \\ \widehat{\text{abun}_r}(a) \end{array}.
+  \cdot \underbrace{\frac{\widehat{\text{abun}_r}(a)}{\text{abun}_r(a)}}_{\substack{\text{fold error in} \\ \text{ref. species}}}.
+  % \cdot \begin{array}{c} \text{fold error in} \\ \widehat{\text{abun}_r}(a) 
 \end{align}
-The constant error in the measured ratio of species $i$ to $r$ (see Equation \@ref(eq:ratio-error)) propagates to the abundance measurement.
-There will generally also be systematic error in the abundance of the reference species; however, if the systematic fold error is constant across samples, so will be that of the abundances of other species.
+The error thus consists of two terms: the ratio of the efficiency between species $i$ and species $r$, and any error in the abundance of the reference species.
+The ratio of species efficiencies is constant by assumption; thus the total error is constant if the error in the reference abundance is.
+Note, if a higher-order taxon is used as a reference---for example, using targeted measurements of a genus or family---then the efficiency of the reference taxon may vary across samples, leading to non-proportional errors.
 
-Spike-ins are instead sometimes used to measure absolute abundances using Equation \@ref(eq:density-prop-meas).
-In this case, an intermediate step is taken in which the total community abundance is first measured by the ratio of non-spike-in to spike-in reads.
-<!-- CHECK -->
-If done correctly, this calculation yields results that are identical to directly applying Equation \@ref(eq:density-ratio-meas) (Appendix \@ref(total-density-ref)).
+In practice, researchers commonly use a less-direct but equivalent approach to measure species abundances from a reference such as a spike-in.
+Set $S$ to be the species of interest excluding the spike-in species $r$.
+In this approach, one measures the total abundance of the community $S$ from the ratio of non-spike-in to spike-in reads,
+\begin{align}
+  (\#eq:total-density-spike)
+  \widehat{\text{abun}}_S(a) 
+  &= \frac{\text{reads}_S(a) \cdot \widehat{\text{abun}}_R(a)}{\text{reads}_r(a)}.
+\end{align}
+Then, one uses this measurement $\widehat{\text{abun}}_{S}(a)$ along with the MGS proportions in Equation \@ref(eq:density-prop-meas) to determine the abundance of individual species.
+This calculation yields measurements that are identical to those from directly applying Equation \@ref(eq:density-ratio-meas) (Appendix \@ref(total-density-ref)).
+This observation might seem paradoxical: Equation \@ref(eq:density-ratio-error) indicates proportional error for the direct approach, whereas \@ref(eq:density-prop-error) suggests non-proportional errors for the indirect approach.
+This apparent contradiction is resolved by the fact the measurement $\widehat{\text{abun}}_{S}(a)$ by this method has errors that are proportional to $\text{efficiency}_S(a)$ and thus exactly offset the proportionality with $1/\text{efficiency}_S(a)$ in the MGS proportions, such that the measured species abundances have constant fold errors.
 
-**Difference between the two approaches:**
-Reference-species normalization yields constant fold errors because it is based on species-level read counts and abundances and we assume that efficiencies are constant at the species level.
-In contrast, total-abundance normalization is based on aggregates of species (for the calculation of proportion and the total-abundance measurement) and so depends on mean efficiencies, which can vary across samples.
+## Summary
+
+Taxonomic bias in MGS measurements makes all MGS-based measures of relative and absolute abundance inaccurate.
+For some measures---but not all---consistent bias at the species level creates proportional errors in species abundances.
+Of two types of relative abundance, the ratio between a pair of species has proportional errors whereas the proportion of an individual species does not. 
+Instead, the multiplicative error in a species' proportion varies with the mean efficiency across samples.
+Methods for measuring species absolute abundance that involve measuring the abundance of the total community likewise experience non-proportional errors which vary with the sample mean efficiency; 
+a notable exception is if the mean efficiency of the total-abundance measurement mirrors that of the MGS measurement.
+Absolute-abundance methods that instead involve measuring or spiking individual reference species yield proportional errors, provided that the abundance of the reference species can be determined up to a proportional error.
+The efficiency of higher-order taxa may vary across samples even if the efficiencies of their constituent species are constant; as a result, all standard abundance measures can have non-proportional errors at taxonomic resolutions higher than that at which bias is conserved.
+
+<!-- Possibly:  -->
+<!-- - taxonomic aggregates need not have proportional errors -->
+<!-- - the fundmental mathematical explanation spanning these results is that the sum of multiple values each having proportional error need not itself have proportional error. -->
