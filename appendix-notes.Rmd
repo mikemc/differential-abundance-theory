@@ -1,0 +1,92 @@
+# Theory notes
+
+## Effective experimental effort: Intuition
+
+The effective experimental effort per cell for sample $a$ is
+\begin{align}
+  (\#eq:effort)
+  \text{effort}_S(a)
+    &= \frac{\text{reads}_S(a)}{\text{abun}_S(a) \cdot \text{efficiency}_S(a)} \\
+    &= \frac{\sum_{i \in S}\text{reads}_i(a)}{\sum_{i \in S} \text{abun}_i(a) \cdot \text{efficiency}_i(a)};
+\end{align}
+the second form follows from the definition of the mean efficiency.
+The effort increases if more sequencing performed on the sample, leading to greater number of reads for all species; and decreases if a larger sample input volume or concentration is used, leading to fewer reads per cell.
+Less intuitively, it also decreases with the mean efficiency of the sample.
+To help interpret the effort light of this last behavior, we consider how the effort varies across a few illustrative scenarios.
+
+**Scenario 1:**
+Consider Sample 1 in Figure \@ref(fig:error-proportions).
+Imagine that sequencing reads can be perfectly assigned to the three species; the taxonomic bias is entirely due to steps prior to read assignment, such as DNA extraction and PCR.
+Supposing that the sample was sequenced to a read depth of 100, the three species have read counts of $(4, 72, 24)$.
+In addition, suppose the total cell concentration in the sample equals 1 in some particular units.
+Since the mean efficiency is $(1 + 18 + 6) / 3 = 8.\bar 3$, the effort is $100 / (1 \cdot 8.\bar 3) = 12$.
+
+**Scenario 2:**
+Now consider a situation identical to Scenario 1, except that the bioinformatics pipeline is unable to assign reads from Species 3.
+In this case, the _assigned_ read counts will be $(4, 72, 0)$, for a total of $76$, though the total number of sequenced reads remains 100.
+Meanwhile, the efficiency of species 3 drops to 0 and the mean efficiency of the sample drops to $(1 + 18 + 0) / 3 = 6.\bar 3$.
+The effort is therefore $76 / (1 \cdot 6.\bar 3) = 12$, the same as in Scenario 1.
+<!-- The decline in total reads is exactly offset by the decline in the mean efficiency. -->
+<!-- This example illustrates a general pattern: The effort is invariant to removing from or adding to species' assigned reads. TODO: Make precise, and prove -->
+
+**Scenario 3:**
+Now consider a situation identical to Scenario 1, except that Species 3 fails to amplify during the PCR step in a marker-gene sequencing experiment.
+But thanks to careful experimental normalization during library preparation, an equal amount of DNA is prepared in the library as in Scenario 1, leading to 100 sequenced reads from the sample.
+The measured relative abundances are identical to in Scenario 2, but the read counts are larger, $(\approx 5.3, \approx 94.7)$.
+(As in Section \@ref(abundance-measurement), we ignore the fact that read counts are discrete.)
+The mean efficiency is also the same ($6.\bar 3$) as in Scenario 2.
+The effort is therefore $100 / (1 \cdot 6.\bar 3) \approx 15.8$, larger than in Scenario 1 and Scenario 2.
+
+**Scenario 4:**
+Now consider a situation identical to Scenario 1, but supposing Species 3 to be a reference species, such as the host or a spike-in.
+Does the effort depend on whether we include the reference species in the species set $S$?
+As we saw in Scenario 1, the effort associated with all three species is 12.
+For the two non-reference species alone, the total abundance is $2/3$, the total read count is $76$, and the mean efficiency is $(1 + 18) / 2 = 9.5$.
+The effort is therefore $76 /(\tfrac{2}{3} \cdot 9.5) = 12$, the same as in Scenario 1 and Scenario 2.
+<!-- Compared to Scenario 2, the change in abundance and mean efficiency offset -->
+
+TODO:
+
+- Make sure this result is general, and not just happening when the three species are all equally abundant.
+- consider moving secenario 4 to 2 or 3, leaving the scenario where effort changes to last.
+- note that for proving the general results, it may be best to go back to main model equation, where we can see that if the read count, abundance, and efficiency for at least one species is unchanged, than the effort is unchanged.
+  - in scenario 3, the effort must go up since taxa 1 and 2 are unchanged but get more reads.
+  - if we add or remove species, without changing the read count of other species, then the effort must stay the same.
+  - this fact that effort is independent of the taxonomic scope S seems useful and convenient and intuitive.
+
+**Summary:**
+The behavior of the effective experimental effort across these scenarios makes intuitive sense if we think of it as specifically describing the 'wet lab' components of the MGS measurement, up to and including sequencing but excluding bioinformatic analysis of the sequencing data.
+The taxonomic scope $S$ is an arbitrary decision made implicitly or explicitly by the researcher, which does not change the wet portion of the experiment; thus   $\text{effort}(a)$ is independent of $S$.
+In addition, sequencing reads are routinely excluded during bioinformatic analysis, and such filtering does not change $\text{effort}(a)$, instead reducing the read counts by reducing the species' efficiencies.
+On the other hand, if species drop out prior to sequencing due to low extraction efficiency and/or low PCR efficiency, then achieving the same total read count requires that a greater sample volume or concentration be passed on to subsequent steps.
+These adjustments are reflected by a commensurate increase in $\text{effort}(a)$. 
+
+
+## Absolute-abundance measurement
+
+Q: How to motivate this 'general' form? 
+It comes from ignoring bias.
+
+Make clear that R doesn't need to be in S. Perhaps want different sets - a superset of all species, and an set of species that each measurement method considers?
+
+---
+
+Consider this general form for measuring of the absolute abundance of a taxon $I$ from a reference species $R$,
+\begin{align}
+  \widehat{\text{abun}}_{I}(a) 
+  &= \text{reads}_{I}(a) \cdot \frac{\widehat{\text{abun}}_{R}(a)}{\text{reads}_{R}(a)}.
+\end{align}
+When $R = S$, this measurement amounts to total-community normalization; when $R=r$, it amounts to reference-species normalization.
+(This form does not encompass using the geometric average of multiple species.)
+Under our model, we can rewrite the right-hand-side to obtain
+\begin{align}
+  \widehat{\text{abun}}_{I}(a) 
+  &= \text{abun}_{I}(a) \cdot \frac{\text{efficiency}_{I}(a)}{\text{efficiency}_{R}(a)}
+  \cdot \text{FE}\left[\widehat{\text{abun}_R}(a)\right],
+\end{align}
+where $\text{FE}\left[\widehat{\text{abun}_R}(a)\right] = \widehat{\text{abun}_R}(a) / \text{abun}_R(a)$ is the fold error in the reference abundance measurement.
+
+From here, we can derive the other results.
+
+Methods differ based on the choice of $R$ and in how the abundance of $R$ is measured.
+
