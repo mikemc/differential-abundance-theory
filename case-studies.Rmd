@@ -13,11 +13,11 @@ The authors used ITS amplicon sequencing to measure communities before and after
 Motivated by the substantial ribosomal copy-number variation (CNV) in fungi (@lofgren2019geno), the authors also performed control measurements of mock communities that they constructed from quantified genomic DNA of the 9 species in the experiment; these controls were used to measure taxonomic bias with the method of @mclaren2019cons.
 The authors found a 13X difference between the most and least efficiently measured commensal, while the pathogen was measured 40X more efficiently than the least efficiently measured commensal.
 
-@leopold2020host performed two related DA analyses on the pre-infection communities: the first characterized the relative importance of host genetics and species arrival order on species relative abundances in the fully-established community, and the second quantified the strength of 'priority effects'---the advantage gain by a species from being allowed to colonize first.
+@leopold2020host performed two related DA analyses on the pre-infection communities: the first characterized the relative importance of host genetics and species arrival order on species relative abundances in the fully-established community, and the second quantified the strength of 'priority effects'---the advantage gained by a species from being allowed to colonize first.
 Both analyses were based on fold changes in species proportions and so in principle were sensitive to taxonomic bias.
-To ensure the results were accurate, the authors incorporated the bias measured from the control samples with analysis-specific calibration procedures.
+To improve accuracy, the authors incorporated the bias measured from the control samples with analysis-specific calibration procedures.
 
-Calibration had negligible impact on the results (personal communication with Devin Leopold and confirmed by our own reanalysis).
+We repeated the two DA analyses of @leopold2020host with and without calibration and found that the results did not meaningfully differ.
 To understand why, we examined the variation in species proportions and the mean efficiency across the pre-infection communities (SI Figure \@ref(fig:leopold2020host-variation)).
 Despite the 13X variation in the efficiencies among species, the mean efficiency hardly varied across samples (SI Figure \@ref(fig:leopold2020host-variation)C), having a geometric range of 1.62X and a geometric standard deviation of 1.05X.
 This consistency in the mean efficiency was despite the fact that each species each showed substantial multiplicative variation (SI Figure \@ref(fig:leopold2020host-variation)A).
@@ -142,7 +142,7 @@ Although the multiplicative variation is highly sensitive to this value, we foun
 The average GSD of species in gut samples was around 1.8X lower than that of species in vaginal samples, regardless of zero-replacement value.
 Thus the variation in species proportions was lower in the gut samples by a similar or greater degree than the variation in mean efficiency, suggesting that bias may be just as or more problematic for inferring fold changes in species proportions.
 
-We sought to further understand the implications of the sparsity of gut microbiome for the effect of bias on DA analyses in the context of a real DA analysis.
+We sought to further understand the implications of the sparsity of gut microbiome for the effect of bias on DA analyses in the context of a real DA analysis.^[Some of the results in this paragraph seem to not hold up to more careful investigation. More generally, this paragraph is quite speculative and may get cut from subsequent versions.]
 @vieirasilva2019quan analyzed variation in absolute abundance of genera in stool samples from patients with primary sclerosing cholangitis and/or inflammatory bowel disease.
 Absolute abundances of genera were obtained via the total-abundance normalization method (Equation \@ref(eq:density-prop-meas)) with proportions measured from 16S sequencing and total abundance measured from flow cytometry.
 The authors the rank-based Spearman correlation to quantify the associations in absolute abundance and fecal calprotectin concentration, a biomarker of intestinal inflammation.
@@ -230,7 +230,7 @@ Overall, the comparison between FRAxC and qPCR measurements gives support to the
 <!-- - possibility of non-genetic variation -> change in efficiency with depth. This could still lead to a change in mean efficiency, but would offset the effect for these particular species. -->
 <!-- - possible error/bias in CARD-FISH -->
     
-## Summary and conclusions
+## Summary
 
 The impact of bias can depend on protocol, biological system, and type of DA analysis being done.
 Though these case studies span a highly limited range of possibilities, when combined with the theoretical results of Section \@ref(differential-abundance) suggest some general conclusions about how and when bias will impact DA analyses based on fold changes in proportions.
