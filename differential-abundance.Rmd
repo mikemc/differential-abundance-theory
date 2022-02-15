@@ -4,20 +4,22 @@
 
 <!-- TODO: Change the GC to be about how there are various methods; state the scope that we consider; and state the punchline that they vary, with proportion-based being more sensitive. -->
 
-How do the errors caused by taxonomic bias in the abundances measured for individual samples impact DA analysis?
+This section turns to how these errors in individual sample measurements described in the previous section affect the results of cross-sample comparisons and DA analyses of many samples.
 <!-- the changes in abundance that we estimate between samples or different host and environmental conditions? -->
-Although there are many ways to quantify the changes in abundance that form the basis of a DA analysis, we focus on DA analyses of the (log) fold changes in proportions, ratios, and absolute abundance; these multiplicative difference measures are common (though not ubiquitous) in extant DA analyses and have more direct ecological interpretations (via the processes of exponential growth and decay) than non-multiplicative measures.
+Microbiome researchers employ many measures for the change in species' abundance across samples.
+We focus on analyses of multiplicative or (log) fold changes, which are common across study types and have more direct ecological interpretations than other measures (via the processes of exponential growth and decay).
+In addition, we briefly consider non-parametric rank-based analyses that are common in microbiome-wide association studies.
 
 ## Fold changes between a pair of samples
 
-The building blocks of a DA analysis are the fold changes (FCs) in abundance between individual pairs of samples.
+The building blocks of a multiplicative DA analysis are the fold changes (FCs) in abundance between individual pairs of samples.
+Intuitively, only abundance measurements that have proportional errors will have FCs that are completely robust to bias.
 
 <!-- P: Proportions and ratios -->
-The impact of bias on the measured FCs in species proportions and ratios follows directly from the results of Section \@ref(abundance-measurement) for the error in individual-sample measurements.
-From Equation \@ref(eq:prop-error), it follows that the measured FC in the proportion of species $i$ from sample $a$ to sample $b$ is
+The phenomenon by which non-proportional errors due to bias distort measured FCs can be seen most simply for species proportions.
+It follows from Equation \@ref(eq:prop-error) that the measured FC in the proportion of a species $i$ from samples $a$ to $b$ is
 \begin{align}
   (\#eq:prop-fc-error)
-% \tag*{Fold change in proportion}
 \underbrace{\frac{\widehat{\text{prop}}_{i}(b)}{\widehat{\text{prop}}_{i}(a)}} _\text{measured FC}
   &= \frac
     {\text{prop}_{i}(b) \cdot \cancel{\text{efficiency}_{i}} / {\text{efficiency}_S(b)}}
@@ -29,12 +31,25 @@ From Equation \@ref(eq:prop-error), it follows that the measured FC in the propo
   \underbrace{\left[\frac{\text{efficiency}_S(b)}{\text{efficiency}_S(a)}\right]^{-1}}_\text{fold error}
   .
 \end{align}
-The sample-independent efficiency factor cancels, but the sample-dependent mean efficiency does not, leaving an error equal to the inverse of the change in the mean efficiency.
-In contrast, when we use Equation \@ref(eq:ratio-error) to compute the error in the FC in the ratio between two species $i$ and $j$, we find that the constant error $\text{efficiency}_{i} / \text{efficiency}_{j}$ exactly cancels, so that the measured FCs remain accurate regardless of whether the mean efficiency varies.
+The sample-independent efficiency factor cancels, but the sample-dependent mean efficiency does not, leaving an error in the measured FC equal to the inverse change in mean efficiency.
+In contrast, the ratio between species $i$ and $j$ has proportional error and so its FC is unaffected by bias.
+From Equation \@ref(eq:ratio-error),
+\begin{align}
+  (\#eq:ratio-fc-error)
+\underbrace{\frac{\widehat{\text{ratio}}_{i/j}(b)}{\widehat{\text{ratio}}_{i/j}(a)}} _\text{measured FC}
+  &= \frac
+    {\text{ratio}_{i/j}(b) \cdot \cancel{\text{efficiency}_{i} / {\text{efficiency}_j}}}
+    {\text{ratio}_{i/j}(a) \cdot \cancel{\text{efficiency}_{i} / {\text{efficiency}_j}}}
+\\[0.5ex]
+  &=
+  \underbrace{\frac{\text{ratio}_{i/j}(b)}{\text{ratio}_{i/j}(a)}}_\text{actual FC}
+  ;
+\end{align}
+the constant error, equal to the ratio between the species' efficiencies, completely cancels, leaving an accurately measured FC.
 
 Figure \@ref(fig:error-proportions) (bottom row) illustrates these two different behaviors for the error in the FCs of proportions versus ratios when the mean efficiency varies between samples.
 Here the mean efficiency decreases by a factor of 2.6 (FC of 0.4X) from Sample 1 to Sample 2, which causes the FC of the proportion of each species to be measured as 2.6X larger than its true value.
-Though the fold error for all species is the same, the implications depend on the actual FC and correspond to three distinct types of error: an increase in magnitude, a decrease in magnitude, and a change in direction; we refer to the latter as a _sign error_ since in reference to the change in sign in the corresponding log fold change (LFC).
+Though the fold error for all species is the same, the implications depend on the actual FC and correspond to three distinct types of error: an increase in magnitude, a decrease in magnitude, and a change in direction; we refer to the latter as a _sign error_ in reference to the corresponding log fold change (LFC).
 We can see each type of error in Figure \@ref(fig:error-proportions).
 For Species 1, which increases and thus moves in the opposite direction of the mean efficiency, we see an increase in magnitude of the measured FC (actual FC: 2.3X, measured FC: 6.5X).
 For Species 2, which decreases and thus moves in the same direction as the mean efficiency but by a larger factor, we see an decrease in magnitude (actual FC: 0.15X, measured FC: 0.44X).
@@ -42,9 +57,10 @@ For Species 2, which decreases by a smaller factor than the mean efficiency, we 
 In contrast, the fold error in Equation \@ref(eq:ratio-error) completely cancels when we divide the ratio measured for one sample $a$ by another sample $b$.
 <!-- **TODO: Note that errors can still arise for higher-level taxa due to variation in efficiency within the taxon.** -->
 
-These differences in the FCs of proportions versus ratios are mirrored when we compare FCs in absolute abundance made with normalization to a total-abundance measurement versus a reference-species measurement.
-FCs computed from total-abundance normalization are subject to error when the ratio of the two mean efficiencies (that for the MGS measurement and for the total-abundance measurement vary across samples).
-In contrast, FCs computed from reference-species normalization are not subject to error, so long as the (fold) error in the assumed or measured abundance of the reference species is constant.
+Absolute-abundance measurements for which bias creates non-proportional errors are subject to the same limitation as proportions.
+In particular, abundance measured by normalization of MGS proportions to a total-abundance measurement will yield errors in FCs given by the inverse change in the mean efficiency, unless this change is offset by error in the total-abundance measurement itself.
+<!-- (see Section \@ref(@absolute-abundance)). -->
+On the other hand, abundances measured by normalization to one or more reference species are capable of having proportional errors that cancel in FC calculations.
 
 ## Regression analysis of many samples
 
@@ -114,3 +130,5 @@ here::here(
 (ref:regression-example) **Taxonomic bias distorts multi-sample differential abundance inference when the mean efficiency of samples is associated with the covariate of interest.** This figure shows the results of a regression analysis of simulated microbiomes consisting of 50 samples and 10 species from two environmental conditions indexed by $x=0$ and $x=1$. In this simulation, the species with the largest efficiency (Species 9) also has the largest positive LFC, which drives the positive association of the log mean efficiency with the condition (shown in Panels A and B). This positive LFC in the log mean efficiency induces a systematic negative shift in the estimated LFCs of all species (Panels C and D). Panel D shows the mean LFC (points) with 95% confidence intervals (CIs), for each species estimated from either the actual or the measured densities. The error (difference in LFC estimates on measured and actual) equals the negative LFC of the mean efficiency (shown in Panel B).
 
 <!-- end Figure -->
+
+### [TODO] Rank-based analyses 
