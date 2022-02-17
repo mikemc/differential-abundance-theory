@@ -42,34 +42,25 @@ As bias shifts our estimates downwards by 2.5X to 5.2X, we would instead conclud
 
 ## Vaginal microbiomes of pregnant women
 
-The vaginal microbiome during pregnancy has been a source of intensive study due to its apparent connection with the health of both mother and her developing child.
-Many MGS studies have found associations of specific microbial species and community characteristics with rates of urinary tract and sexually-transmitted infections, bacterial vaginosis (BV), and preterm birth.
-Yet these associations vary across studies of different populations and using different MGS methods.
+A growing number of MGS studies have used DA analysis to describe associations between members of the vaginal microbiome and health conditions including urinary tract infections, sexually-transmitted infections, bacterial vaginosis, and preterm birth.
+However, these associations often vary between studies.
 DA analyses of the vaginal microbiome are commonly based on proportions, creating an opportunity for taxonomic bias to impact results.
-A number of studies have experimentally demonstrated substantial taxonomic bias among MGS protocols and individual steps (such as extraction and PCR amplification) in vaginal samples or _in vitro_ samples of vaginally-associated species (@yuan2012eval,@brooks2015thet,@gill2016eval,@graspeuntner2018sele).
-<!-- TODO: perhaps add ref on taxonomic resolution and also sampling methods -->
-Bias has been proposed as a potential explanation for discrepancies across studies (@callahan2017repl, Others?), but there has so far been little quantitative analysis of this possibility.
-Here we use empirical bias measurements from control samples to investigate the role of bias in proportion-based DA analyses of vaginal microbiomes from a recent large-cohort study of pregnant women.
+Substantial taxonomic bias has been experimentally demonstrated in MGS protocols applied to vaginal samples or in vitro samples of vaginally-associated species (@yuan2012eval, @brooks2015thet, @gill2016eval, @graspeuntner2018sele).
+The different biases of different MGS protocols have been proposed as one explanation for discrepancies in DA results across studies (@callahan2017repl).
 
-As part of the Multi-Omic Microbiome Study: Pregnancy Initiative (MOMS-PI) study, @fettweis2019thev collected longitudinal samples from over 1500 pregnant women, including nearly 600 that were measured by amplicon sequencing of the 16S V1-V3 hypervariable region to yield species-level bacterial taxonomic profiles.
-Taxonomic bias of this MGS protocol was previously investigated by @brooks2015thet and @mclaren2019cons, using measurements by @brooks2015thet of cellular mock communities of seven common, clinically-relevant vaginal bacterial species. 
-<!-- TODO: check on clinical relevance -->
+
+As part of the Multi-Omic Microbiome Study: Pregnancy Initiative (MOMS-PI) study, @fettweis2019thev collected longitudinal samples from over 1500 pregnant women, including nearly 600 that were taxonomically profiled by amplicon sequencing of the 16S V1-V3 hypervariable region.
+The taxonomic bias of the MOMS-PI MGS protocol was previously quantified by @mclaren2019cons using control measurements by @brooks2015thet of cellular mock communities of seven common, clinically-relevant vaginal bacterial species.
 Of these, _Lactobacillus iners_ had the highest efficiency, which was nearly 30X larger than that of the species with the lowest efficiency, _Gardnerella vaginalis_.
 A second _Lactobacillus_ species, _L. crispatus_, had an efficiency that was approximately 2X less than _L. iners_ and 15X greater than _G. vaginalis_.
-These species, along with the unculturable _Lachnospiraceae BVAB1_, are the most common top (most-abundant) species (SI analysis) and can reach high proportions in individual samples, indicating that shifts between them might drive large changes in the mean efficiency which might in turn impact DA results.
+These species, along with the unculturable _Lachnospiraceae BVAB1_, are most frequently the most abundant species in a sample and commonly reach high proportions of over 70% (TODO SI analysis).
+Therefore, shifts between these dominant species could drive large changes in the sample mean efficiency, which might in turn distort DA analyses.
 
-We sought to assess this possibility using a joint analysis of the control measurements from @brooks2015thet and the microbiome measurements from the MOMS-PI study.
-To obtain the taxonomic bias among all species identified in the MOMS-PI measurements, we used the taxonomic relationships with the seven control species to impute the efficiencies for the remaining species.
-We used these imputed efficiencies to calibrate (correct the effect of bias in) the MOMS-PI measurements, examine variation in the mean efficiency varied across samples, and compare the results of a DA analysis with and without bias correction.
-
-<!-- Such imputed efficiencies carry considerable uncertainty, which we ignore to simplify our presentation.  -->
-<!-- Notably, while this uncertainty can majorly impact abundances in individual samples, it has a much weaker impact on LFCs across samples (SI analysis TODO). -->
-
-The mean efficiency varies substantially across vaginal samples (Figure \@ref(fig:momspi-mean-efficiency-dist).
-This variation appears to be primarily driven by variation in which species is most abundant, samples in which a _Lactobacillus_ species is most abundant (after calibration) typically have an efficiency that is 3-20X greater than samples in which _G. vaginalis_ is most abundant.
-Shifts between _Lactobacillus_-dominance and _Gardnerella_-dominance are common in between-women comparisons and occasionally occur between consecutive visits in individual women (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)).
-These shifts typically result in substantial fold changes in mean efficiency (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)) and can cause spurious fold changes in the trajectories of lower-abundance species (SI Figure \@ref(fig:momspi-trajectory)).
-Decreases in mean efficiency during transitions from _Lactobacillus_ to _Gardnerella_ dominance would be more extreme for vaginal microbiome primer sets that fail to amplify _Gardnerella_ (@graspeuntner2018sele).
+We sought to understand the potential impact of bias on DA analysis of vaginal microbiome profiles from the MOMS-PI study.
+To do so, we first examined variation in the mean efficiency across samples under the assumption that bias in the MOMS-PI study was accurately represented by the @brooks2015thet control measurements.
+Using taxonomic relatedness to impute the efficiencies of species not in the controls, we were able to calibrate the MOMS-PI profiles and estimate the mean efficiency of each sample (TODO SI Analysis).
+The mean efficiency varies substantially across vaginal samples (Figure 4.1), with samples in which a _Lactobacillus_ species is most abundant typically having a mean efficiency that is 3-20X greater than samples in which _G. vaginalis_ is most abundant.
+The vaginal microbiome sometimes shifted between _Lactobacillus_-dominance and _Gardnerella_-dominance between consecutive visits in individual women (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)), which caused magnitude and sign errors in the trajectories of lower-abundance species (SI Figure \@ref(fig:momspi-trajectory)).
 
 <!-- begin figure -->
 
@@ -85,24 +76,17 @@ fs::path(
 
 <!-- end figure -->
 
-We next considered whether the observed variation in mean efficiency could cause systematic error in a DA analysis.
-In particular, we hypothesized that DA analysis of species proportions versus a covariate that is associated with _Lactobacillus_ and/or _Gardnerella_ would be particularly prone to spurious results.
-Patient metadata was not available due to privacy restrictions; we therefore sought a clinically relevant covariate to use in a regression analysis that could be determined directly from the microbiome profiles and that we _a priori_ expected to be associated with the proportions of _Lactobacillus_ and _Gardnerella_.
-Alpha diversity metrics such as species richness, the Shannon index, and the (Inverse) Simpson index have been repeatedly found to be strongly positively associated with bacterial vaginosis (BV; @srinivasan2012bact, @cartwright2018mult).^[@cartwright2018mult found that an observed Simpson Diversity Index of 0.82 (corresponding to an order-2 effective number of species of 5.6) classified high diversity samples as BV positive with a sensitivity of 100% and specificity of 85.1%.]
-In addition, it is commonly observed that samples from women with and without BV that are dominated by _Lactobacillus spp._ tend to have higher diversity, whereas samples dominated by _Gardnerella_ tend to have lower diversity.
-We therefore chose to perform a DA analysis of species proportion versus alpha diversity, hypothesizing that _Lactobacillus_ and _Gardnerella_ would drive a negative association of mean efficiency with diversity and thereby distort DA estimates for all species.
-We split samples into low, medium, and high diversity groups based on Shannon diversity in observed (uncalibrated) microbiome profiles.
-We then estimated the LFC in proportion from low- to high-diversity samples for 30 species passing a basic prevalence threshold, with and without bias correction.
-A large fraction of entries in the species count matrix were small counts or zeros.
-We used therefore used gamma-Poisson (or negative-binomial) regression of the observed read counts to fit a linear model to log species proportions while accounting for uncertainty from the random sampling of reads.
+We hypothesized that proportion-based DA analyses of health condition that is associated with the abundance of common taxa with particularly high or low efficiencies, such as _Lactobacillus_ and/or _Gardnerella_ in the MOMS-PI study, would be particularly prone to spurious results.
+A potential example may exist in the vaginal microbiome: Bacterial vaginosis (BV) has been repeatedly found to be strongly positively associated with higher-diversity communities with increased abundance of _G. vaginalis_ and decreased abundance of _Lactobacillus spp._ (@srinivasan2012bact, @cartwright2018mult).
+As a proxy for clinical BV, we split samples from the MOMS-PI study into low diversity (non-BV), intermediate diversity, and high diversity (BV-like) groups based on Shannon diversity in observed (uncalibrated) microbiome profiles.
+We estimated the LFC in proportion from non-BV to BV-like samples for 30 prevalent bacterial species, with and without bias correction, using a gamma-Poisson (or negative-binomial) regression of the observed read counts to fit a linear model to log species proportions.
 We accounted for bias by including an offset term in the linear model equal to the log ratio of the species' efficiency to the sample mean efficiency.
 
-The mean efficiency was on average lower in high-diversity samples due to a reduction in _Lactobacillus_ dominance (LFC of -1.6, or a 4.8X reduction). 
-Our results from the previous section therefore suggest that accounting for bias should reduce the estimated LFC for each species by about this same amount.
-We found that, as expected, bias correction reduced the LFC of each species, though the effect was variable and typically somewhat smaller.
-Bias correction led to substantial magnitude changes for several species and sign changes in 3 species; however, the relative difference between the corrected and uncorrected LFCs was modest for the 19/30 species with the largest LFCs of over 2 (corresponding to a FC of 7.4X) even after correction.
-These large LFCs occur in species that rarely if ever reach high proportions and so are likely driven by the sum-to-one constraint: The high diversity communities are those not dominated by _Lactobacillus_ spp. (or to a lesser extent _G. vaginalis_ and BVAB1).
-Therefore it is not clear how well it will generalize to regressions on other covariates.
+As expected, bias correction reduced the estimated LFC from non-BV to BV-like groups for every species tested, though the importance of this effect varied among species (TODO: median and range of change).
+Bias correction led to substantial magnitude changes for several species and sign changes in 3 species; however, the relative difference between the corrected and uncorrected LFCs was modest for the 19/30 species with the largest changes, which each had a corrected LFC greater than 2 (corresponding to a FC greater than 7.4X).
+Our theoretical results from the previous section suggest that bias correction should reduce the estimated LFC for each species by roughly the amount that the mean efficiency decreases between groups.
+Consistent with this prediction, the mean efficiency was lower in high-diversity BV-like samples (mean LFC of -1.6) due to the lower abundance of the _Lactobacillus spp._
+that are so efficiently measured by the MOMS-PI MGS protocol.
 
 ## Human gut microbiomes
 
