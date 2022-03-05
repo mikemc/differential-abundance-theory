@@ -106,7 +106,7 @@ From Equations \@ref(eq:measurement-model) and \@ref(eq:ratio-meas), it follows 
 \end{align}
 Taxonomic bias creates a multiplicative measurement error in the ratio that is equal to the ratio in their efficiencies; the error is therefore constant across samples.
 For instance, in Figure \@ref(fig:error-proportions), the ratio of Species 3 (with an efficiency of 6) to Species 1 (with an efficiency of 1) is over-estimated by a factor of 6 in both communities despite their varying compositions.
-A demonstration in artificially constructed ('mock') communities of bacterial cells is shown in [Figure 3D](https://doi.org/10.7554/eLife.46923.004) of @mclaren2019cons.
+A demonstration in bacterial mock communities is shown in [Figure 3D](https://doi.org/10.7554/eLife.46923.004) of @mclaren2019cons.
 
 Thus taxonomic bias creates variable fold errors in species proportions, but constant fold errors in species ratios.
 Consequently, a perfect cancellation of errors can only occur in ratio-based DA analysis.
@@ -123,7 +123,7 @@ Consequently, a perfect cancellation of errors can only occur in ratio-based DA 
 <!-- end figure -->
 
 **Higher-order taxa:** How does bias affect the proportions and ratios of higher-order taxa, such as a genera, phyla, or even all organisms?
-More generally, we can identify an higher-order taxon $I$ with a set of species, $\{i \in I\}$.
+More generally, we can identify a higher-order taxon $I$ with a set of species, $\{i \in I\}$.
 The abundance and reads of a taxon $I$ in a sample $a$ equal the sums over its constituent species, $\text{abun}_{I}(a) = \sum_{i \in I}\text{abun}_{i}(a)$ and $\text{reads}_{I}(a) = \sum_{i \in I}\text{reads}_{i}(a)$.
 The efficiency of taxon $I$ equals the weighted average of its constituent species,
 \begin{align}
@@ -211,7 +211,7 @@ Other methods that are capable of measuring cells (rather than extracted DNA) in
 The measurements from any of these methods could be used for $\widehat{\text{abun}}_{r}(a)$ in Equation \@ref(eq:density-ratio-meas) to obtain the absolute abundance for all species.
 Appendix [REF] describes how using multiple reference species and/or statistical modeling can address the fact that any one native reference species is unlikely to be found in all samples.
 
-Despite the diversity of these methods, each can be represented by Equation (\#eq:density-ratio-meas), making it straightforward to understand the impact of taxonomic bias in the MGS measurement.
+Despite the diversity of these methods, each can be represented by Equation \@ref(eq:density-ratio-meas), making it straightforward to understand the impact of taxonomic bias in the MGS measurement.
 It follows from Equation \@ref(eq:ratio-error) that the measured abundance of species $i$ is 
 \begin{align}
   (\#eq:density-ratio-error)
