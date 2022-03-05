@@ -2,22 +2,31 @@
 
 <!-- # Differential-abundance methods vary in their robustness to taxonomic bias  -->
 
-<!-- TODO: Change the GC to be about how there are various methods; state the scope that we consider; and state the punchline that they vary, with proportion-based being more sensitive. -->
+We now consider how the error in MGS-derived abundance measurements affect DA analyses.
+We focus on multiplicative DA analyses, or those that measure the fold change (FC) in the relative or absolute abundance of a taxon.
+Such analyses are widely used in microbiome studies and have more direct ecological interpretations than other types via the multiplicative processes of exponential growth and decay.
+In addition, we briefly consider non-parametric rank-based analyses, which are common in microbiome-wide association studies.
 
-This section turns to how these errors in individual sample measurements described in the previous section affect the results of cross-sample comparisons and DA analyses of many samples.
-<!-- the changes in abundance that we estimate between samples or different host and environmental conditions? -->
-Microbiome researchers employ many measures for the change in species' abundance across samples.
-We focus on analyses of multiplicative or (log) fold changes, which are common across study types and have more direct ecological interpretations than other measures (via the processes of exponential growth and decay).
-In addition, we briefly consider non-parametric rank-based analyses that are common in microbiome-wide association studies.
+## Fold change between a pair of samples
 
-## Fold changes between a pair of samples
-
-The building blocks of a multiplicative DA analysis are the fold changes (FCs) in abundance between individual pairs of samples.
-Intuitively, only abundance measurements that have proportional errors will have FCs that are completely robust to bias.
-
-<!-- P: Proportions and ratios -->
-The phenomenon by which non-proportional errors due to bias distort measured FCs can be seen most simply for species proportions.
-It follows from Equation \@ref(eq:prop-error) that the measured FC in the proportion of a species $i$ from samples $a$ to $b$ is
+The building blocks of a multiplicative DA analysis are the FCs in relative or absolute abundance between pairs of individual samples.
+If the fold error (FE) in a given abundance measure is constant, then it will not affect the FCs among samples.
+<!-- Ratios -->
+We saw, for example, that consistent bias creates constant FE in the ratio between two species $i$ and $j$ equal to the ratio in their efficiencies (Equation \@ref(eq:ratio-error)).
+This error completely cancels in the FC from sample $a$ to $b$,
+\begin{align}
+  (\#eq:ratio-fc-error)
+\underbrace{\frac{\widehat{\text{ratio}}_{i/j}(b)}{\widehat{\text{ratio}}_{i/j}(a)}} _\text{measured FC}
+  &= \frac
+    {\text{ratio}_{i/j}(b) \cdot \cancel{\text{efficiency}_{i} / {\text{efficiency}_j}}}
+    {\text{ratio}_{i/j}(a) \cdot \cancel{\text{efficiency}_{i} / {\text{efficiency}_j}}}
+\\[0.5ex]
+  &=
+  \underbrace{\frac{\text{ratio}_{i/j}(b)}{\text{ratio}_{i/j}(a)}}_\text{actual FC}
+  .
+\end{align}
+<!-- Proportions -->
+In contrast, the variable FE in the proportion of a species (Equation \@ref(eq:prop-error)) does not completely cancel,
 \begin{align}
   (\#eq:prop-fc-error)
 \underbrace{\frac{\widehat{\text{prop}}_{i}(b)}{\widehat{\text{prop}}_{i}(a)}} _\text{measured FC}
@@ -31,90 +40,65 @@ It follows from Equation \@ref(eq:prop-error) that the measured FC in the propor
   \underbrace{\left[\frac{\text{efficiency}_S(b)}{\text{efficiency}_S(a)}\right]^{-1}}_\text{fold error}
   .
 \end{align}
-The sample-independent efficiency factor cancels, but the sample-dependent mean efficiency does not, leaving an error in the measured FC equal to the inverse change in mean efficiency.
-In contrast, the ratio between species $i$ and $j$ has proportional error and so its FC is unaffected by bias.
-From Equation \@ref(eq:ratio-error),
-\begin{align}
-  (\#eq:ratio-fc-error)
-\underbrace{\frac{\widehat{\text{ratio}}_{i/j}(b)}{\widehat{\text{ratio}}_{i/j}(a)}} _\text{measured FC}
-  &= \frac
-    {\text{ratio}_{i/j}(b) \cdot \cancel{\text{efficiency}_{i} / {\text{efficiency}_j}}}
-    {\text{ratio}_{i/j}(a) \cdot \cancel{\text{efficiency}_{i} / {\text{efficiency}_j}}}
-\\[0.5ex]
-  &=
-  \underbrace{\frac{\text{ratio}_{i/j}(b)}{\text{ratio}_{i/j}(a)}}_\text{actual FC}
-  ;
-\end{align}
-the constant error, equal to the ratio between the species' efficiencies, completely cancels, leaving an accurately measured FC.
+Although the constant species' efficiency cancels, the varying mean efficiency does not, leaving a FE in the FC that is the same for every species and is equal to the inverse FC in the mean efficiency.
 
-Figure \@ref(fig:error-proportions) (bottom row) illustrates these two different behaviors for the error in the FCs of proportions versus ratios when the mean efficiency varies between samples.
-Here the mean efficiency decreases by a factor of 2.6 (FC of 0.4X) from Sample 1 to Sample 2, which causes the FC of the proportion of each species to be measured as 2.6X larger than its true value.
+Figure \@ref(fig:error-proportions) (bottom row) illustrates these different effects of bias on FCs in proportions versus ratios.
+In this hypothetical example, the mean efficiency decreases by a factor of 2.6 from Sample 1 to Sample 2 (FC of 0.4X), causing the FC in the proportion of each species to appear 2.6X larger than its true value.
 Though the fold error for all species is the same, the implications depend on the actual FC and correspond to three distinct types of error: an increase in magnitude, a decrease in magnitude, and a change in direction; we refer to the latter as a _sign error_ in reference to the corresponding log fold change (LFC).
 We can see each type of error in Figure \@ref(fig:error-proportions).
 For Species 1, which increases and thus moves in the opposite direction of the mean efficiency, we see an increase in magnitude of the measured FC (actual FC: 2.3X, measured FC: 6.5X).
-For Species 2, which decreases and thus moves in the same direction as the mean efficiency but by a larger factor, we see an decrease in magnitude (actual FC: 0.15X, measured FC: 0.44X).
+For Species 2, which decreases and thus moves in the same direction as the mean efficiency but by a larger factor, we see a decrease in magnitude (actual FC: 0.15X, measured FC: 0.44X).
 For Species 2, which decreases by a smaller factor than the mean efficiency, we see a change in direction (actual FC: 0.6X, measured FC: 1.8X), such that the species actually appears to increase (a sign error).
-In contrast, the fold error in Equation \@ref(eq:ratio-error) completely cancels when we divide the ratio measured for one sample $a$ by another sample $b$.
-<!-- **TODO: Note that errors can still arise for higher-level taxa due to variation in efficiency within the taxon.** -->
+In contrast, the ratios between species change by the same factors in the actual and observed taxonomic profiles.
+For example, the ratio of Species 2 to Species 3 changes from $1/1$ to $1/4$ in the actual profiles and from $3$ to $3/4$ in the observed profiles, a decrease by 4X either way.
 
-Absolute-abundance measurements for which bias creates non-proportional errors are subject to the same limitation as proportions.
-In particular, abundance measured by normalization of MGS proportions to a total-abundance measurement will yield errors in FCs given by the inverse change in the mean efficiency, unless this change is offset by error in the total-abundance measurement itself.
-<!-- (see Section \@ref(@absolute-abundance)). -->
-On the other hand, abundances measured by normalization to one or more reference species are capable of having proportional errors that cancel in FC calculations.
+<!-- The ratios in sample 1 are Actual: 1:1:1, Observed: 1:18:6 -->
+<!-- The ratios in sample 2 are Actual: 15:1:4, Observed: 5:6:8 -->
+
+We can similarly understand the impact of bias on the measured FCs in a species' absolute abundance.
+To the extent that the FE in the abundance measurement is constant across samples, it will cancel and lead to accurate FCs.
+For the various measurement methods described in Section \@ref(absolute-abundance), the FE in a species' abundance can be expressed as a species-specific constant multiplied by a species-independent factor that, depending on experimental details, may vary with sample composition.
+Thus the FE in the FC between a pair of samples is the same for all species.
+Further, it can be reduced by experimental designs that minimize cross-sample variation in the species-independent factor, regardless of the magnitude of bias (variation in efficiency among species) in the MGS measurement.
 
 ## Regression analysis of many samples
 
-<!-- TODO: Write a transition. -->
-<!-- TODO: consider doing log proportion for simplicity, and using the vaginal mb example for the figure -->
-
-DA analysis of multiple samples can be framed as a regression problem in which we analyze the relationship between a microbial _response variable_, such as the log abundance of species $i$, with one or more _covariates_, such as the pH of the sampled environment or whether the sample is from a healthy or sick person.
-The simplest regression analysis uses the simple linear regression model,
+DA analysis can be framed as a regression analysis, the simplest of which uses the simple linear regression model
 \begin{align}
   (\#eq:regression)
-  \log \widehat{\text{abun}}_i(a) = \alpha_i + \beta_i x(a) + \varepsilon_i(a),
+  y(a) = \alpha + \beta x(a) + \varepsilon(a),
 \end{align}
-where $x$ is a continuous covariate (e.g. pH) or a binary covariate (e.g. $x=1$ for treated patients and $x=0$ for controls), $\alpha_i$ and $\beta_i$ are regression coefficients, and $\varepsilon_i(a)$ is a mean-zero random variable that reflects the residual (unexplained) variation in the response.
-In a DA analysis, we are interested in the slope coefficient $\beta$, which describes how the species' abundance changes with $x$.
-We are generally uninterested in the intercept coefficient, $\alpha$, which captures differences in the baseline abundance among species and---it is usually hoped---study- and species-specific systematic error such as that created by taxonomic bias.
+describing how a microbial _response variable_ $y$ relates to a _covariate_ $x$ and _residual (or unexplained) error_ $\varepsilon$.
+For example, $y$ may be the log absolute abundance of species $i$ and $x$ may be a continuous variable, such as pH, or a binary variable, such as $x=1$ for treated patients and $x=0$ for untreated controls.
+The regression coefficients $\alpha$ and $\beta$ are parameters to be estimated from the data.
+A DA analysis is primarily interested in the slope coefficient $\beta$, which determines how the average or expected value of $y$ increases with $x$.
+For a binary covariate, $\beta$ equals the average difference in $y$ between samples with $x=1$ versus those with $x=0$.
+Taking the response $y$ to be the logarithm of a species' relative or absolute abundance makes the DA analysis multiplicative, with the coefficient $\beta$ corresponding to the average log fold change (LFC) in abundance between conditions or for a unit increase in $x$.
 
-How does taxonomic bias in fact impact estimates of the slope coefficient, $\beta$?
-Appendix \@ref(appendix-regression) derives the effect of bias on the estimated coefficients for the simple linear regression model under estimation via Ordinary Least Squares (OLS) or Maximum Likelihood Estimation (MLE).
-The result has a simple interpretation that provides intuition for what to expect in more complicated generalized linear regression models used in popular DA methods. 
-Consider the regression \@ref(eq:regression) fit to the measured log abundance of species $i$ across all samples.
-The measurement error in the response variable,
-\begin{align}
-  \text{error}_{i}(a) \equiv 
-  \log \widehat{\text{abun}}_i(a) - \log \text{abun}_i(a)
-  = \log \frac{\widehat{\text{abun}}_i(a)}{\text{abun}_i(a)},
-\end{align}
-can be thought of as having three components:
+Appendix \@ref(appendix-regression) derives mathematical results for the effect that measurement error in the response caused by taxonomic bias has on LFCs estimated via simple linear regression.
+Here we illustrate these results with a example.
+Suppose that we wish to estimate the average LFC in the absolute abundance of every species between samples from two conditions, such as treated and untreated patients.
+Further suppose that we have measured absolute abundances by multiplying the proportions from MGS with an accurate measurement of total-community abundance.
+For each species $i$, we set $y(a)$ in Equation \@ref(eq:regression) equal to $\log \widehat{\text{abun}}_{i}(a)$, and use either Ordinary Least Squares (OLS) or Maximum Likelihood Estimation (MLE) to estimate the coefficients $\alpha$ and $\beta$.
+From Equation \@ref(eq:density-prop-error), we know that the FE in the abundance of each species equals its efficiency relative to the mean efficiency of the sample.
 
-- Error that is constant across samples affects the intercept coefficient, $\alpha_i$.
-- Error that varies systematically with $x$ affects the slope coefficient, $\beta_i$.
-- Error that varies and is uncorrelated with $x$ affects the residual variation, $\varepsilon_{i}(s)$.
+How does this error affect the estimate of $\beta$ for species $i$?
+There are three possibilities: 
+In the first scenario, the mean efficiency is constant across samples, such that the FE in $\widehat{\text{abun}}_{i}(a)$ is constant.
+This constant FE induces a constant additive error in $y$ that affects the estimate of the intercept $\alpha$, but not the slope $\beta$.
+In the second scenario, the mean efficiency varies but is not systematically higher or lower in samples from treated versus untreated patients.
+This unsystematic variation in the mean efficiency induces additive error in $y$ that is uncorrelated with $x$ and is statistically equivalent to an increase in the residual variation ($\epsilon$ in the regression model).
+The estimate of $\beta$ will be less precise (i.e., have a larger standard error) than in Scenario 1, but will not be systematically distorted.
+In the third scenario, the mean efficiency is systematically different in treated versus untreated patients.
+If the mean efficiency is higher in treated patients, then the additive error in $y$ will tend to be smaller (or more negative) in this condition, leading to a downward shift in the estimate of $\beta$.
+More generally, the portion of additive variation in the log mean efficiency that is correlated with $x$ creates an equal but opposite error in the estimate of $\beta$ that is the same for each species, whereas the portion that is uncorrelated with $x$ affects the standard errors of $\beta$.
 
-We saw in Section \@ref(abundance-measurement) that the error from taxonomic bias has a species-specific, sample-independent component that is constant across samples; this component causes a species-specific systematic error in the estimated intercept, $\alpha_{i}$.
-The error also has a sample-specific, species-independent component. 
-The portion that is correlated with the covariate $x$ creates a systematic error in the slope coefficient $\beta_{i}$ that is the same for every species and opposite in sign to how the error varies with $x$;
-the portion that is uncorrelated with $x$ affects the precision (standard errors) of the slope estimates in a species-specific manor.
-
-<!-- The variation in measurement error created by the log mean efficiency impacts the point estimate and precision of the regression coefficient $\beta$. -->
-
-Figure \@ref(fig:regression-example) illustrates with a simulated data for the case of log abundance measured using the total-abundance normalization method (Equation \@ref(eq:density-prop-meas)), assuming that total community abundance is measured perfectly accurately.
-In this case, the variable component of the error is due entirely to variation in the log mean efficiency of the MGS measurement.
-Variation in the log mean efficiency that is associated with the covariate $x$ creates a systematic error in the estimated slope $\hat \beta$ equal to the negative of the (scaled) covariance of log mean efficiency with $x$.
-The absolute error is the same for all species; however, its relative value depends on the magnitude of the covariance of the log mean efficiency with $x$ relative to that of the response (here, $\log \text{abun}_{i}$) with $x$ or, equivalently, the relative magnitudes of their slopes.
-As in the case of fold changes between pairs of samples, the net effect can be decreases in magnitude (Species 9, 10, and 1 in Figure \@ref(fig:regression-example)), changes in sign (Species 5), or increases in magnitude (remaining species) depending on these relative values.
-Variation in the log mean efficiency that is uncorrelated with $x$ does not systematically distort $\hat \beta$ but does affect its precision, typically leading to increased standard errors as the variation in log mean efficiency effectively acts as an additional source of noise in measured abundance (Figure \@ref(fig:regression-example) D).
-The exception is for species whose residual variation is strongly positively correlated with that of log mean efficiency (here, Species 9), which can appear to have less random variation and receive standard errors that are too small.
+Figure \@ref(fig:regression-example) shows a simulated example for which the mean efficiency is systematically higher in the condition $x=1$, leading to a systematic decrease in the estimated LFC for each species.
+As we saw for the FC between individual samples, the biological significance varies by species, despite the absolute error in the LFC being shared.
+We see decreases in magnitude (Species 9, 10, and 1 in Figure \@ref(fig:regression-example)), changes in sign (Species 5), or increases in magnitude (remaining species) depending the value of the actual LFC relative to the error.
+The portion of the variation in the log mean efficiency that is uncorrelated with $x$ increases the standard errors for most species (Figure \@ref(fig:regression-example) D).
+The exception is Species 9, which is the primary driver of the the mean efficiency dynamics in this example.
 Decreased magnitudes and increased standard errors can both cause associations to be missed that would otherwise have been detected (Species 10 and 1), while increased magnitudes can turn weak or statistically insignificant associations into strong and statistically significant ones (Species 7, 6 and 4).
-
-Overall, we find that variation in measurement error created by variation in the mean efficiency of the MGS measurement can negatively affect certain DA analyses by creating systematic errors in the slope coefficient estimates and/or reducing their precision.
-Similar effects occur for regressions of log proportions and of log abundances derived by total-abundance normalization when the total abundance is accurately measured; however, as noted in Section \@ref(abundance-measurement), total-abundance measurements that are taxonomically biased in a complementary manner can mitigate these effects.
-Regression analyses of log-ratios and log abundances derived from reference-species normalization remain unaffected---the errors are constant across samples and so only impact the intercept coefficients.
-
-<!-- Similar results apply to microbiome regression tools (such as corncob; @martin2020mode) that perform regression on the logit (instead of log) proportion of a species;  -->
-<!-- however, the mean efficiency of the entire sample must instead be replaced with the mean efficiency among all species excluding the focal species, which causes the absolute error in regression coefficients to vary somewhat across species. -->
 
 <!-- Figure: Regression example -->
 
@@ -131,4 +115,12 @@ here::here(
 
 <!-- end Figure -->
 
-### [TODO] Rank-based analyses 
+## Rank-based analyses 
+
+Researchers often prefer to use nonparametric, rank-based DA methods to determine how species vary across sample conditions.
+Rather than estimating LFCs, these methods estimate the average change in the cross-sample rank of a species' relative or absolute abundance.
+Popular rank-based methods in microbiome DA analysis include the Wilcoxon-Mann-Whitney and Kruskal-Wallis tests when the covariate $x$ is discrete covariate and Spearman's rank correlation when $x$ is continuous.
+Rank-based DA methods are unaffected by a constant FE in the response prior to rank transformation, since such an error does not affect the cross-sample ranks.
+Hence consistent taxonomic bias does not affect rank-based analyses of species ratios.
+However, variable FE in the untransformed response (as seen in species proportions) can change the cross-sample ranks.
+If associated with the covariate $x$, the resulting error in the ranks will create a systematic error in the DA result.
