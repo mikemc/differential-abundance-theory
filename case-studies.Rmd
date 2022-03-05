@@ -90,58 +90,20 @@ that are so efficiently measured by the MOMS-PI MGS protocol.
 
 ## Human gut microbiomes
 
-An overwhelming majority of applications of DA analysis are in studies of the human gut microbiome. (True?)
-Many are microbial association tests in a case-control design---looking for taxa that are differentially abundant in one group of subjects versus another.
-It is also increasingly common to perform time series experiments to elucidate dynamics of microbial communities within a host and their interaction with dynamic host variables.
-Although interest in other microorganisms and viruses is growing, so far these are mostly of bacteria.
-Were therefore asked whether there are features of human gut bacterial microbiomes that we might expect to make DA analyses more or less robust to taxonomic bias.
+We wondered whether the greater alpha (within-community) diversity in the human gut microbiome samples relative to the vaginal microbiome might reduce the impact of bias on DA analyses.
+In a community with higher species-level alpha diversity, the mean efficiency effectively averages over a larger number of species.
+Consequently, if communities are assembled randomly, the mean efficiency varies less as the order-2 alpha diversity $^2D$ increases (Appendix REF).^[Order-2 alpha diversity, also known as the order-2 Hill number or effective number of species, is equivalent to the Inverse Simpson diversity index and is given by $^2D = 1 / \sum_{i}P_{i}^2$, where $P_{i}$ is the proportion of species $i$ in the sample (@jost2006entr).]
+But real communities are not randomly assembled; instead, species have complex patterns of positive and negative associations (REF).
+Thus there is unlikely to be a simple 1-1 relationship between alpha diversity and variation in the mean efficiency.
+Moreover, even if the mean efficiency does vary less across gut microbiome samples, if species (relative or absolute) abundances also vary less then the importance of bias for DA analyses might stay the same or even increase.
 
-We first considered whether the greater diversity of the human gut microbiome as compared to the human vaginal microbiome might limit the impact of bias on species-level DA analyses.
-Intuitively, we expect the mean efficiency to vary less across samples from a given ecosystem type as alpha diversity increases, since it effectively averages over a larger number of species.
-Indeed, as shown in Appendix X, in randomly assembled communities the additive variance in the mean efficiency is inversely proportional to the order-2 _true diversity_ or _effective number of species_ in the community, which is equivalent to the popular Inverse Simpson alpha diversity index.
-But real communities do not assemble randomly.
-Moreover, it is the multiplicative variation in the mean efficiency relative to that in the species proportions that determines the impact bias has on proportion-based DA analyses; it is possible that the variation in individual species proportions is reduced to an even greater degree than that in the mean efficiency.
-Thus it is not obvious whether the gut microbiome's higher alpha diversity will effectively insulate its DA analyses from the effects of bias.
-
-To investigate this question, we analyzed species-level bacterial profiles from vaginal and stool samples from healthy subjects that had been subjected to shotgun sequencing as part of the Human Microbiome Project (@huttenhower2012stru).[^We obtained MetaPhlAn3 species-level bacterial relative abundances from the curatedMetagenomicData R package.]
-Consistent with previous findings, the stool microbiomes had substantially greater diversity than the vaginal microbiomes by several measures, including: within individuals (alpha diversity) and in total across many individuals (gamma diversity); at the species level and by measures that account for phylogenetic divergence; and for diversity measures spanning a range of sensitivity to low abundance species as quantified by Hill's $q$, including richness ($q=0$), Shannon entropy ($q=1$), and the Inverse Simpson index ($q=2$).
-To understand how this greater diversity might modulate the effect of bias, we used computer simulation to assess the variation in the mean efficiency under a range of plausible taxonomic biases, with and without phylogenetic conservation of the efficiency trait.
-_In each simulation replicate, the species efficiencies were sampled from a multivariate log-normal distribution.
-Phylogenetic independence was achieved by setting the covariance matrix equal to the identity matrix, so that the efficiencies were IID.
-Phylogenetic conservation was achieved by setting the covariance matrix equal to the phylogenetic covariance matrix, which amounts to Brownian evolution of the log efficiency trait._
-As expected, the mean efficiency varied less in the higher-diversity gut microbiome samples than in the vaginal microbiome samples; the geometric standard deviation (GSD) of the mean efficiency in stool samples was on average 1.5X less than that in vaginal samples regardless of whether bias was phylogenetically conserved.
-This difference is not extreme and leaves substantial variation in the mean efficiency in gut samples.
-We suggest several possible explanations.
-First, although richness is typically around 100 bacterial species in the MetaPhlAn3 gut profiles, the more relevant order-2 effective number of species ($^2D$; equivalent to the Inverse Simpson diversity index) is typically only around 10 and often lower.
-A order-2 diversity that is much lower than species richness arises from the skewed distribution of abundances within a gut microbiome sample, with the most abundant 1-2 species often forming a majority of reads.
-It is these high-proportion species, captured by the order-2 diversity, that ultimately drive the variation in mean efficiency, not the large number of low-proportion species that drive the richness.
-A second, related reason is that, like in the vaginal microbiome, a relatively small set of species tend to be the most abundant across individuals.
-The overall effect is similar, though less extreme, as that of the dominance of a few key species in the vaginal microbiome: Variation in the efficiencies among these species has an outsized impact on the mean efficiency, again leading to a weakening of the averaging affect when we consider variation across samples.
-
-We next compared the variation in species proportions in the two ecotypes.
-In assessing multiplicative variation, one must grapple with the sparsity of human microbiome data.
-Across both ecotypes, most species have low prevalence, appearing in just a small minority of samples.
-One way to handle these zero observations is to replace them with a small positive value, roughly representing a minimum detection limit.
-Although the multiplicative variation is highly sensitive to this value, we found that the relative difference between gut and vaginal samples was robust to values spanning $10^{-6}$ to $10^{-3}$.
-The average GSD of species in gut samples was around 1.8X lower than that of species in vaginal samples, regardless of zero-replacement value.
-Thus the variation in species proportions was lower in the gut samples by a similar or greater degree than the variation in mean efficiency, suggesting that bias may be just as or more problematic for inferring fold changes in species proportions.
-
-We sought to further understand the implications of the sparsity of gut microbiome for the effect of bias on DA analyses in the context of a real DA analysis.^[Some of the results in this paragraph seem to not hold up to more careful investigation. More generally, this paragraph is quite speculative and may get cut from subsequent versions.]
-@vieirasilva2019quan analyzed variation in absolute abundance of genera in stool samples from patients with primary sclerosing cholangitis and/or inflammatory bowel disease.
-Absolute abundances of genera were obtained via the total-abundance normalization method (Equation \@ref(eq:density-prop-meas)) with proportions measured from 16S sequencing and total abundance measured from flow cytometry.
-The authors the rank-based Spearman correlation to quantify the associations in absolute abundance and fecal calprotectin concentration, a biomarker of intestinal inflammation.
-[This will be described in Section \@ref(differential-abundance): Spearman correlation is equivalent to doing a regression on the rank-transformed data and is another form of DA analysis; changes in ranks of proportions are affected by bias, and changes in ranks of ratios are not. So rank-based methods (Wilcoxon for boolean covariate and Spearman for continuous covariate) have the same issue as LFC methods when it comes to analyzing proportions instead of ratios.]
-As described in Section \@ref(differential-abundance), taxonomic bias in the MGS measurement has a similar effect on analyses of absolute abundances from the total-abundance normalization as it does no analyses of the raw proportions.
-Thus we can consider whether bias might affect the Spearman correlations in the study.
-When we re-analyzed the Spearman correlations, we found that they were often driven by presence-absence of the given genus, rather than continuous variation in abundance, as evidenced by the fact that for many species, replacing the absolute genus abundances with 0 or 1 indicating presence or absence often did not affect the Spearman correlation.
-For these taxa, we can expect bias to have much less impact on the reported correlation than for taxa for which the correlation was driven by continuous variation.
-The reason is that systematic variation of the mean efficiency with the covariate (which was, in contrast, log-normally distributed) will tend to systematically shift the ranks of observations in a taxon with a continuously varying abundance, but not one where the rank correlation is driven by the proportion of non-zero observations.
-We confirmed this expectation by investigating the sensitivity of Spearman correlations for the top associations that were driven either by presence/absence variation or continuous variation, and found that the correlation was much more sensitive to bias in the second case.
-
-<!-- The impact of bias in an association study depends on whether the mean efficiency is associated with the clinical covariate. -->
-_We might consider adding: A paragraph giving examples where there are large taxonomic shifts associated with a clinical covariate, which therefore have the potential to drive systematic variation in the mean efficiency.
-The primary positive example I have looked at is a study of children with acute diarrhea, in which stool from healthy controls has a microbiome with roughly equal amounts of Actinobacteria (Gram positive), Firmicutes (Gram positive), and Bacteroidetes (Gram negative), and Proteobacteria (Gram negative), but the diarrheic stool is dominated by Proteobacteria and specifically E. coli and to a lesser extent Klebsiella (both in Enterobacteriaceae, which is known to be causally associated with acute diarrhea generally).
-Any particular bias favoring E. coli or Enterobacteriaceae would have the potential to distort results, which is something we could simulate and visualize._
+To investigate this question, we analyzed bacterial species profiles of vaginal and stool samples derived from shotgun sequencing in the Human Microbiome Project (@huttenhower2012stru, SI Methods \@ref(methods-gut)).
+Stool profiles had substantially greater order-2 alpha diversity than vaginal profiles (TODO SI FIGURE; geometric average of TODO in stool and TODO in vaginal profiles).
+To assess the relative importance of bias for proportion-based DA analyses in the two ecosystems, we quantified the variation in the mean efficiency across samples for a large number of possible taxonomic biases under the assumption that the measured profiles reflected the truth (TODO SI Analysis).
+Across simulation replicates, the GSD in the mean efficiency was typically lower in stool than in vaginal samples by a geometric average of 1.5X (SI FIGURE TODO; geometric average GSD of 1.5 for stool samples and 2.2 for vaginal samples).
+At the level of individual species, the average GSD in the proportion of a species in gut samples was around 1.8X lower than that in vaginal samples.
+The negative effects of bias in a DA analysis of a species' proportion scales with the ratio of the GSD in mean efficiency to that in the species' proportion (Section \@ref(differential-abundance)).
+Thus our results suggest that although the mean efficiency is likely to vary less in the gut, it may remain just as or more problematic for proportion-based DA analyses.
 
 ## Microbial growth in marine sediments
 
