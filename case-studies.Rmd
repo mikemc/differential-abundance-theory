@@ -23,22 +23,23 @@ Despite the 13X variation in the efficiencies among species, the mean efficiency
 This consistency in the mean efficiency was despite the fact that each species each showed substantial multiplicative variation (SI Figure \@ref(fig:leopold2020host-variation)A).
 But the pre-infection samples were always dominated by the three species with the highest efficiencies, which varied by 3X and by just 1.5X between the two most dominant.
 The mean efficiency, equal to the proportion-weighted arithmetic average of species efficiencies, is insensitive to species present at low relative abundance and so remained relatively constant across samples.
-Because the multiplicative variation in the mean efficiency was much smaller than that in the proportions of individual taxa, it had a negligible impact on the inferred fold changes and the DA analyses based on them.
+Because the multiplicative variation in the mean efficiency was much smaller than that in the proportions of individual species, it had a negligible impact on the inferred fold changes and the DA analyses based on them.
 
 We performed an additional DA analysis on the data from @leopold2020host to investigate whether any commensals increased in absolute concentration in response to infection.
 The pathogen is absent in pre-infection samples but tends to dominate the community post-infection, resulting in a substantially higher mean efficiency in post-infection samples (SI Figure \@ref(fig:leopold2020host-infection-mean-efficiency-dist)).
 Across different host genotypes, the average post-infection increase in mean efficiency ranged from 2.5X to 5.2X.
-We used simple linear regression to measure the LFC in commensal species proportions pre- to post-infection, with and without calibration (SI Figure \@ref(fig:leopold2020host-infection-lfc)).
-All commensals tended to decrease in proportion post-infection, which is expected given the pathogen’s growth to most abundant community member and the sum-to-one constraint of species proportions.
-However, when taxonomic bias was ignored the magnitude of the post-infection decrease was overestimated, by an amount corresponding to the inverse change in log mean efficiency.
-This magnitude error was substantial for the commensal-host pairs with the weakest changes; in several cases, LFC estimates with 95% confidence intervals below 0 became indistinguishable from 0 after calibration.
+Using gamma-Poisson (or negative-binomial) regression of the observed read counts, we estimated the average LFC in commensal species proportions following infection with and without calibration (SI Figure \@ref(fig:leopold2020host-infection-lfc)).
+Commensals typically decreased post-infection, which is expected given the pathogen's growth to most abundant community member and the sum-to-one constraint faced by proportions.
+However, failure to account for bias caused the decrease to be overestimated, by an amount corresponding to the inverse change in log mean efficiency.
+For commensal-host pairs with relatively small observed decreases, bias correction greatly reduced the magnitude of the negative LFCs or, in several cases, resulted in LFCs that were near 0 or slightly positive.
 
 Although @leopold2020host did not include absolute-abundance measurements, we can consider the impact taxonomic bias would have on an absolute DA analysis in a simple scenario in which total genome concentration of each pre- and post-infection sample is perfectly known.
 The total genomic concentrations of each sample, combined with the species proportions measured by MGS, can be combined into a measurement of species concentrations using the total-abundance normalization method (Equation \@ref(eq:density-prop-meas)).
 In this case, the bias in the MGS measurements will create absolute errors in the estimated LFCs of genome concentration of equal magnitude to the errors in the LFC estimates for proportions.
 The scientific error, however, might become worse.
-Suppose that the species whose calibrated proportions appeared to hold steady or slightly decrease actually increased in absolute abundance by around 2X.
-As bias shifts our estimates downwards by 2.5X to 5.2X, we would instead conclude that these taxa decreased.
+Suppose that total abundance increased by 2X due to pathogen growth; in this case, species whose proportions remained approximately constant would have increased in absolute abundance by around 2X.
+Bias, when not accounted for, shifts LFCs estimates downwards by 2.5X to 5.2X depending on host genotype.
+Hence, without bias correction, we would instead conclude that these species decreased.
 
 ## Vaginal microbiomes of pregnant women
 
@@ -79,7 +80,7 @@ fs::path(
 We hypothesized that proportion-based DA analyses of health condition that is associated with the abundance of common taxa with particularly high or low efficiencies, such as _Lactobacillus_ and/or _Gardnerella_ in the MOMS-PI study, would be particularly prone to spurious results.
 A potential example may exist in the vaginal microbiome: Bacterial vaginosis (BV) has been repeatedly found to be strongly positively associated with higher-diversity communities with increased abundance of _G. vaginalis_ and decreased abundance of _Lactobacillus spp._ (@srinivasan2012bact, @cartwright2018mult).
 As a proxy for clinical BV, we split samples from the MOMS-PI study into low diversity (non-BV), intermediate diversity, and high diversity (BV-like) groups based on Shannon diversity in observed (uncalibrated) microbiome profiles.
-We estimated the LFC in proportion from non-BV to BV-like samples for 30 prevalent bacterial species, with and without bias correction, using a gamma-Poisson (or negative-binomial) regression of the observed read counts to fit a linear model to log species proportions.
+We estimated the LFC in proportion from non-BV to BV-like samples for 30 prevalent bacterial species, with and without bias correction, using gamma-Poisson (or negative-binomial) regression of the observed read counts to fit a linear model to log species proportions.
 We accounted for bias by including an offset term in the linear model equal to the log ratio of the species' efficiency to the sample mean efficiency.
 
 As expected, bias correction reduced the estimated LFC from non-BV to BV-like groups for every species tested, though the importance of this effect varied among species (TODO: median and range of change).

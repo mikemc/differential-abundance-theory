@@ -247,9 +247,7 @@ ps_t1 <- ps %>%
   filter_tax_table(.otu %in% commensal_taxa) %>%
   mutate_sample_data(., 
     sample_sum = sample_sums(.),
-    mean_efficiency = calibrate(., bias_t1, norm = 'close') %>%
-      perturb(bias_t1, norm = 'none') %>% 
-      sample_sums,
+    mean_efficiency = mean_efficiency(., bias_t1, type = 'observed')
   )
 sam_t1 <- ps_t1 %>% sample_data %>% as_tibble
 ```
@@ -400,12 +398,15 @@ The results here, with Mel included, are the most informative for what would hap
 
 For doing simple linear regression, we must replace zeros with positive values.
 I will use `zCompositions::cmultRepl()` as in @leopold2020host for simplicity and consistency with our other analyses in this case study.
-I will recompute the mean efficiency with these new compositions; however, 
-aero replacement will have a minimal impact on the mean efficiency. 
+I will recompute the mean efficiency with these new compositions; however, zero replacement will have a minimal impact on the mean efficiency. 
 
 ```{r}
 bias_inf <- bias/bias['Fusarium']
-ps_inf <- ps
+ps_inf <- ps %>%
+  mutate_sample_data(., 
+    sample_sum = sample_sums(.),
+    mean_efficiency = mean_efficiency(., bias_inf, type = 'observed')
+  )
 stopifnot(taxa_are_rows(ps_inf) == FALSE)
 otu_new <- ps_inf %>% 
   otu_table %>% 
@@ -420,9 +421,8 @@ otu_table(ps_inf_repl) <- otu_table(otu_new, taxa_are_rows = FALSE)
 rm(otu_new)
 ps_inf_repl <- ps_inf_repl %>%
   mutate_sample_data(., 
-    mean_efficiency = calibrate(., bias_inf, norm = 'close') %>%
-      perturb(bias_inf, norm = 'none') %>% 
-      sample_sums,
+    sample_sum = sample_sums(.),
+    mean_efficiency = mean_efficiency(., bias_inf, type = 'observed')
   )
 ```
 
@@ -530,16 +530,12 @@ The FC in mean efficiency ranges from `r min(x$estimate) %>% signif(3)` to `r ma
 
 ## Simple linear regression of log proportion
 
-```{r}
-x <- ps_inf_repl %>% 
-  as_tibble %>%
-  left_join(bias_inf %>% enframe('.otu', 'efficiency'), by = '.otu')
-```
-
 Run a simple linear regression with lm on log proportion,
 
 ```{r}
-x_reg <- x %>%
+res_lm <- ps_inf_repl %>% 
+  as_tibble %>%
+  left_join(bias_inf %>% enframe('.otu', 'efficiency'), by = '.otu') %>%
   with_groups(.sample, mutate,
     log_prop = log(close_elts(.abundance))
   ) %>%
@@ -548,50 +544,43 @@ x_reg <- x %>%
     offset_obs = 0,
     offset_cal = log(efficiency / mean_efficiency),
   ) %>%
-  group_by(.otu, genotype) %>%
-  nest() %>%
+  with_groups(c(.otu, genotype), nest) %>%
   mutate(
-    fit_obs = map(data, 
+    Observed = map(data, 
       ~lm(
         log_prop ~ timepoint + offset(offset_obs), 
         data = .x,
       )),
-    fit_cal = map(data, 
+    Calibrated = map(data, 
       ~lm(
         log_prop ~ timepoint + offset(offset_cal), 
         data = .x,
       )),
-  )
-```
-
-
-```{r}
-z <- x_reg %>%
-  select(-data) %>% 
-  mutate(across(starts_with('fit'), map, tidy, conf.int = TRUE)) %>%
-  pivot_longer(starts_with('fit'), names_to = 'type', values_to = 'fit', 
-    names_prefix = 'fit_') %>%
-  unnest(fit) %>%
-  ungroup %>%
-  left_join(enframe(bias, '.otu', 'efficiency'), by = '.otu')
+  ) %>%
+    select(-data) %>%
+    pivot_longer(c(Observed, Calibrated), names_to = 'type', values_to = 'fit')
+res_lm_tidy <- res_lm %>%
+  mutate(across(fit, map, broom.mixed::tidy, conf.int = TRUE)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)')
 ```
 
 ```{r}
-z1 <- z %>%
-  filter(term == 'timepoint2') %>%
-  select(.otu, genotype, type, estimate, std.error) %>%
-  pivot_wider(names_from = type, values_from = c(estimate, std.error)) %>%
+res_lm_tidy_wide <- res_lm_tidy %>%
+  select(.otu, genotype, type, estimate, std.error, conf.low, conf.high, p.value) %>%
+  pivot_wider(names_from = type, 
+    values_from = c(estimate, std.error, conf.low, conf.high, p.value)) %>%
   glimpse
 ```
 
 Check that the corrections are the same for each taxon within a genotype, but differ by genotype.
 
 ```{r, fig.dim = c(6,6)}
-z1 %>%
-  ggplot(aes(y = .otu, x = estimate_cal - estimate_obs, color = .otu)) +
+res_lm_tidy_wide %>%
+  ggplot(aes(y = .otu, x = estimate_Calibrated - estimate_Observed, color = .otu)) +
   scale_color_manual(values = pal_genotype, guide = NULL) +
   facet_wrap(~genotype) +
-  stat_pointinterval()
+  geom_point()
 ```
 
 The corrections are the same within genotypes, as expected, and vary to a small degree between genotypes.
@@ -601,8 +590,8 @@ Let's visualize the impact of bias correction on the coefficients, in a couple w
 First, let's plot the uncorrected against the corrected estimates.
 
 ```{r, fig.dim = c(10, 8), layout="l-body-outset"}
-z1 %>%
-  ggplot(aes(estimate_cal, estimate_obs, color = .otu)) +
+res_lm_tidy_wide %>%
+  ggplot(aes(x = estimate_Calibrated, y = estimate_Observed, color = .otu)) +
   scale_color_manual(values = pal_genotype) +
   facet_wrap(~genotype, ncol = 4) +
   theme_minimal_grid() +
@@ -619,14 +608,14 @@ z1 %>%
   geom_abline(color = 'darkred') +
   geom_linerange(
     aes(
-      xmin = estimate_cal - 2 * std.error_cal,
-      xmax = estimate_cal + 2 * std.error_cal,
+      xmin = conf.low_Calibrated,
+      xmax = conf.high_Calibrated,
     )
   ) +
   geom_linerange(
     aes(
-      ymin = estimate_obs - 2 * std.error_obs,
-      ymax = estimate_obs + 2 * std.error_obs
+      ymin = conf.low_Observed,
+      ymax = conf.high_Observed,
     )
   ) +
   geom_point(size = 2)
@@ -636,24 +625,152 @@ This figure makes it clear how the constant shift maintains a perfect correlatio
 But it is perhaps easier to see the biological impact on the results if we plot the two estimate types in a straight line,
 
 
-```{r infection-lfc-estimates, fig.dim = c(8, 8)}
-z %>%
-  filter(term == 'timepoint2') %>%
+```{r infection-lm-lfc-estimates, fig.dim = c(9, 8)}
+res_lm_tidy %>%
   mutate(
     across(.otu, fct_reorder, estimate),
-    across(type, fct_recode, Corrected = 'cal', Uncorrected = 'obs')
   ) %>%
   ggplot(aes(y =.otu, color = type,
       x = estimate, 
       xmin = estimate - 2 * std.error,
       xmax = estimate + 2 * std.error
   )) +
-  # theme_minimal_hgrid() +
+  facet_wrap(~genotype, ncol = 4, scale = 'free_x') +
   theme(
-    axis.line.y = element_blank()
+    axis.line.y = element_blank(),
+    legend.position = 'top',
+    panel.spacing.x = unit(4, 'mm')
   ) +
+  scale_x_continuous(labels = formatC) +
   colorblindr::scale_color_OkabeIto() +
-  facet_wrap(~genotype, ncol = 4) +
+  labs(
+    x = 'Estimated LFC',
+    y = 'Taxon',
+    color = 'Type'
+  ) +
+  geom_vline(xintercept = 0, size = 0.5, color = 'grey') +
+  geom_pointrange(fatten = 2)
+```
+
+## Gamma-Poisson regression
+
+There are a large fraction of zeros at T1 for the lower abundance and/or efficiency taxa, making it more appropriate to apply gamma Poisson model directly to the counts.
+
+```{r}
+library(rstanarm)
+options(mc.cores = parallel::detectCores())
+```
+
+Consider the prior on the intercept.
+Here the offsets will include the read depth, and so we want to set the intercept prior to be for the proportions.
+
+TODO: Set prior in a well-defined way.
+
+```{r}
+x <- ps_inf %>%
+  transform_sample_counts(~close_elts(0.3 + .)) %>%
+  filter_tax_table(.otu %in% commensal_taxa) %>%
+  as_tibble %>%
+  with_groups(c(.otu, genotype), summarize, across(.abundance, gm_mean)) %>%
+  pull(.abundance) %>%
+  summary
+x %>% signif(2)
+
+mu <- log(0.01)
+sigma <- 3
+qnorm(p = c(0.025, 0.975), mean = mu, sd = sigma) %>% exp %>% signif(1)
+custom_prior_intercept <- normal(location = mu, scale = sigma)
+```
+
+```{r}
+tbl_gp <- ps_inf %>%
+  filter_tax_table(.otu %in% commensal_taxa) %>%
+  as_tibble %>%
+  left_join(bias_inf %>% enframe('.otu', 'efficiency'), by = '.otu') %>%
+  mutate(
+    offset_obs = log(sample_sum),
+    offset_cal = log(sample_sum * efficiency / mean_efficiency),
+  ) %>%
+  with_groups(c(.otu, genotype), nest)
+```
+
+```{r, echo = F, eval = F}
+res_gp_test <- tbl_gp %>%
+  slice(1) %>%
+  mutate(
+    Observed = map(data, 
+      ~stan_glm(data = .x, iter = 100,
+        .abundance ~ timepoint + offset(offset_obs),
+        prior_intercept = custom_prior_intercept,
+        family = neg_binomial_2, seed = 42, algorithm = 'sampling'
+      )
+    ),
+    Calibrated = map(data, 
+      ~stan_glm(data = .x, iter = 100,
+        .abundance ~ timepoint + offset(offset_cal),
+        prior_intercept = custom_prior_intercept,
+        family = neg_binomial_2, seed = 42, algorithm = 'sampling'
+      )
+    ),
+  ) %>%
+  select(-data) %>%
+  pivot_longer(c(Observed, Calibrated), names_to = 'type', values_to = 'fit')
+# check the intercept priors
+res_gp_test
+res_gp_test %>%
+  pull(fit) %>%
+  map(prior_summary)
+```
+
+```{r, eval = T}
+res_gp <- xfun::cache_rds({
+  tbl_gp %>%
+    mutate(
+      Observed = map(data, 
+        ~stan_glm(data = .x,
+          .abundance ~ timepoint + offset(offset_obs),
+          prior_intercept = custom_prior_intercept,
+          family = neg_binomial_2, seed = 42, algorithm = 'sampling'
+        )
+      ),
+      Calibrated = map(data, 
+        ~stan_glm(data = .x,
+          .abundance ~ timepoint + offset(offset_cal),
+          prior_intercept = custom_prior_intercept,
+          family = neg_binomial_2, seed = 42, algorithm = 'sampling'
+        )
+      ),
+    ) %>%
+    select(-data) %>%
+    pivot_longer(c(Observed, Calibrated), names_to = 'type', values_to = 'fit')
+}, dir = '_cache/', file = 'res_gp', 
+hash = list(tbl_gp, custom_prior_intercept))
+
+res_gp_tidy <- res_gp %>%
+  mutate(across(fit, map, broom.mixed::tidy, conf.int = TRUE)) %>%
+  unnest(fit) %>% 
+  filter(term != '(Intercept)')
+```
+
+```{r infection-gp-lfc-estimates, fig.dim = c(9, 8)}
+res_gp_tidy %>%
+  filter(term == 'timepoint2') %>%
+  mutate(
+    across(.otu, fct_reorder, estimate),
+  ) %>%
+  ggplot(aes(y =.otu, color = type,
+      x = estimate, 
+      xmin = conf.low,
+      xmax = conf.high
+  )) +
+  facet_wrap(~genotype, ncol = 4, scale = 'free_x') +
+  theme(
+    axis.line.y = element_blank(), 
+    legend.position = 'top',
+    panel.spacing.x = unit(4, 'mm')
+  ) +
+  scale_x_continuous(labels = formatC) +
+  colorblindr::scale_color_OkabeIto() +
   labs(
     x = 'Estimated LFC',
     y = 'Taxon',
