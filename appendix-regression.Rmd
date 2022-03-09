@@ -1,9 +1,11 @@
-# Taxonomic bias and linear regression {#appendix-regression}
+# Linear regression {#appendix-regression}
+
+## Simple linear regression
 
 This section derives the theoretical results of Section \@ref(differential-abundance) for the effect of taxonomic bias on regression-based DA analyses.
 As in Section \@ref(differential-abundance), we restrict our attention to DA analyses that can be expressed in terms of the simple linear regression model in which the response is log absolute abundance or log proportion of individual species or the log ratio of a pair of species. 
 
-## Review of simple linear regression
+### Review of simple linear regression
 
 Table: (\#tab:statistical-notation) Statistical notation used in this section.
 
@@ -71,7 +73,7 @@ This uncertainty is quantified by the standard error, $\text{se}(\hat \beta)$, e
 <!-- (@wasserman2004allo Equation 13.13). -->
 Approximate 95% confidence intervals for $\beta$ are given by $\hat \beta \pm 2\; \hat{\text{se}}(\hat \beta)$.
 
-## Measurement error in the response
+### Measurement error in the response
 
 Now consider a researcher who would like to regress a biological quantity $y$ (the response) on a second quantity $x$ (the covariate).
 But instead of $y$, they only know a proxy $z$, which is related to $y$ via the difference $d = z - y$.
@@ -133,7 +135,7 @@ It follows that the sample variance of the $z$ residuals equal
 The variance of the $z$ residuals is increased above that of the $y$ residuals when the $d$ residuals are either uncorrelated or positively correlated with the $y$ residuals, but may be decreased when the $y$ and $d$ residuals are negatively correlated.
 An increased residual variance will lead to a larger estimate for $\sigma$ as well as larger standard errors in the slope coefficient $\beta$.
 
-## Specific application to taxonomic bias
+### Specific application to taxonomic bias
 
 These general results can be used to understand how taxonomic bias affects DA analyses that can be expressed as linear regression of log (relative or absolute) abundance.
 
@@ -174,3 +176,84 @@ However, high-efficiency species that vary substantially in proportion across sa
 Now, suppose we were instead performing a DA analysis of a response whose fold error is constant across samples, such as the log ratio of two species.
 For the log ratio of species $i$ and $j$, the error is $d(a) = \log \text{efficiency}_i / \text{efficiency}_j$ and is constant across samples.
 Thus the covariance of $d$ with $x$ is 0 and taxonomic bias causes no error the slope estimate $\hat \beta$, only the intercept estimate $\hat \alpha$.
+
+
+## Gamma-Poisson regression
+
+This section describes how gamma-Poisson regression can, with appropriate choice of offsets, be used to estimate LFCs in proportions from MGS count data either with or without bias correction.
+
+### Background
+
+The gamma-Poisson distribution, also known as the negative binomial distribution, is a distribution that is commonly used to model sequencing count data (@holmes2018mode).
+Its key advantage over the simple linear regression model is that it directly models the random sampling of reads that occurs during a sequencing experiment and, in this way, naturally accounts for the imprecision associated with an observation of zero or a small positive count for a given species and sample.
+The gamma-Poisson distribution has two parameters, which jointly determine the mean and the standard deviation.
+We use the parameterization used by the rstanarm R package (@rstanarm), which we use for fitting gamma-Poisson GLMs in our case-study analyses.
+Suppose that $y^{(a)}$ has a gamma-Poisson distribution conditional on a covariate $x$.
+Define two parameters $\mu$ and $\phi$ such that
+\begin{align}
+  E[y^{(a)} \mid x]  &= \mu^{(a)} \\
+  sd[y^{(a)} \mid x] &= \sqrt{
+    E[y^{(a)} \mid x] + E[y^{(a)} \mid x]^2 / \phi
+  };
+\end{align}
+thus $\mu$ equals the mean and $\phi$, known as the 'reciprocal dispersion', increases the standard deviation as it approaches 0 and causes the standard deviation to approach $\sqrt{\mu}$ (that of a Poisson distribution) as it approaches infinity.
+
+For use in gamma-Poisson GLM regression of MGS data, we partition the mean into two factors, $\mu^{(a)} = u^{(a)} \theta^{(a)}$ (@gelman2020regr).
+Here, $\theta^{(a)} = e^{\alpha + \beta x^{(a)}}$ is the quantity of primary interest, whose average LFC equals $\beta$.
+The factor $u^{(a)}$ is a sample-specific _exposure_ parameter that determines the overall scale of counts.
+We can equivalently write $\mu^{(a)} = e^{\alpha + \beta x^{(a)} + \log u^{(a)}}$;
+the logarithm of the exposure, $\log u^{(a)}$, is known as the _offset_ of the GLM.
+Performing gamma-Poisson regression with standard statistical software requires that the offsets are provided as known values.
+
+### Inferring LFCs in proportions with and without bias correction
+
+Our goal is to use gamma-Poisson regression to estimate the LFC in a species proportion from the observed read counts. 
+We therefore equate the counts $M_i^{(a)}$ with $y^{(a)}$ and the proportion $P_{i}^{(a)}$ with $\theta^{(a)}$; it remains to determine the offsets that are consistent with our MGS model.
+To do so, we relax the deterministic assumption of our original model and instead suppose that the right-hand side of Equation \@ref(eq:mgs-model) equals the _expected_ read count of species $i$ in sample $a$,
+\begin{align}
+  (\#eq:mgs-model-gp)
+  E[M_i^{(a)}] = A_i^{(a)} B_i F^{(a)}.
+\end{align}
+The total expected count is
+\begin{align}
+  (\#eq:total-reads-gp)
+  E[M_S^{(a)}] &= \sum_{i \in S} E[M_i^{(a)}]
+  \\&= \left( \sum_{i \in S} A_i^{(a)} B_i \right) F^{(a)} 
+  \\&= A_S^{(a)} B_S^{(a)} F^{(a)}.
+\end{align}
+Under the gamma-Poisson model for $M_i^{(a)}$, we have that $E[M_i^{(a)}] = u_i^{(a)} P_i^{(a)}$.
+Equating this expression for $E[M_i^{(a)}]$ with Equation \@ref(eq:mgs-model-gp) lets us solve for the exposure,
+\begin{align}
+  (\#eq:exposure)
+  u_i^{(a)} 
+    &= \frac{A_i^{(a)} B_i F^{(a)}}{P_i^{(a)}} 
+  \\&= B_i A_S^{(a)} F^{(a)}
+  \\&= \frac{B_i}{B_S} \cdot E[M_S^{(a)}].
+\end{align}
+The second line follows from $P_i^{(a)} \equiv A_i^{(a)}/ A_S^{(a)}$, and the third line from Equation \@ref(eq:total-reads-gp).
+
+The final expression in Equation \@ref(eq:exposure) can be used to compute offsets for the regression.
+The three terms $B_i$, $B_S^{(a)}$, and $E[M_S^{(a)}]$ are each unknown, so we instead substitute estimates for these terms to obtain an estimated exposure $\hat u_{i}^{(a)}$; we then set the offset in the linear model to $\log \hat u_{i}^{(a)}$.
+We can estimate $E[M_S^{(a)}]$ by the observed total count, $M_S^{(a)}$.
+In the absence of bias correction, we set $B_{i} = B_{S}^{(a)} = 1$; our estimate of the exposure is then just
+\begin{align}
+  \hat u_i^{(a)} = M_S^{(a)}.
+\end{align}
+We can apply bias correction using estimates of the efficiencies, $\hat B_{i}$, derived from community control measurements.
+From these estimates and the observed counts, we can estimate the mean efficiency in the sample by
+\begin{align}
+  \hat B_S^{(a)} = \sum_{i\in S} B_i \hat P_i^{(a)},
+\end{align}
+where $\hat P_i^{(a)}$ are the calibrated proportions obtained from a simple plug-in procedure,
+\begin{align}
+  \hat P_i^{(a)} = \frac{M_i^{(a)} / B_i}{\sum_j M_j^{(a)} / B_j}.
+\end{align}
+Equivalently, we can calculate $\hat B_S^{(a)}$ directly from the observed counts,
+\begin{align}
+  \text{B}_S^{(a)} =
+  \left[\sum_j \frac{M_j^{(a)}}{M_S^{(a)} \text{B}_j}\right]^{-1}.
+\end{align}
+We then estimate the exposure by
+\begin{align}
+  \hat u_i^{(a)} = \frac{\hat B_i}{\hat B_S} \cdot M_S^{(a)}.
+\end{align}
