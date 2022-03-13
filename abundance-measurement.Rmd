@@ -31,7 +31,7 @@ Thus we take 'absolute' simply to mean not relative to other species; however, o
 Similarly, our results apply to abundance units other than cells, such as biomass and genome copy number.
 Our model stipulates that the assigned read count of a species $i$ in a sample $a$ equals its abundance multiplied by species-specific and sample-specific factors,
 \begin{align}
-  (\#eq:measurement-model)
+  (\#eq:mgs-model)
   \text{reads}_{i}(a)
   = \text{abun}_{i}(a) \quad \cdot
     \underbrace{\text{efficiency}_{i}}_{\substack{\text{species specific,} \\  \text{sample independent}}}
@@ -43,7 +43,7 @@ We assume the efficiencies of particular species are consistent across samples.
 The variation in efficiency among species corresponds to the taxonomic bias of the MGS protocol.
 The sample-specific factor, $\text{effort}(a)$, quantifies the *effective experimental effort* per unit abundance in measuring the sample.
 <!-- It accounts for variation in sample input volume and total sequencing run output, as well as the mean species efficiency within the sample. -->
-Equation \@ref(eq:measurement-model) implies that the total number of assigned reads in sample $a$ equals
+Equation \@ref(eq:mgs-model) implies that the total number of assigned reads in sample $a$ equals
 \begin{align}
   (\#eq:total-reads)
   \text{reads}_S(a)
@@ -80,7 +80,7 @@ The proportion of a species is typically measured by its proportion of assigned 
   (\#eq:prop-meas)
   \widehat{\text{prop}}_{i}(a) = \frac{\text{reads}_i(a)}{\text{reads}_S(a)}.
 \end{align}
-We can rewrite the right-hand side (using Equations \@ref(eq:measurement-model), \@ref(eq:total-reads), and \@ref(eq:prop-meas)) to find
+We can rewrite the right-hand side (using Equations \@ref(eq:mgs-model), \@ref(eq:total-reads), and \@ref(eq:prop-meas)) to find
 \begin{align}
   (\#eq:prop-error)
   \widehat{\text{prop}}_{i}(a)
@@ -97,7 +97,7 @@ The measured ratio between species $i$ and $j$ is given by the ratio of their re
   (\#eq:ratio-meas)
   \widehat{\text{ratio}}_{i/j}(a) = \frac{\text{reads}_i(a)}{\text{reads}_j(a)}.
 \end{align}
-From Equations \@ref(eq:measurement-model) and \@ref(eq:ratio-meas), it follows that 
+From Equations \@ref(eq:mgs-model) and \@ref(eq:ratio-meas), it follows that 
 \begin{align}
   (\#eq:ratio-error)
   \widehat{\text{ratio}}_{i/j}(a)
