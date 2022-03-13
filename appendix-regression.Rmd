@@ -44,7 +44,7 @@ That is, conditional on the value of $x$ in a sample $a$, the response $y$ is gi
 Given data $(y, x)$, we _fit_ the model by finding estimates for the parameters $\alpha$, $\beta$, and $\sigma^2$ that best reflect the data under the assumption that the model is correct and according to our chosen criterion that defines 'best'.
 Here we consider the least-squares estimates for the coefficients $\alpha$ and $\beta$, which are also the maximum likelihood estimates if we further assume that the errors $\varepsilon$ are normally distributed.
 <!-- Defining the residuals as $\hat \varepsilon(a) = y(a) - (\hat \alpha + \hat \beta x(a))$,  -->
-The least-squares estimates of $\alpha$ and $\beta$ are the values that minimize the residual sum of squares, $\text{RSS} = \sum_{a} \hat \varepsilon(a)$.
+The least-squares estimates of $\alpha$ and $\beta$ are the values that minimize the residual sum of squares, $\text{RSS} = \sum_{a} \hat \varepsilon(a)^2$.
 These estimates can be conveniently expressed in terms of the sample means and covariances or correlations of $x$ and $y$,
 \begin{align}
   (\#eq:lm-hat)
@@ -96,7 +96,7 @@ To understand how the measurement error in $y$ impacts the researcher's regressi
 \end{align}
 The researcher would like to fit the model for $y$ (Equation \@ref(eq:lm-y)), but instead can only fit the model for $z$ (Equation \@ref(eq:lm-z)).
 The two are related via the Equation \@ref(eq:lm-z) for $d$.
-It is helpful to imagine, for the moment, that $y$ and $d$ are known and so we can fit all three models \@ref(eq:lm-y), \@ref(eq:lm-z), and \@ref(eq:lm-d).
+It is helpful to imagine that $y$ and $d$ are known and so we can fit all three models \@ref(eq:lm-y), \@ref(eq:lm-z), and \@ref(eq:lm-d).
 From Equation \@ref(eq:lm-hat) and the linearity of sample means and covariances it follows that 
 \begin{align}
   (\#eq:lm-hat-rel)
@@ -110,7 +110,7 @@ Consequently, we see that the measurement error $d$ creates absolute errors in t
   \text{abs. error}(\hat \alpha) &\equiv \hat \alpha_z - \hat \alpha_y = \hat \alpha_d \\
   \text{abs. error}(\hat \beta) &\equiv \hat \beta_z - \hat \beta_y = \hat \beta_d.
 \end{align}
-These absolute errors correspond to the _statistical bias_ in the coefficient estimates.
+<!-- These absolute errors correspond to the _statistical bias_ in the coefficient estimates. -->
 Expressed in terms of sample means and covariances, these errors are
 \begin{align}
   (\#eq:lm-hat-err-1)
@@ -161,7 +161,7 @@ Thus the absolute error in $\hat \beta$ is the negative of the scaled covariance
 Although the absolute error is the same for each species, its practical significance varies.
 Recall from Equation \@ref(eq:lm-hat) that the correct value for $\hat \beta$ (i.e., the estimate without measurement error) is
 \begin{align}
-  \hat \beta &= \frac{s[\log \text{abun}, x]}{s^2(x)}.
+  \hat \beta &= \frac{s[\log \text{abun}_i, x]}{s^2(x)}.
 \end{align}
 For species whose log abundance covaries with $x$ much more than the log mean efficiency, the error will be relatively small.
 This situation can occur either because the mean efficiency varies relatively little across samples or because its variation is relatively uncorrelated with $x$.
@@ -180,7 +180,7 @@ Thus the covariance of $d$ with $x$ is 0 and taxonomic bias causes no error the 
 
 ## Gamma-Poisson regression
 
-This section describes how gamma-Poisson regression can, with appropriate choice of offsets, be used to estimate LFCs in proportions from MGS count data either with or without bias correction.
+This section describes how gamma-Poisson regression can, with appropriate choice of offsets, be used to estimate log fold changes (LFCs) in proportions from MGS count data either with or without bias correction.
 
 ### Background
 
