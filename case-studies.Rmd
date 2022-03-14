@@ -166,15 +166,15 @@ The differences in growth rate are small in absolute terms; however, the maximum
 In summary, the comparison between FRAxC and qPCR measurements supports the overall study conclusions, but also suggests that species at the low end of positive FRAxC-derived rates may be merely persisting or even slowly declining in abundance.
 
 
-## Summary and conclusions
+## Summary and discussion
 
 The effect that consistent taxonomic bias has on proportion-based DA analyses depends on the MGS protocol, the biological system, and the sample comparisons under investigation.
-Our case studies explore a limited range of possibilities; however, we can begin to form some general conclusions by placing them within the context of the three scenarios considered for LFC estimation described in Section \@ref(differential-abundance). 
+Our case studies explore a limited range of possibilities; however, we can begin to form some general conclusions by placing them within the context of the three scenarios described in Section \@ref(differential-abundance). 
 
 We saw several cases where the mean efficiency is stable across samples, so that bias does not affect LFC estimates (Scenario 1).
 In the pre-infection fungal microbiome samples of @leopold2020host, we observed that the mean efficiency remained stable despite substantial bias and large multiplicative variation in species proportions among samples.
 Because the variation in the mean efficiency was much less than that of the individual species, the impact of bias on DA analysis was negligible.
-In the vaginal case study, we also observed that the mean efficiency was relative stable across vaginal microbiomes that were dominated by the same species, despite substantial bias and large FCs in non-dominant species.
+In the vaginal case study, we also observed that the mean efficiency was relative stable across vaginal microbiomes that were dominated by the same species, despite substantial bias and large LFCs in non-dominant species.
 In both cases, the stability of the mean efficiency can be understood by the fact that it is an additive average over species and so is primarily determined by the most abundant species in the sample.
 
 Yet we also observed cases where the mean efficiency varied substantially.
@@ -182,13 +182,13 @@ In several cases, the mean efficiency varied systematically with the condition o
 Examples include the comparison of foliar fungal microbiomes pre- and post-infection, for which the mean efficiency increased post-infection, and the comparison of vaginal microbiomes with low versus high diversity in the MOMS-PI study, for which the mean efficiency was typically lower in high-diversity samples.
 Our analysis of marine sediment communities is consistent with a systematic decline of the mean efficiency with burial time that is sufficient to substantially inflate the estimated growth rates of slowly changing species.
 The mean efficiency cannot change more than the species proportions constituting it.
-Therefore, the error in the estimated proportion FCs tend to be practically significant only for species whose FCs are substantially smaller in magnitude than the largest FC.
+Therefore, the error in the estimated proportion LFCs tend to be practically significant only for species whose LFCs are substantially smaller in magnitude than the largest LFC.
 
 Variation in the mean efficiency may also be substantial, yet unassociated with the condition of interest (Scenario 2).
 Although we did not directly observe this scenario directly, we have reason to think that it may be common in real microbiome studies.
 Our simulation analysis of gut microbiomes suggest that even in diverse ecosystems, bias will often cause multiplicative variation in the mean efficiency that is comparable to that of individual species.
 This variation is much less problematic for DA results when it not associated with the condition under study, since any loss in precision can in principle be offset by an increase in sample size.
-For certain applications, however, it will be important to remember that the FCs between individual samples remain unreliable.
+For certain applications, however, it will be important to remember that the LFCs between individual samples remain unreliable.
 
 Under what conditions should we expect the problematic third scenario?
 Our case studies suggest one prominent mechanism for causing systematic variation in the mean efficiency: the existence of one or more species with unusually high or low efficiencies that tend to dominate the community more often in one sample condition than another.
@@ -201,47 +201,9 @@ Species with recent common ancestry are expected to share a number of traits tha
 They are also expected to share traits related to the condition of interest.
 If related species tend to have similar efficiencies and similar associations with the condition, then they may drive an association of the mean efficiency with the condition.
 
-These observations provide reasons to both worry and hope. It seems likely that in many studies, the mean efficiency is consistent (first scenario) or is at least not associated with the condition (second scenario), so that DA inferences remain valid. Yet it is not obvious which scenario any study falls into. There are plausible mechanisms leading to systematic variation of the mean efficiency even in ecosystems with high species diversity. Moreover, our explorations suggest that random variation in the mean efficiency is common and distorts comparisons between individual samples. Thus while we should not discount the large set of existing DA results, we should seek ways to better assess the robustness of results from previous studies and to measure and correct the error caused by bias in future ones.
-
-## [Temp] Summary and conclusions
-
-[first draft of new summary, prior to revising the DA theory section]
-
-The effect that consistent taxonomic bias has on proportion-based DA analyses depends on the MGS protocol, the biological system, and the sample comparisons under investigation.
-Our case studies explore a limited range of possibilities; however, when combined with the theoretical framework developed Section 3, they suggest some general conclusions. 
-
-In the first scenario, the mean efficiency remains stable across samples despite large variation in the relative efficiencies among species and in species composition among samples.
-In this case, the error caused by consistent taxonomic bias _will mostly cancel_ in cross-sample comparisons, and bias will not substantially affect the inferred FCs between sample pairs or between sample conditions.
-We observed this scenario in the analysis of pre-infection fungal microbiome samples of Leopold and Busby (2020).
-A stable mean efficiency within marine soil cores is consistent with our comparison of qPCR- and MGS-derived growth rates in the Lloyd et al.
-(2020) experiment, though we lack the power for firm conclusions.
-In the MOMS-PI study, we found that the mean efficiency was stable across vaginal microbiomes with the same dominant species, even as non-dominant species had large FCs.
-
-In the second scenario, the mean efficiency varies substantially across samples but is not associated with the condition of interest.
-In this case, the measured FCs between pairs of samples can be highly distorted; however, these errors effectively average out, leading to reliable FCs between sample conditions.
-For example, the mean efficiency varied widely across vaginal microbiomes in the MOMS-PI study, but was only associated with one out of the three proinflammatory cytokines we considered.
-For the other three, bias had a negligible impact on the inferred associations between species and cytokine level.
-
-In the third scenario, the mean efficiency systematically varies with the condition of interest, causing a systematic error in the estimated FCs between sample conditions even when averaged over many samples.
-Examples include the comparison of foliar fungal microbiomes pre- and post-infection, for which the mean efficiency increased post-infection, and the comparison of vaginal microbiomes with low versus high diversity in the MOMS-PI study, for which the mean efficiency was typically lower in high-diversity samples.
-Our analysis of marine sediment communities is consistent with a systematic decline of the mean efficiency with burial time sufficient to substantially inflate the estimated growth rates of slowly changing species.
-[TODO: Mention gut microbiome infection, RX examples.]
-The mean efficiency cannot change more than the species proportions constituting it.
-Therefore, the error in the estimated proportion FCs tend to be practically significant only for species whose FCs are substantially smaller in magnitude than the largest FC.
-
-—
-
-Under what conditions should we expect this problematic third scenario?
-Our case studies suggest one prominent mechanism for causing systematic variation in the mean efficiency: the existence of one or more species with unusually high or low efficiencies that tend to dominate the community more often in one sample condition than another.
-This mechanism was responsible for the negative effect of bias in our DA analyses of foliar fungal microbiomes following infection and of vaginal microbiomes with low versus high diversity.
-In experimental systems where no one species frequently forms a large fraction of the community, systematic variation of the mean efficiency can still arise through the collective change of many species that are associated with the condition of interest.
-We described a plausible instance in the marine-sediment case study, where increased burial time selects for lysis-resistant (and so lower efficiency) species.
-As another example, treatment with an antibiotic might selectively kill Gram negative species, which also tend to be easier to lyse, thereby decreasing the mean efficiency in fecal samples collected after treatment.
-A generic mechanism which might spawn such condition-efficiency associations stems from the evolutionary relationships among species.
-Species with recent common ancestry are expected to share a number of traits that determine measurement efficiency, including cell wall structure, genome size, ribosomal copy number, and PCR binding sequence.
-They are also expected to share traits related to the condition of interest.
-If related species tend to have similar efficiencies and similar associations with the condition, then they may drive an association of the mean efficiency with the condition.
-
-
-These observations provide reasons to both worry and hope. It seems likely that in many studies, the mean efficiency is consistent (first scenario) or is at least not associated with the condition (second scenario), so that DA inferences remain valid. Yet it is not obvious which scenario any study falls into. There are plausible mechanisms leading to systematic variation of the mean efficiency even in ecosystems with high species diversity. Moreover, our explorations suggest that random variation in the mean efficiency is common and distorts comparisons between individual samples. Thus while we should not discount the large set of existing DA results, we should seek ways to better assess the robustness of results from previous studies and to measure and correct the error caused by bias in future ones.
-
+These observations provide reasons to both worry and hope.
+It seems likely that in many studies, the mean efficiency is consistent (first scenario) or is at least not associated with the condition (second scenario), so that DA inferences remain valid.
+Yet it is not obvious which scenario any study falls into.
+There are plausible mechanisms leading to systematic variation of the mean efficiency even in ecosystems with high species diversity.
+Moreover, our explorations suggest that random variation in the mean efficiency is common and distorts comparisons between individual samples.
+Thus while we should not discount the large set of existing DA results, we should seek ways to better assess the robustness of results from previous studies and to measure and correct the error caused by bias in future ones.
