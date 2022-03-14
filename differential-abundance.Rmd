@@ -82,18 +82,20 @@ Further suppose that we have measured absolute abundances by multiplying the pro
 For each species $i$, we set $y(a)$ in Equation \@ref(eq:regression) equal to $\log \widehat{\text{abun}}_{i}(a)$, and use either Ordinary Least Squares (OLS) or Maximum Likelihood Estimation (MLE) to estimate the coefficients $\alpha$ and $\beta$.
 From Equation \@ref(eq:density-prop-error), we know that the FE in the abundance of each species equals its efficiency relative to the mean efficiency of the sample.
 
-How does this error affect the estimate of $\beta$ for species $i$?
-There are three possibilities: 
-In the first scenario, the mean efficiency is constant across samples, such that the FE in $\widehat{\text{abun}}_{i}(a)$ is constant.
-This constant FE induces a constant additive error in $y$ that affects the estimate of the intercept $\alpha$, but not the slope $\beta$.
-In the second scenario, the mean efficiency varies but is not systematically higher or lower in samples from treated versus untreated patients.
-This unsystematic variation in the mean efficiency induces additive error in $y$ that is uncorrelated with $x$ and is statistically equivalent to an increase in the residual variation ($\epsilon$ in the regression model).
-The estimate of $\beta$ will be less precise (i.e., have a larger standard error) than in Scenario 1, but will not be systematically distorted.
-In the third scenario, the mean efficiency is systematically different in treated versus untreated patients.
-If the mean efficiency is higher in treated patients, then the additive error in $y$ will tend to be smaller (or more negative) in this condition, leading to a downward shift in the estimate of $\beta$.
-More generally, the portion of additive variation in the log mean efficiency that is correlated with $x$ creates an equal but opposite error in the estimate of $\beta$ that is the same for each species, whereas the portion that is uncorrelated with $x$ affects the standard errors of $\beta$.
+To understand how the FE in species abundances affects the estimated LFC for a given species, it is useful to consider three possible scenarios for how the mean efficiency varies across samples.
+In the first scenario, the mean efficiency remains stable across samples, such that the FE in $\widehat{\text{abun}}_{i}(a)$ is approximately constant. 
+In this case, the FE induced by bias _mostly cancels_ and does not substantially affect the estimated LFC.
+In the second scenario, the mean efficiency varies substantially but is not associated with the condition, creating random FEs in the individual sample measurements.
+In this case, the LFCs between individual samples will be highly distorted, but these errors will effectively average out in the regression and the estimated LFC remains reliable.
+Although the random FEs caused by bias do not create a systematic error in the LFC estimate, they will tend to reduce the precision (i.e., increase the standard error) of the estimate.
+This reduced precision can be offset, however, by increasing the number of samples.
+In the third scenario, the mean efficiency systematically varies with the condition, causing a systematic error in the estimated LFC regardless of the number of samples.
+In particular, the portion of additive variation in the log mean efficiency that is linearly associated with $x$ creates an equal but opposite additive error in the estimated LFC for each species.
+Although the absolute additive error in the LFCs is the same for all species, its biological significance varies, depending on its magnitude relative to that of the species' true LFC.
 
-Figure \@ref(fig:regression-example) shows a simulated example for which the mean efficiency is systematically higher in the condition $x=1$, leading to a systematic decrease in the estimated LFC for each species.
+Figure \@ref(fig:regression-example) shows a simulated example of the problematic third scenario.
+Here, the average log mean efficiency is higher in the condition corresponding to $x=1$ due to an increase of the high-efficiency Species 9.
+This systematic increase in the log mean efficiency causes a decrease in the estimated LFC for each species by an equal amount.
 As we saw for the FC between individual samples, the biological significance varies by species, despite the absolute error in the LFC being shared.
 We see decreases in magnitude (Species 9, 10, and 1 in Figure \@ref(fig:regression-example)), changes in sign (Species 5), or increases in magnitude (remaining species) depending the value of the actual LFC relative to the error.
 The portion of the variation in the log mean efficiency that is uncorrelated with $x$ increases the standard errors for most species (Figure \@ref(fig:regression-example) D).
