@@ -79,6 +79,22 @@ fs::path(
 
 <br><br>
 
+<!-- Case studies: Gut -->
+
+
+```{r gut, fig.cap = '(ref:cap-gut)'}
+fs::path(
+  "notebook/_posts/2022-01-30-hmp-stool-vagina-comparison/",
+  "hmp-stool-vagina-comparison_files",
+  "figure-html5/main-1.svg"
+) %>%
+  include_svg
+```
+
+(ref:cap-gut) **Compared to vaginal samples, stool samples have higher diversity, lower variation in mean efficiency, and lower variation in species proportions.** This figure summarizes results from our case study of shotgun-sequenced stool and vaginal samples in the Human Microbiome Project. Panel A shows the distribution of order-2 alpha diversity (equal to the Inverse Simpson Index) across samples. Panel B shows the variation in the mean efficiency, as quantified by the GSD, across samples of a given type for each of 1000 simulated bias vectors. Panel C shows the variation in the proportion of each species commonly found in a given sample type. For Panel C, variation is measured by the GSD when a pseudo-value of $10^{-4}$ is added to the raw proportions. Different choices of the pseudo-value substantially change the measured GSDs, but not the difference (ratio) between gut and vaginal species.
+
+<br><br>
+
 <!-- Solutions -->
 
 ```{r sensitivity-example, fig.cap = '(ref:cap-sensitivity-example)'}

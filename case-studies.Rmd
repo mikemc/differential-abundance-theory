@@ -91,20 +91,45 @@ that are so efficiently measured by the MOMS-PI MGS protocol.
 
 ## Human gut microbiomes
 
-We wondered whether the greater alpha (within-community) diversity in the human gut microbiome samples relative to the vaginal microbiome might reduce the impact of bias on DA analyses.
-In a community with higher species-level alpha diversity, the mean efficiency effectively averages over a larger number of species.
-Consequently, if communities are assembled randomly, the mean efficiency varies less as the order-2 alpha diversity $^2D$ increases (Appendix REF).^[Order-2 alpha diversity, also known as the order-2 Hill number or effective number of species, is equivalent to the Inverse Simpson diversity index and is given by $^2D = 1 / \sum_{i}P_{i}^2$, where $P_{i}$ is the proportion of species $i$ in the sample (@jost2006entr).]
-But real communities are not randomly assembled; instead, species have complex patterns of positive and negative associations (REF).
+We wondered whether DA in the human gut microbiome might be less affected by bias than the vaginal microbiome, due to its greater species diversity.
+Recall that the mean efficiency is an abundance-weighted average over species in a sample; thus we might expect it to become more stable as the within-sample (alpha) diversity increases.
+In fact, one can show that for communities that are randomly assembled from a large species pool, the additive variance in the mean efficiency is inversely proportional to order-2 diversity $^2D$ (also known as the Inverse Simpson diversity index) (Appendix \@ref(diversity-and-mean-efficiency)).
+But real communities are assembled through complex processes that create positive and negative associations among species (REF).
 Thus there is unlikely to be a simple 1-1 relationship between alpha diversity and variation in the mean efficiency.
-Moreover, even if the mean efficiency does vary less across gut microbiome samples, if species (relative or absolute) abundances also vary less then the importance of bias for DA analyses might stay the same or even increase.
+Moreover, even if the mean efficiency does vary less across the more diverse gut samples, if the proportion of each species also varies less, then the importance of bias for DA analyses need not diminish.
+
+```{r gut-stats, message = FALSE}
+hmp_div_stats <- fs::path(
+  "notebook/_posts/2022-01-30-hmp-stool-vagina-comparison/_output/",
+  "div_q2_stats.csv"
+) %>%
+  read_csv(col_types = 'cddd') %>%
+  metacal::as_matrix(rownames = body_site)
+
+hmp_me_stats <- fs::path(
+  "notebook/_posts/2022-01-30-hmp-stool-vagina-comparison/_output/",
+  "reps_me_summ_diff.csv"
+) %>%
+  read_csv(col_types = 'cddd') %>%
+  metacal::as_matrix(rownames = sim_type)
+
+hmp_species_stats <- fs::path(
+  "notebook/_posts/2022-01-30-hmp-stool-vagina-comparison/_output/",
+  'species_gsd_stats.csv'
+) %>%
+  read_csv(col_types = 'dddd')
+hmp_species_diff <- hmp_species_stats %>%
+  summarize(diff = metacal::gm_mean(vagina_stool)) %>%
+  pull(1)
+```
 
 To investigate this question, we analyzed bacterial species profiles of vaginal and stool samples derived from shotgun sequencing in the Human Microbiome Project (@huttenhower2012stru, SI Methods \@ref(methods-gut)).
-Stool profiles had substantially greater order-2 alpha diversity than vaginal profiles (TODO SI FIGURE; geometric average of TODO in stool and TODO in vaginal profiles).
-To assess the relative importance of bias for proportion-based DA analyses in the two ecosystems, we quantified the variation in the mean efficiency across samples for a large number of possible taxonomic biases under the assumption that the measured profiles reflected the truth (TODO SI Analysis).
-Across simulation replicates, the GSD in the mean efficiency was typically lower in stool than in vaginal samples by a geometric average of 1.5X (SI FIGURE TODO; geometric average GSD of 1.5 for stool samples and 2.2 for vaginal samples).
-At the level of individual species, the average GSD in the proportion of a species in gut samples was around 1.8X lower than that in vaginal samples.
-The negative effects of bias in a DA analysis of a species' proportion scales with the ratio of the GSD in mean efficiency to that in the species' proportion (Section \@ref(differential-abundance)).
-Thus our results suggest that although the mean efficiency is likely to vary less in the gut, it may remain just as or more problematic for proportion-based DA analyses.
+On average, stool profiles had substantially greater order-2 alpha diversity than vaginal profiles (SI Figure \@ref(fig:gut)A; GM $\md$ GSD of `r hmp_div_stats['stool', 'gm'] %>% round(1)` $\md$ `r hmp_div_stats['stool', 'gsd'] %>% round(1)` in stool samples and `r hmp_div_stats['vagina', 'gm'] %>% round(1)` $\md$ `r hmp_div_stats['vagina', 'gsd'] %>% round(1)` in vaginal samples).
+To assess the potential importance of bias for proportion-based DA analyses in the two ecosystems, we quantified the multiplicative variation in the mean efficiency across samples for a large number of possible taxonomic biases under the assumption that the measured profiles reflected the truth.
+Across simulation replicates, the GSD in the mean efficiency was typically lower in stool than in vaginal samples (SI Figure \@ref(fig:gut)B; ratio of GSD in vaginal samples to GSD in stool samples of `r hmp_me_stats['iid', 'gm'] %>% round(1)` $\md$ `r hmp_me_stats['iid', 'gsd'] %>% round(1)` across 1000 simulations).
+Notably, however, the multiplicative variation in species also tended to be lower (SI Figure \@ref(fig:gut)C), which the GSD in the proportion of a gut species across gut samples an average of `r hmp_species_diff %>% round(2)`-fold lower than that of a vaginal species across vaginal samples.
+Recall that the importance of bias estimation of the FC in a species' proportion depends on GSD in the mean efficiency relative the GSD in the species' proportion (Section \@ref(differential-abundance)).
+Thus these results suggest that although the mean efficiency likely varies less across stool than vaginal samples, bias may be just as problematic for proportion-based DA analyses.
 
 ## Microbial growth in marine sediments
 
@@ -129,7 +154,7 @@ Thus comparing qPCR to FRAxC growth rates on the same reference taxa allows us t
 Because the systematic error in regression slopes due to bias is the same for each taxon (Section 3), these comparisons allow us to draw conclusions about the accuracy of FRAxC growth rates for all taxa.
 
 ```{r}
-x <- here(
+x <- fs::path(
   'notebook/_posts/2022-01-08-lloyd2020evi-case-study/_output/table1-tidy.rds'
 ) %>% readRDS
 bathy_core30_fraxc <- x %>%

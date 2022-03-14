@@ -465,3 +465,80 @@ Note, the original HMP protocol was found to be biased in favor of Bacteroidetes
 Check to see if I can get these, and use them for the analysis.
 
 
+### What are the drivers of mean efficiency variation?
+
+Hypothesis: The most abundant species in each sample can mostly explain the variation.
+
+
+```{r, eval = F}
+# zero out each sample to just the top n taxa, then compute the mean efficiency
+# (without closing out? or closing out?)
+mean_efficiency_top <- function(x, bias, type, n = 1) {
+
+
+}
+```
+
+
+```{r, eval = F}
+reps_me1 <- reps %>%
+  mutate(
+    mean_efficiency = map(bias, ~mean_efficiency(ps_gv, .x, type = 'actual')),
+    across(mean_efficiency, map, enframe, '.sample', 'mean_efficiency')
+    mean_efficiency_top = map(bias, ~mean_efficiency_top(ps_gv, .x, type = 'actual')),
+    across(mean_efficiency_top, map, enframe, '.sample', 'mean_efficiency_top')
+  ) %>%
+  select(-bias) %>%
+  unnest(c(mean_efficiency, mean_efficiency_top)) %>%
+  left_join(ps_gv %>% sample_data %>% as_tibble, by = '.sample')
+```
+
+
+# Variation in species
+
+We also need to choose what species to consider as candidates for a DA analysis in the given ecosystem.
+
+Let's get a lightly filtered ps object for each type, and check out the prevalence patterns.
+
+```{r}
+ps_list <- list(
+  stool = ps_gv %>% filter_sample_data(body_site == 'stool'),
+  vagina = ps_gv %>% filter_sample_data(body_site == 'vagina')
+) %>%
+  map(filter_taxa2, ~ sum(. > 0) >= 2) %>%
+  map(orient_taxa, as = 'cols')
+ps_list %>% map_int(nsamples)
+ps_list %>% map_int(ntaxa)
+```
+
+```{r, eval = T}
+x <- ps_list %>%
+  map_dfr(as_tibble)
+
+min_vals <- c(0, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1)
+
+prev <- x %>%
+  with_groups(c(.otu, body_site), summarize,
+    min = min_vals,
+    prevalence = map_dbl(min_vals, ~mean(.abundance > .x))
+  )
+```
+
+```{r}
+prev %>%
+  ggplot(aes(x = prevalence, y = as.factor(min), 
+      fill = body_site, color = body_site)) +
+  scale_x_log10() +
+  geom_density_ridges(stat = 'binline', alpha = 0.3, scale = 0.95)
+```
+
+It's a bit hard to know what threshold to use to pick a relevant set of taxa.
+
+```{r}
+prev %>%
+  filter(min < 1e-3) %>%
+  ggplot(aes(x = prevalence, y = body_site,
+      fill = body_site, color = body_site)) +
+  facet_wrap(~min) +
+  geom_density_ridges(stat = 'binline', alpha = 0.3, scale = 0.95)
+```
