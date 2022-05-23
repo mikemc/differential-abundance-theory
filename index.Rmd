@@ -73,3 +73,5 @@ We describe the basic problem posed by taxonomic bias for measuring changes in t
 Analyses of both relative and absolute abundances are considered.
 The manuscript is licensed under a [CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/).
 See [the Zenodo record](https://doi.org/10.5281/zenodo.4552717) for how to cite the latest version.
+Supporting data analyses can be found in the accompanying [computational research notebook] (https://mikemc.github.io/differential-abundance-theory/notebook/).
+
