@@ -1,47 +1,45 @@
 # Potential solutions {#solutions}
 
-Microbiome studies proffer a wide diversity of goals and constraints, such that there is no once-size-fits all solution to mitigating taxonomic bias in DA analysis.
-Instead, we present six classes of solutions, each supported by our theoretical results from the previous sections, that together encompass the majority of experimental contexts faced by researchers today.
-
 ## Ratio-based relative DA analysis
 
-Since bias creates a consistent fold error in species ratios, a natural approach to countering bias when analyzing relative abundances is to use DA methods that are based on fold changes in ratios.
-A variety of such methods have been developed for microbiome DA analysis that build on earlier work from the field of Compositional Data Analysis (CoDA).
-These methods analyze (log) fold changes in the ratio between species or, more generally, between the products of multiple species.
-Taking the product or geometric mean of multiple species provides an approach to aggregating species into a higher-level taxonomic units such that the ratios between units maintain proportional errors, in contrast to the standard approach of additively aggregating species.
-Besides a greater robustness to taxonomic bias, analyses of ratios have other advantages over analyses of proportions and absolute abundances.
-Analyses of ratios avoid the standard criticism leveled at proportion-based analysis—namely that the changes in the proportion of one species depend in a non-transparent way on the changes in abundance of all other species (@gloor2017micr), including unidentified contaminants.
-In many experiments, the total abundance in a sample may be a poor indicator of the total abundance of the sampled ecosystem; unless this relationship can be characterized and accounted for, changes in ratios may be more informative than changes in absolute abundance for the underlying biology of interest.
+Since bias creates constant fold errors (FEs) in the ratios among species, it can be countered by using relative DA methods that analyze FCs in these ratios.
+A variety of ratio-based methods have been published under the name of Compositional Data Analysis (CoDA).
+CoDA methods may more generally consider the ratios between products of multiple species, possibly raised to some exponent; a simple example is the geometric mean of several species.
+The mathematical operations of multiplication and exponentiation maintain constant FEs.
+Hence such products provide a method for aggregating species into a higher-level taxonomic units that maintains bias invariance when estimating FCs.
+Ratio-based analyses also avoid the potential for misinterpreting changes in a species’ proportion that are driven by the sum-to-one constraint (@gloor2017micr).
 
-Ratios come with their limitations, however.
-First, there are a vast number of species ratios (and derivatives) to potentially consider, none of which provide direct information about absolute densities, which can make choosing and interpreting a ratio-based DA analysis challenging.
-Second, ratio measurements are impacted by noise in both the numerator and denominator and so can be noisier than proportion measurements, particularly when the read counts in the denominator are small.
-A related problem is that, due to the discrete nature of biological organisms and the reads that are generated during sequencing, species in the denominator are commonly observed to have 0 reads; the assumptions that made by different methods about the meaning of these 0 counts can have a major impact on DA results.
-Finally, bias invariance at the level of ratios among species does not extend to ratios between additive aggregates of species, such as between bacterial phyla, unless further conditions are met (@mclaren2019cons).
-Multiplicative aggregates of species provides a bias-invariant alternative that has proven useful in biomarker discovery but are harder to interpret.
+We note two important caveats.
+First, in most MGS datasets, any given species is likely to be extremely rare in most samples, such that no sequencing reads are observed.
+In order to analyze FCs, DA methods interpret these zero counts as evidence that the true abundance of the species is very small (but still positive).
+A common approach to enable the computation of FCs in the presence of zeros is to add a small value, or ‘pseudo-count’, to the read counts, making all values positive.
+Unfortunately, this procedure violates bias invariance.
+How bias interacts with more sophisticated approaches for handling zeros remains an important open question.
+Second, the bias invariance of ratios among species does not extend to additive aggregates of species into higher-order taxa such phyla unless bias is conserved within the species group (@mclaren2019cons).
+Multiplicative aggregates of species, recently used for biomarker discovery (@riverapinto2018bala, @quinn2020inte), provide an alternative that remains bias-invariant but may be harder to interpret.
+
+If biological or technical considerations favor a DA method that is not bias invariant, it can be beneficial to also use a ratio-based method as a robustness check.
+For example, @hevroni2020seas examined how the within-sample ranks of viral species changed from summer to winter.
+Since changes in within-sample ranks can be affected by bias, the authors also considered the (bias-invariant) changes in the centered log ratios (CLR) associated with each species.
+They found that the species whose within-sample ranks increased also increased in their CLR value, providing evidence that their initial results were not driven by bias.
 
 ## Calibration using community controls {#calibrate-compositions}
 
-Measurement of community calibration controls along with the primary experimental samples can enable researchers to directly measure and remove the effect of bias prior to or concurrent with downstream DA analysis.
-Community calibration controls are samples whose species identities and relative abundances are known either by construction or by characterization with a chosen 'gold standard' or _reference protocol_ (@mclaren2019cons).
-MGS measurement of one or more control communities can be used to directly measure the relative efficiencies among the union of species in the controls (@mclaren2019cons).
-The measured relative efficiencies can then be used to calibrate (remove the effect of bias from) the relative abundances of the control species in a set of primary (non-control) experimental samples that were measured with the same protocol (ideally in the same experiment and sequencing run) (@mclaren2019cons).
-Calibration can be extended to species not in the controls using statistical methods to impute (predict) the unobserved efficiencies using phylogenetic relatedness, genetic characteristics (such as 16S copy number), and/or phenotypic properties (such as cell-wall structure).
-Control samples may also be aliquots of a natural sample that are shared across experiments, allowing for characterization of the _differential bias_ between experiments.
-Calibration using the differential bias provides a quantitative way to make results directly comparable across studies using different protocols.
-Calibrated relative abundances can be combined with an accurate total-abundance measurement or accurately quantified spike-in to obtain calibrated absolute abundances.
+_Community calibration controls_ are samples whose species identities and relative abundances are known, either by construction or by characterization with a chosen 'gold standard' or _reference protocol_ (@mclaren2019cons).
+Inclusion of these samples along with the primary samples in an MGS experiment can enable researchers to calibrate their MGS measurement by directly measuring and removing the effect of bias.
+Calibration can be extended to species not in the controls by imputing the efficiencies of the missing species using phylogenetic relatedness, genetic characteristics (such as 16S copy number), and/or phenotypic properties such as cell-wall structure.
 
-The calibrated compositions can be used for arbitrary downstream microbiome analyses, including relative and absolute DA analysis.
-To demonstrate the potential for calibration to improve fold-change measurements, we estimated bias from one sample in the mock community data from @brooks2015thet that contained all 7 species and used it to calibrate the compositions of all samples (Figure \@ref(fig:calibration-example)).
-We then estimated species' densities using the uncalibrated and calibrated proportions using total-abundance normalization, treating the total density as known and fixed.
-Visual inspection shows that the bias estimated from just a single control community with all species can be sufficient to greatly reduce the effect of taxonomic bias on the measured fold change in species' proportions or absolute abundances derived from them (Figure \@ref(fig:calibration-example)).
+Calibration makes it possible to correct for bias in relative and absolute DA methods that would otherwise not be bias invariant.
+To demonstrate, we used calibration to improve the estimated FCs between samples in the absolute abundance of a species in the bacterial mixtures from @brooks2015thet.
+We used the bias estimated from a single 7-species mixture to calibrate the MGS-derived proportions in all measured mixtures.
+We obtained calibrated absolute abundances by multiplying the calibrated proportions by the known total abundance (Equation \@ref(eq:density-prop-meas)).
+Calibration greatly increased the accuracy of the estimated FCs (Figure \@ref(fig:calibration-example), A vs. B).
+The fungal and vaginal case studies of Section \@ref(case-studies) provide several practical examples of calibration in proportion-based DA analyses.
 
-To demonstrate a practical application, we used the bias estimated from the full set of mock communities as the basis for calibrating the vaginal community time series measurements from the MOMS-PI study (@fettweis2019thev) that were made using the same 16S sequencing protocol.
-We imputed the efficiencies of other species using taxonomic relationships (Methods).
-Calibration then allowed us to explore the impact of bias on the measured trajectories of species proportions within women over the course of pregnancy as described in Section \@ref(case-studies).
-Uncertainty in the imputed efficiencies has a large impact on the abundances of species in individual samples; however, because the mean efficiency mainly depends on the most abundant species in the sample, its variation across samples can be accurately predicted so long as the most abundant organisms are covered.
-(TODO: Show this in the SI Rmd MOMSPI case study)
-Therefore less taxonomic coverage is needed to robustly infer fold changes in proportions (or absolute abundances derived from them) than to infer values in individual samples.
+In studies of synthetic communities (like the fungal case study) or of ecosystems dominated by a relatively small number of culturable taxa (like the vaginal microbiome), calibration controls can be artificially constructed ('mock') communities.
+In other cases, _natural community controls_ can be derived from aliquots of a homogenized microbiome sample.
+Measurement of these controls across multiple experiments enables characterization of the _differential bias_ between experiments (@mclaren2019cons).
+Calibration using differential bias can make results directly comparable across studies that used different.
 
 <!-- begin figure -->
 
@@ -53,144 +51,71 @@ fs::path(
   knitr::include_graphics()
 ```
 
-(ref:cap-calibration-example) **Fold changes can be calibrated using community controls or reference species.** The figure compares the performance of three methods for measuring fold changes in absolute cell density in cellular mock communities of 7 vaginal species, which were constructed and measured via 16S sequencing by @brooks2015thet. The 'Uncalibrated' fold changes are derived directly from uncalibrated individual abundance measurements, which equal the product of the species' proportion by the total density (which here is be known to be constant by construction). The 'Calibrated (community)' measurements are computed from abundance measurements where the proportions are first corrected for the taxonomic bias that was estimated from a single sample that contained all 7 species. The 'Calibrated (reference)' measurements are computed from abundances measured with the reference-species method, with _Lactobacillus crispatus_ used as the reference; that is, the true abundance of _L. crispatus_ is treated as known and used to infer the abundance of the remaining 6 species. Only samples that contain _L. crispatus_ are included.
+(ref:cap-calibration-example) **Fold changes can be calibrated using community controls or reference species.** The figure compares the performance of three methods for measuring fold changes in absolute cell density in cellular mock communities of 7 vaginal species, which were constructed and measured via 16S sequencing by @brooks2015thet. The 'Uncalibrated' fold changes are derived directly from uncalibrated individual abundance measurements, which equal the product of the species' proportion by the total density (which is constant by construction). The 'Calibrated (community)' measurements are computed from abundance measurements where the proportions are first corrected for the taxonomic bias that was estimated from a single sample that contained all 7 species. The 'Calibrated (reference)' measurements are computed from abundances measured with the reference-species method, with _Lactobacillus crispatus_ used as the reference; that is, the true abundance of _L. crispatus_ is treated as known and used to infer the abundance of the remaining 6 species. Only samples that contain _L. crispatus_ are included.
 
 <!-- end figure -->
 
-## Complementary total-abundance and MGS measurements for absolute DA
+## Choose absolute-abundance methods with more stable FEs
 
-An emerging method for absolute DA analysis involves coupling MGS with an experimental measurement of the total abundance of the community, either of cells (e.g. by flow cytometry) or extracted DNA (e.g. by marker-gene qPCR or bulk DNA quantification).
-Species abundances are obtained by multiplying the measured total abundance 
-by the species proportions derived from MGS (Equation \@ref(eq:density-prop-meas)).
-This method has been dubbed 'Quantitative Microbiome Profiling' (@vandeputte2017quan); however, it remains subject to taxonomic bias in the MGS measurement (Section \@ref(absolute-abundance), Equation \@ref(eq:density-prop-error)).
-The error in the MGS-derived species proportions propagates to the measured abundances, and we've shown that this error can vary across samples and so negatively affect DA analyses.
-The total-abundance measurement is itself also subject to taxonomic bias---yet therein lies a possible solution.
+There are many methods for obtaining species (absolute) abundances from the relative abundances measured by MGS, which had previously not been evaluated for their sensitivity to taxonomic bias (@williamson2021amul being a notable exception).
+Our theoretical results show that these methods differ in the extent to which taxonomic bias causes the FEs in species abundances to vary across samples.
+The effect of bias on absolute DA analysis can be mitigated by choosing methods with more stable FEs, using either of two general approaches.
 
-The error in a species' abundance due to bias varies across samples with the ratio of the mean efficiency of the total-abundance measurement to that of the MGS measurement (Equation \@ref(eq:density-prop-error)).
-Consequently, measurements that are complementary, in the sense of having similar relative efficiencies among species, can lead to more consistent error across samples, thereby improving the accuracy of DA analyses.
+### Use complementary MGS and total-abundance measurements
 
-We illustrate by considering the debate over whether flow cytometry or 16S qPCR measurements of total abundance are better suited for normalizing 16S amplicon sequencing experiments (@galazzo2020howt, @jian2021comm).
-Flow cytometry directly counts cells, whereas 16S-qPCR measures the concentration of a marker gene following DNA extraction and so is subject to bias from extraction, copy-number variation, primer binding, and amplification.
-Thus we should intuitively expect flow cytometry to provide a more accurate measure of total abundance (and its changes across samples).
-Yet the 16S-qPCR measurement shares much or all of its bias with the 16S sequencing measurement, such that we can expect its mean efficiency to covary with that of the sequencing measurement.
-In that case, our theory predicts that the qPCR-based measurements of species abundance, while not more accurate than the cytometry-based ones, will have more stable fold errors and thus lead to more accurate fold changes across samples.
+A popular approach to measuring the absolute abundance of individual species is to multiply the species' proportions from MGS by a measurement of the abundance of the total community (Equation \@ref(eq:density-prop-meas)).
+The resulting species abundances are affected by taxonomic bias in the MGS _and_ the total-abundance measurement (Equation \@ref(eq:density-prop-error)).
+Section \@ref(differential-abundance) shows that the effect of both forms of bias on DA results can be reduced by choosing MGS and total-abundance methods that have similar taxonomic bias.
 
-These observations suggest that for the purposes of performing an absolute DA analysis from amplicon sequencing measurements, the ideal total-abundance measurement is qPCR or ddPCR of that marker gene from the same DNA extraction.
+Consider the debate over whether flow cytometry or 16S qPCR are better methods for measuring total abundance for the purposes of normalizing 16S amplicon sequencing data (@galazzo2020howt, @jian2021comm).
+Flow cytometry directly counts cells, whereas 16S qPCR measures the concentration of the 16S gene following DNA extraction.
+Thus the 16S qPCR measurement is subject to bias from extraction, copy-number variation, primer binding, and amplification, just like the 16S sequencing measurement.
+Although this shared bias likely makes 16S-qPCR less accurate as a measure of total cell concentration, our theory suggests that it can lead to more accurate fold changes across samples.
+
+More generally, these observations suggest that for the purposes of performing an absolute DA analysis from amplicon sequencing measurements, the ideal total-abundance measurement may be qPCR the same marker gene, from the same DNA extraction.
 Similar reasoning suggests that for shotgun sequencing, the ideal total-abundance measurement is bulk DNA quantification: Shotgun sequencing and bulk DNA quantification are both subject to bias from extraction and variation in genome size.
+Optimal use of these pairings requires thoughtful choices during bioinformatics. For example, performing copy-number correction on amplicon read counts prior to multiplication by qPCR measurements would be counter-productive, as it decouples bias in the two measurements. Additionally, the MGS proportions should be computed prior to discarding any unassigned reads, since species that are missing from the given taxonomy database still contribute to the total concentration of marker-gene and/or bulk DNA.
+Future experiments should evaluate the extent to which the taxonomic bias of DNA-based total-abundance measurements is stable across samples and shared with the complementary MGS measurement.
 
-Making optimal use of these pairings requires making thoughtful choices during bioinformatics.
-For example, performing copy-number correction on amplicon read counts prior to multiplication by qPCR measurements would be counter-productive, as it decouples bias in the two measurements.
-Additionally, the MGS proportions should be computed prior to discarding any unassigned reads, since species that are missing from the given taxonomy database still contribute to the total concentration of marker-gene and/or bulk DNA.
+### Normalize to a reference species
 
-Notably, this analysis suggests that for both marker-gene and shotgun sequencing, DNA-based measurements are preferable to cell-based measurements, despite the fact that bias during extraction makes DNA-based measures likely a poor proxy for true changes in cellular abundance.
-For the purposes of species-level DA analysis, however, it can be preferable for the total-abundance measurement to share the extraction bias of the MGS measurement rather than to have no bias at all.
-An important countervailing consideration is whether DNA-based quantification is significantly less linear in sample input concentration than cell-based quantification.
-Random and systematic nonlinearity in the DNA yield and/or quantification as input cell concentration increases will lead to distortions in the species-level fold changes unless otherwise measured and accounted for.
+A second approach to obtaining species abundances involves normalizing the MGS count for each species to that of a reference species with constant and/or known abundance (Equation \@ref(eq:density-ratio-meas)).
+Our theory predicts that taxonomic bias induces constant FEs in the resulting species abundances which do not affect DA results.
 
-## Reference species for absolute DA
+Previous studies have used species with a constant abundance as references: spike-ins, computationally-identified 'housekeeping species', and the host.
+Researchers may naturally be concerned about bias between the reference species and the native species being normalized against it (see, for example, @harrison2021theq's recommendations for spike-in experiments).
+Our results show that accurate FCs and DA results can be obtained so long as the relative efficiency of the focal species to the reference is consistent across samples.
+This condition is much weaker than requiring that bias is small (the relative efficiency is close to 1) and so greatly expands the applicability of spike-ins and host normalization in microbiome experiments.
 
-Note for revise: consider putting this first again, and having the transition be that this is a way to get bias to cancel out fully; the other approach can account for most-all of it.
-
-A competing approach to absolute DA analysis instead derives absolute-abundance information from a cellular or DNA spike-in to samples in a fixed concentration prior to DNA extraction.
-A conceptually similar approach is to choose a native species, such as the host, to treat as the constant against which to measure other species.
-Using one of two possible calculations (via MGS proportions or ratios) described in Section \@ref(absolute-abundance), these reference-species methods are each capable of yielding constant fold errors in species abundances and hence accurate fold changes and ranks across samples.
-
-To these two reference-species approaches, we propose a third: Directly measure the absolute abundance of one or more non-constant native species.
-Provided that the targeted species measurement has a consistent absolute efficiency, this approach too yields constant fold errors in species abundances.
+Section \@ref(absolute-abundance) further proposed an additional class of reference species for normalizing MGS measurements: Species whose abundance has been measured using a targeted method such as qPCR with species-specific primers.
 To demonstrate the ability for reference calibration to improve fold changes, we treated the abundance of one species (_Lactobacillus crispatus_) in the @brooks2015thet mock community data as known, and used it to calibrate the abundances of all species. 
 Doing so improved the resulting measurements of fold changes in density for all species (Figure \@ref(fig:calibration-example)).
-For most natural ecosystems, there is unlikely to be a single species or genus that is found in all samples.
-Sample coverage can be increased by measuring multiple species with complementary presence-absence patterns (Appendix [TODO]).
-Coverage can also be increased by using higher-order taxa as references---for example, performing qPCR measurements targeted to a particular family rather than a particular species.
-Higher-order taxa necessarily have higher prevalence than species, though may be more prone to errors from a varying efficiency across samples.
-DNA-based targeted measurements, such as qPCR with species-specific primers, may suffer from the non-linearity problem mentioned above.
-Cell-based targeted measurements such as using ddPCR directly on cells or virions (REFS) may be preferable.
-
-Beyond species-level DA analysis, reference species (particularly, spike-ins and housekeeping species) have also been used to measure changes in total-community abundance (@rao2021mult, OTHERS).
-Our results show that the bias invariance seen at the species-level does not apply for this purpose---the measured fold change in total abundance have an error equal to the inverse change in the sample mean efficiency.
-The same problem arises when analyzing the change in any taxon above the taxonomic order at which bias (i.e., the relative-efficiency trait) is conserved.
+Direct, targeted measurement of a reference species removes the need for it to have a constant abundance, thus further expanding the applicability of this reference-species normalization to experiments where spike-ins or housekeeping species are not viable options.
+The targeted measurement need not itself be an unbiased measure of the reference species' abundance; so long as it has constant FE, the abundances of native species obtained by normalization will also have constant FEs.
+In many ecosystems, there may not be a single universally-present species that can serve as a reference in all samples.
+Sample coverage can be increased by making targeted measurements of multiple species or of larger taxonomic groups; see Appendix REF for details.
 
 ## Bias sensitivity analysis
 
 Even if control measurements are not available, it is possible to computationally assess the sensitivity of a given DA result to taxonomic bias.
-One approach to conducting a _bias sensitivity analysis_ involves re-analyzing an MGS dataset across a range of possible taxonomic biases for the experiment.
+A _bias sensitivity analysis_ can be conducted by analyzing an MGS dataset multiple times under a range of possible taxonomic biases.
 First, a large number of hypothetical biases are generated from a user-specified probability distribution.
-This distribution determines the overall strength and phylogenetic conservation of bias that one wishes to consider, and may be informed by empirical facts such as control measurements or known primer mismatches.
-Next, the DA analysis is re-run while using each bias vector to calibrate the MGS measurements.
-Exactly how this should be done depends on details of the DA method; SI Rmd [TODO] provides several examples.
-Finally, the distribution of results can be compared graphically or with summary statistics to the original result.
-This approach is well-suited to the standard practice in microbiome studies of using 'off-the-shelf' statistical packages, as it can in principle be used with any DA method.
-Alternatively, existing DA methods can be extended to directly include the unknown taxonomic bias in the statistical model and provide DA estimates that inherently account for the added uncertainty in microbiome compositions due to the presence of unknown bias.
-@greenland2005mult compares these two approaches in a general context, and @nixon2022asta applies the second approach to microbiome data in the absence of taxonomic bias.
-A bias sensitivity analysis can also be used to ask what result a study would find that was identical except for having a given differential bias relative to the first, which is useful for disentangling disagreements between studies.
+Next, the DA analysis is re-run while using each simulated bias vector to calibrate the MGS measurements.
+This approach is highly flexible, and can be used to investigate the bias sensitivity of any DA method.
+Alternatively, existing DA methods can be extended to directly include the unknown taxonomic bias in their underlying statistical model, thereby providing DA estimates that inherently account for the added uncertainty in microbiome compositions due to the presence of unknown bias.
+(@greenland2005mult compares these two approaches in a general context; @nixon2022asta applies the second approach to microbiome data in the absence of taxonomic bias.)
 
-Designing and interpreting a bias sensitivity analysis is complicated by the large percentage of zero counts in species-level microbiome profiles, as the results may strongly depend on how these zeros are handled in the calibration process.
+Interpreting a bias sensitivity analysis is complicated by the large percentage of zero counts in species-level microbiome profiles, as the results may strongly depend on how these zeros are handled in the calibration process.
 Therefore it can be advantageous to jointly test the sensitivity of assumptions about zero-generating processes along with taxonomic bias, making statistical DA models that include bias and one or more zero-generating processes especially valuable.
-The development of tools and workflows to facilitate bias sensitivity analysis may provide an efficient way to increase scientists' ability to assess the reliability of microbiome results, both for differential abundance and microbiome analyses more generally.
+The development of tools and workflows to facilitate bias sensitivity analysis may provide an efficient way to increase scientists’ ability to assess the reliability of microbiome results, both for differential abundance and microbiome analyses more generally.
 
 ## Bias-aware meta-analysis
 
 Meta-analysis of microbiome samples measured across multiple studies must contend with the fact that different studies typically use different protocols and hence have different taxonomic biases.
 These different biases can be explicitly accounted for in a _bias meta-analysis_ which has the potential to improve statistical power as well as interpretability of multi-study DA analyses.
-Parametric meta-analysis models include study-specific latent parameters representing "batch effects"—non-biological differences in the data from each study which can distort the observed biological patterns.
-By estimating these 'nuisance parameters' along with the biological parameters of interest (such as species log-fold changes), the meta-analysis aims to reduce statistical bias in the biological parameters created by the non-biological differences among studies.
+Parametric meta-analysis models include study-specific latent parameters representing 'batch effects'—non-biological differences in the data from each study which can distort the observed biological patterns.
+By estimating these 'nuisance parameters' along with the biological parameters of interest (such as species log-fold changes), the meta-analysis aims to reduce statistical bias in the biological parameters created by the non-biological differences among studies (@leek2010tack,@wang2019mana).
 In a bias-aware meta-analysis, the meta-analysis model is configured so that (some of) the latent parameters correspond to study- and species-specific relative efficiencies.
 If taxonomic bias is consistent within but not between studies, then this approach may improve the ability for the meta-analysis to accurately identify DA patterns as compared to meta-analysis methods in which the 'batch effects' do not reflect the multiplicative and compositional nature of taxonomic bias.
+The ability to infer and adjust for the differential bias between studies can be increased by measuring one or more shared control samples alongside the experiment-specific samples.
 
-## Experimental recommendations
-
-<!-- Maybe: Give an overview of the solution classes -->
-We close this section by offering several recommendations to guide researchers in choosing one or more methods that are suited to their own purposes.
-
-### Use bias-invariant methods instead of or in addition to noninvariant ones
-
-Our results show that some but not all DA methods are theoretically invariant to taxonomic bias in the sense of having results that are exactly or approximately unaffected by taxonomic bias that acts consistently across samples at the given taxonomic level of analysis.
-Thus an obvious suggestion is to use invariant DA methods in place of noninvariant ones.
-Robust methods may carry their own downsides (such as the issues with ratio-based analyses noted above) which do not allow them to fully meet the goal of the study.
-In this case, bias-invariant methods can be used to validate a primary analysis.
-A recent study by @hevroni2020seas illustrates this second approach.
-The authors analyzed how the within-sample rank of a viral species changed from summer to winter, which can in principle be distorted by species-level bias.
-To address this concern, the authors also analyzed the change in the centered log ratio (CLR) associated with each species, a ratio-based analysis that is bias invariant.
-They found that the species whose within-sample ranks increased also increased in their CLR value, providing evidence that their results were not being driven by taxonomic bias.
-An example for absolute DA is suggested by our marine-sediments case study: If total-abundance measurements are made as well as targeted species measurements for all or a subset of samples, then analysis of species abundances derived from the reference-species abundance can be used as a check against those derived from total-community abundance.
-
-### Use control measurements to quantitatively validate and correct estimates
-
-The use of control measurements in microbiome studies primarily serve as a qualitative check on the success of the experiment.
-Above, we describe several ways that controls can be used to quantitatively characterize and correct the effect of bias in DA analyses.
-Our earlier work (@mclaren2019cons) proposed the use of control communities, which can be used to directly mesaure and correct bias.
-Artificial ('mock') communities are particularly suited to studies of synthetic communities (like the fungal case study) or of ecosystems dominated by a relatively small number of culturable taxa (like the vaginal microbiome).
-In other cases, natural community controls can still be used to correct differential bias across experiments.
-The diversity of methods for measuring absolute abundance from MGS data provides opportunities for quantitative validation and correction of absolute DA analysis without the need for control communities.
-In particular, targeted measurements or spike-ins of one or more taxa can be used to validate absolute DA results derived from by other means.
-Recall that our model indicates that consistent bias does not affect fold changes in species abundance derived by these methods, but error in fold changes from total-abundance measurement that are shared among species.
-As a result, differences between these two bias-invariant methods and the noninvariant methods can be used to quantitatively correct the noninvariant method.
-
-### Use computational approaches to test hypotheses about inconsistent results
-
-Computational approaches to accounting bias provide a cheap way to evaluate hypotheses about how bias might be driving inconsistencies between studies.
-For example, @callahan2017repl report a lack of association of _Lactobacillus iners_ in the vaginal microbiomes of pregnant women with preterm birth, whereas @kindinger2017thei report a positive association.
-@callahan2017repl hypothesized that the difference could be due to the use of primers in @kindinger2017thei that have a general preference for _Lactobacillus spp._ and fail to amplify _Gardnerella vaginalis_ (which sometimes co-occurs with _L. iners_), in conjunction with the use by @kindinger2017thei of a different DA analysis method that is likely to be more sensitive to such a bias.
-One can this hypothesis by perturbing the microbiome profiles by @callahan2017repl to have such a bias and perform the analysis methods of both studies on the the original and perturbed data and compare the results.
-Alternatively, both datasets could be jointly analyzed in a bias-aware meta-analysis to estimate the differential bias between studies (while also controlling for health outcome and other relevant subject metadata) and comparing it to the hypothesized bias.
-
-### Combine methods to offset limitations
-
-The various approaches to relative and absolute DA have trade-offs both in terms of their theoretical sensitivity to bias and in terms of their experimental feasibility.
-For example, our results show that for a study that aims to perform absolute DA with 16S amplicon sequencing, the use of spike-ins or of total-16S qPCR to derive absolute abundances can each provide species-level fold changes that are robust to bias, but cannot do the same for total community abundance.
-Therefore when both are of interest, either of these methods can be usefully paired with a method that directly counts cells and so may be more likely to provide accurate fold changes in total abundance.
-As another example, targeted measurements of just one or two species may be unlikely cover all samples, but can be used to validate or correct measurements derived from other absolute-abundance methods.
-
-The two computational methods we discuss can each be usefully combined with the use of control communities or targeted measurements.
-Considerable uncertainty is entailed in extrapolating the bias measured from community controls to other species and sample types.
-This uncertainty can be naturally accounted for by using the control measurements to inform a bias-sensitivity analysis.
-The ability for a bias-aware meta-analysis to adjust for differential bias between studies might increase dramatically if these studies include one or more common natural community controls, enabling direct bias measurement.
-Finally, targeted measurements can be used to constrain the fold changes in absolute abundance in both bias-sensitivity analyses and bias-aware meta-analyses.
-
-### Make assumptions explicit
-
-Regardless of whether the above approaches are taken, researchers can place their microbiome inferences on firmer scientific ground by explicitly stating their assumptions about taxonomic bias---the conditions that are required for a given biological conclusion to follow from a statistical result derived from a particular experimental design and analysis.
-For instance, consider the inference of exponential growth rates of prokaryotic taxa in marine sediments by @lloyd2020evid that was discussed in Section \@ref(case-studies).
-The inferred exponential growth rates are accurate provided that 1) bias is consistent across samples at the taxonomic level being analyzed (here, typically families), 2) the mean efficiency does not systematically vary with sample depth, and 3) the fold error in the total-abundance measurement does not systematically vary with sample depth.
-In the case of meta-analyses, authors can helpfully distinguish whether their analysis merely assumes that bias is consistent within individual studies, or requires the much stronger assumption that it is consistent across studies.
-Creating a norm of explicitly stating the assumptions being made about bias in research articles will help both authors and readers better evaluate the claims being made and to identify opportunities to improve their confidence through implementation of the sorts of solutions we propose.
