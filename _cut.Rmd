@@ -1,0 +1,35 @@
+# Cut text
+
+# How taxonomic bias affects abundance measurements {#abundance-measurement}
+
+## Absolute abundance
+
+Here we consider some practical applications of this method and how their measurements are affected by bias in the MGS measurement and error in $\widehat{\text{abun}}_{r}(a)$.
+Appendix [REF] describes the general case where there is a set $R$ of multiple reference species; here we restrict our attention to a single reference species $r$.
+
+### Leveraging information about a reference species
+
+In practice, researchers commonly use a less-direct but equivalent approach to measure species abundances from a reference such as a spike-in.
+Set $S$ to be the species of interest excluding the spike-in species $r$.
+In this approach, one measures the total abundance of the community $S$ from the ratio of non-spike-in to spike-in reads,
+\begin{align}
+  (\#eq:total-density-spike)
+  \widehat{\text{abun}}_S(a)
+  &= \frac{\text{reads}_S(a) \cdot \widehat{\text{abun}}_R(a)}{\text{reads}_r(a)}.
+\end{align}
+Then, one uses this measurement $\widehat{\text{abun}}_{S}(a)$ along with the MGS proportions in Equation \@ref(eq:density-prop-meas) to determine the abundance of individual species.
+This calculation yields measurements that are identical to those from directly applying Equation \@ref(eq:density-ratio-meas) (Appendix \@ref(total-density-ref)).
+This observation might seem paradoxical: Equation \@ref(eq:density-ratio-error) indicates proportional error for the direct approach, whereas \@ref(eq:density-prop-error) suggests non-proportional errors for the indirect approach.
+This apparent contradiction is resolved by the fact the measurement $\widehat{\text{abun}}_{S}(a)$ by this method has errors that are proportional to $\text{efficiency}_S(a)$ and thus exactly offset the proportionality with $1/\text{efficiency}_S(a)$ in the MGS proportions, such that the measured species abundances have constant fold errors.
+
+
+## Summary
+
+Taxonomic bias in MGS measurements makes all MGS-based measures of relative and absolute abundance inaccurate.
+For some measures---but not all---consistent bias at the species level creates constant FEs in species abundances.
+Of two types of relative abundance, the ratio between a pair of species has constant FEs, whereas the proportion of an individual species does not. 
+Instead, the FE a species' proportion varies with the mean efficiency across samples.
+Methods for measuring species absolute abundance that involve measuring the abundance of the total community likewise have FEs that vary with the sample mean efficiency; 
+a notable exception is if the mean efficiency of the total-abundance measurement mirrors that of the MGS measurement.
+Absolute-abundance methods that instead involve measuring or spiking individual reference species have constant FEs provided that the abundance of the reference species can be determined up to a constant FE.
+The efficiency of higher-order taxa may vary across samples even if the efficiencies of their constituent species are constant; as a result, all standard abundance measures can yield variable FEs at taxonomic resolutions higher than that at which bias is conserved.
