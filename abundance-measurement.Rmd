@@ -12,9 +12,9 @@ For concreteness, we will consider _absolute abundance_, or simply _abundance_, 
 That said, our results equally apply to other definitions of absolute abundance, such as the total number of cells in a sample or ecosystem and other abundance units such as biomass or genome copy number.
 
 This model is the simplest that respects the multiplicative nature of taxonomic bias and the *compositional* nature of MGS measurements.
-The actual abundance of a species in a given sample, multiplied by its measurement efficiency---its rate of conversion from cells to taxonomically assigned sequencing reads---determines the species' read count in that sample.
+The actual abundance of a species in a given sample, multiplied by its _measurement efficiency_---its rate of conversion from cells to taxonomically assigned sequencing reads---determines the species' read count in that sample.
 Taxonomic bias presents as variation in the measurement efficiencies among species within an MGS experiment.
-The read counts further depend on sample-specific experimental factors that are typically unknown, such that they are best interpreted as only providing relative abundances (such data is said to be _compositional_) (@gloor2017micr).
+The read counts further depend on sample-specific experimental factors that are typically unknown, such that they are best interpreted as only providing relative abundances (such data is said to be _compositional_; @gloor2017micr).
 
 We consider a set of microbiome samples measured by a specific MGS protocol that extracts, sequences, and taxonomically assigns reads to a set of microbial species $S$.
 We make several simplifying assumptions to facilitate our analysis and presentation.
@@ -24,90 +24,72 @@ Third, we suppose that taxonomic bias acts consistently across samples at the le
 Finally, unless otherwise stated, we treat sequencing measurements as deterministic, ignoring the 'random' variation in read counts that arise from the sampling of sequencing reads and other aspects of the MGS process.
 These assumptions, though unrealistic descriptions of most MGS experiments, serve the purpose of clearly demonstrating when and why consistent taxonomic bias creates errors in DA analysis.
 
-Our model stipulates that the taxonomically-assigned read count for a species $i$ in a sample $a$ equals its abundance multiplied by species-specific and sample-specific factors,
+Our model stipulates that the taxonomically-assigned read count for a species $i$ in a sample $a$ equals its abundance $A_{i}^{(a)}$ multiplied by a species-specific factor $B_{i}$ and a sample-specific factor $F^{(a)}$,
 \begin{align}
   (\#eq:mgs-model)
-  \text{reads}_{i}(a)
-  = \text{abun}_{i}(a) \quad \cdot
-    \underbrace{\text{efficiency}_{i}}_{\substack{\text{species specific,} \\  \text{sample independent}}}
-    \cdot \quad
-    \underbrace{\text{effort}(a)}_{\substack{\text{species independent,} \\  \text{sample specific}}}.
-%  \\ \\
-%  M_i^{(a)} = A_i^{(a)} B_i F^{(a)}.
+  M_i^{(a)} = A_i^{(a)} B_i F^{(a)}.
 \end{align}
-The species-specific factor, $\text{efficiency}_{i}$, equals the *relative measurement efficiency* (or simply *efficiency*) of the species relative to an arbitrary baseline species (@mclaren2019cons).
+The species-specific factor, $B_{i}$, is the *relative measurement efficiency* (or simply *efficiency*) of the species relative to an arbitrary baseline species (@mclaren2019cons).
 The variation in efficiency among species corresponds to the taxonomic bias of the MGS protocol.
-The sample-specific factor, $\text{effort}(a)$, quantifies the *effective experimental effort* per unit abundance in measuring the sample.
-Equation \@ref(eq:mgs-model) implies that the total number of assigned reads in sample $a$ equals
+The sample-specific factor, $F^{(a)}$, describes the effective sequencing effort for that sample; it equals the number of reads per unit abundance that would be obtained for a species with an efficiency of 1.
+We can write the total number of assigned reads for the sample as
 \begin{align}
   (\#eq:total-reads)
-  \text{reads}_S(a)
-    = \text{abun}_S(a) \cdot \text{efficiency}_S(a) \cdot \text{effort}(a),
-    \\ \\
-  \sum_i M_i^{(a)}
-    = \left(\sum_i A_i^{(a)}\right) \cdot \bar B^{(a)} \cdot F^{(a)},
+  M_\tot^{(a)}
+    = A_\tot^{(a)} \bar B^{(a)} F^{(a)},
 \end{align}
-where $\text{abun}_{S}(a) \equiv \sum_{j\in S}\text{abun}_j(a)$ is the total abundance of species in $S$ and 
+where 
+$M_{\tot}^{(a)} \equiv \sum_{j\in S} M_j^{(a)}$ is the total read count and $A_{\tot}^{(a)} \equiv \sum_{j\in S}A_j^{(a)}$ is the total abundance for all species $S$, and 
 \begin{align}
   (\#eq:mean-efficiency)
-  \text{efficiency}_S(a) 
-    \equiv \frac{\sum_{j\in S}\text{abun}_j(a) \cdot \text{efficiency}_j}{\text{abun}_S(a)}
-%    \\
-%  \bar B^{(a)}
-%    \equiv \frac{\sum_{i} A_i^{(a)} B_i}{\sum_i A_i^{(a)}}
+  \bar B^{(a)} \equiv \frac{\sum_{i\in S} A_i^{(a)} B_i}{\sum_{i\in S} A_i^{(a)}}
 \end{align}
-is the _sample mean efficiency_, the mean efficiency of all species in sample $a$ weighted by their abundance.
+is the _sample mean efficiency_, defined as the mean efficiency of all species weighted by their abundance.
 
 ## Relative abundance {#relative-abundance}
 
 We distinguish between two types of species-level *relative abundances* within a sample.
-The *proportion* of species $i$ in sample $a$ equals its abundance relative to the total abundance of all species in $S$,
+The *proportion* $P_{i}^{(a)}$ of species $i$ in sample $a$ equals its abundance relative to the total abundance of all species in $S$,
 \begin{align}
   (\#eq:prop)
-  \text{prop}_{i}(a) 
-    &\equiv \frac{\text{abun}_i(a)}{\text{abun}_S(a)}.
-%  \\&= \frac{\text{abun}_i(a)}{\sum_{i \in S}\text{abun}_i(a)}.
-%  P_{i}^{(a)}
-%    &\equiv \frac{A_i^{(a)}}{\sum A_i^{(a)}}.
+  P_{i}^{(a)} &\equiv \frac{A_i^{(a)}}{A_\tot^{(a)}}.
 \end{align}
-The *ratio* between two species $i$ and $j$ equals the abundance of $i$ relative to that of $j$,
+The *ratio* $R_{i/j}^{(a)}$ between two species $i$ and $j$ equals the abundance of $i$ divided by that of $j$,
 \begin{align}
   (\#eq:ratio)
-  \text{ratio}_{i/j}(a) \equiv \frac{\text{abun}_i(a)}{\text{abun}_j(a)}.
-%  R_{i/j}^{(a)} \equiv \frac{A_i^{(a)}}{A_j^{(a)}}.
+  R_{i/j}^{(a)} \equiv \frac{A_i^{(a)}}{A_j^{(a)}}.
 \end{align}
 
 The measured proportion of a species is given by its proportion of all the assigned reads in a sample,
 \begin{align}
   (\#eq:prop-meas)
-  \widehat{\text{prop}}_{i}(a) = \frac{\text{reads}_i(a)}{\text{reads}_S(a)}.
+  \tilde P_{i}^{(a)} &\equiv \frac{M_i^{(a)}}{M_\tot^{(a)}}.
 \end{align}
-We can rewrite the right-hand side (using Equations \@ref(eq:mgs-model), \@ref(eq:total-reads), and \@ref(eq:prop-meas)) to find
+We use the tilde to distinguish the measurement from the actual quantity being measured.
+From Equations \@ref(eq:mgs-model), \@ref(eq:total-reads), and \@ref(eq:prop-meas), it follows that the measured and actual proportion are related by
 \begin{align}
   (\#eq:prop-error)
-  \widehat{\text{prop}}_{i}(a)
-  &= \text{prop}_{i}(a) \cdot \underbrace{\frac{\text{efficiency}_{i}}{\text{efficiency}_S(a)}}_{\substack{\text{variable} \\ \text{fold error}}}.
+  \tilde P_{i}^{(a)} &= P_{i}^{(a)} \cdot \frac{B_i}{\bar B^{(a)}}.
 \end{align}
-Taxonomic bias creates a multiplicative error in the species' proportion equal to its efficiency divided by the mean efficiency in the sample.
-Since the mean efficiency varies across samples, so does the FE in a species' proportion.
+<!-- Taxonomic bias thus creates a fold-error (FE) in the measured proportion $\tilde P_{i}^{(a)}$ of species $i$ equal to the efficiency $B_i$ of species $i$ $divided by the mean efficiency $\bar B^{(a)}$ in the sample. -->
+Taxonomic bias thus creates a fold-error (FE) in the measured proportion of a species that is equal to its efficiency divided by the mean efficiency in the sample.
+Since the mean efficiency varies across samples, so does the FE.
 This phenomenon can be seen for Species 3 in the two hypothetical communities in Figure \@ref(fig:error-proportions). 
 Species 3, which has an efficiency of 6, is under-measured in Sample 1 (FE < 1) but over-measured (FE > 1) in Sample 2.
 This difference occurs because the even distribution of species Sample 1 yields a mean efficiency of 8.33; in contrast, the lopsided distribution in Sample 2, which is dominated by the low-efficiency Species 1, has a mean efficiency of just 3.15.
 A demonstration in bacterial mock communities is shown in [Figure 3C](https://doi.org/10.7554/eLife.46923.004) of @mclaren2019cons.
 
-The measured ratio between species $i$ and $j$ is given by the ratio of their read counts, 
+The measured ratio $\tilde R_{i/j}^{(a)}$ between species $i$ and $j$ is given by the ratio of their read counts, 
 \begin{align}
   (\#eq:ratio-meas)
-  \widehat{\text{ratio}}_{i/j}(a) = \frac{\text{reads}_i(a)}{\text{reads}_j(a)}.
+  \tilde R_{i/j}^{(a)} \equiv \frac{M_{i}^{(a)}}{M_{j}^{(a)}}.
 \end{align}
-From Equations \@ref(eq:mgs-model) and \@ref(eq:ratio-meas), it follows that 
+From Equations \@ref(eq:mgs-model) and \@ref(eq:ratio-meas), it follows that the measured and actual ratio are related by
 \begin{align}
   (\#eq:ratio-error)
-  \widehat{\text{ratio}}_{i/j}(a)
-%  &= \frac{\text{abun}_{i}(a)}{\text{abun}_{j}(a)} 
-  &= \text{ratio}_{i/j}(a) \cdot \underbrace{\frac{\text{efficiency}_{i}}{\text{efficiency}_{j}}}_{\substack{\text{constant} \\ \text{fold error}}}.
+  \tilde R_{i/j}^{(a)} = R_{i/j}^{(a)} \cdot \frac{B_i}{B_j}.
 \end{align}
-Taxonomic bias creates FE in the ratio measurement that is equal to the ratio in the species' efficiencies; the FE is therefore constant across samples.
+Taxonomic bias thus creates a FE in the measured ratio that is equal to the ratio in the species' efficiencies; the FE is therefore constant across samples.
 For instance, in Figure \@ref(fig:error-proportions), the ratio of Species 3 (with an efficiency of 6) to Species 1 (with an efficiency of 1) is over-estimated by a factor of 6 in both communities despite their varying compositions.
 A demonstration in bacterial mock communities is shown in [Figure 3D](https://doi.org/10.7554/eLife.46923.004) of @mclaren2019cons.
 
@@ -124,19 +106,21 @@ A demonstration in bacterial mock communities is shown in [Figure 3D](https://do
 
 **Higher-order taxa:**
 We can consider a higher-order taxon $I$, such as a genus or phylum, as a set of species, $\{i \in I\}$.
-The abundance of taxon $I$ in sample $a$ is the sum of the abundances of its constituent species, $\text{abun}_{I}(a) = \sum_{i \in I}\text{abun}_{i}(a)$.
-Similarly, the read count of taxon $I$ is the sum $\text{reads}_{I}(a) = \sum_{i \in I}\text{reads}_{i}(a)$.
-The efficiency of taxon $I$ equals the abundance-weighted average of the efficiencies of its constituent species,
+The abundance of taxon $I$ in sample $a$ is the sum of the abundances of its constituent species, $A_{I}^{(a)} \equiv \sum_{i \in I} A_{i}^{(a)}$.
+Similarly, the read count of taxon $I$ is the sum $M_{I}^{(a)} \equiv \sum_{i \in I} M_{i}^{(a)}$.
+We further define the efficiency of taxon $I$ as the abundance-weighted average of the efficiencies of its constituent species,
 \begin{align}
   (\#eq:efficiency-general)
-  \text{efficiency}_I(a) 
-    \equiv \frac{\sum_{i\in I}\text{abun}_i(a)\cdot \text{efficiency}_i}{\text{abun}_I(a)}.
+  B_I^{(a)} \equiv \frac{\sum_{i\in I} A_{i}^{(a)} B_{i}}{\sum_{i\in I} A_{i}^{(a)}}.
 \end{align}
-If the constituent species have different efficiencies, then the efficiency of the higher-order taxon will vary across samples depending on the relative abundances of its constituents (@mclaren2019cons).
+With these definitions, the read count for taxon $I$ can be expressed as
+$M_{I}^{(a)} = A_{I}^{(a)} B_I^{(a)} F^{(a)}$.
+Thus $B_I^{(a)}$ plays a role analogous to the efficiency of an individual species, but differs in that it need not be constant across samples:
+If the constituent species have different efficiencies, then the efficiency of the higher-order taxon $I$ depends on the relative abundances of its constituents and so will tend to vary across samples (@mclaren2019cons).
 As an example, suppose that Species 1 and Species 2 in Figure \@ref(fig:error-proportions) were in the same phylum.
 The efficiency of the phylum would then be $\tfrac{1}{2} \cdot 1 + \tfrac{1}{2} \cdot 18 = 9.5$ in Sample 1 and $\tfrac{15}{16} \cdot 1 + \tfrac{1}{16} \cdot 18 \approx 2.1$ in Sample 2.
-Equations \@ref(eq:prop-error) and \@ref(eq:ratio-error) continue to describe the measurement error in proportions and ratios involving higher-order taxa, so long as the sample-dependent taxon efficiency defined by Equation \@ref(eq:efficiency-general) is used.
-In this way, we can see that both proportions and ratios among higher-order taxa may have inconsistent fold errors.
+Equations \@ref(eq:prop-error) and \@ref(eq:ratio-error) continue to describe the measurement error in proportions and ratios involving higher-order taxa, so long as the sample-dependent, higher-order taxa efficiencies $B_I^{(a)}$ and $B_J^{(a)}$ are used. 
+In this way, we see that both proportions and ratios among higher-order taxa may have inconsistent FEs.
 
 ## Absolute abundance {#absolute-abundance}
 
@@ -148,66 +132,67 @@ We consider each approach in detail to determine how taxonomic bias affects the 
 
 ### Leveraging information about total-community abundance
 
-Suppose that the abundance of the total community in each sample has been measured by a non-MGS method.
-The absolute abundances of individual species can be obtained by multiplying the species proportions (obtained via MGS) by this total-abundance measurement,
+Suppose that the total abundance of all species in the sample, $A_{\tot}^{(a)}$, has been measured by a non-MGS method, yielding a measurement $\tilde A_\tot^{(a)}$.
+The absolute abundance of an individual species can be measured by multiplying the species' proportion from MGS by this total-abundance measurement,
 \begin{align}
   (\#eq:density-prop-meas)
-  \widehat{\text{abun}}_{i}(a) 
-  &= \widehat{\text{prop}}_{i}(a) \cdot \widehat{\text{abun}}_S(a).
-%  \\ \\
-%  \hat A_i^{(a)} &= \hat P_i^{(a)} \cdot \widehat{\sum_i A_i^{(a)}}.
-%  \\ \\
-%  \hat A_i^{(a)} &= \hat P_i^{(a)} \cdot \widetilde{\sum_i A_i^{(a)}}.
+  \tilde A_i^{(a)} &= \tilde P_i^{(a)} \tilde A_\tot^{(a)}.
 \end{align}
 Total-abundance measurements recently used for this purpose include counting cells with microscopy (@lloyd2020evid) or flow cytometry (@props2017abso, @vandeputte2017quan, @galazzo2020howt), measuring the concentration of a marker-gene with qPCR or ddPCR (@zhang2017soil, @barlow2020aqau, @galazzo2020howt, @tettamantiboshier2020comp), and measuring bulk DNA concentration with a florescence-based DNA quantification method (@contijoch2019gutm).
 
-Importantly, these methods of measuring total-community abundance are themselves subject to taxonomic bias.
+Importantly, these methods of measuring total abundance are themselves subject to taxonomic bias.
 Flow cytometry may, for example, yield lower cell counts for species whose cells tend to clump together or are prone to lysis during steps involved in sample collection, storage, and preparation.
 Marker-gene concentrations measured by qPCR are affected by variation among species in extraction efficiency, marker-gene copy number, and PCR binding and amplification efficiency.
 We can easily understand the impact of taxonomic bias on total-abundance measurement under simplifying assumptions analogous to those in our MGS model.
-Suppose that each species has an _absolute efficiency_ for the total-abundance measurement that is constant across samples.
-Neglecting other sources of random and systematic error, the total-abundance measurement equals
+Suppose that each species $i$ has an _absolute efficiency_ $B_{i}^{\mtot}$ for the total-abundance measurement that is constant across samples.
+Further, let $\bar B^{\mtot (a)}$ be the abundance-weighted average of these efficiencies in sample $a$---that is, the mean efficiency of the total-abundance measurement.
+Neglecting other error sources, the total-abundance measurement equals
 \begin{align}
   (\#eq:total-density-error)
-  \widehat{\text{abun}}_S(a) 
-  &= \sum_{i\in S} \text{abun}_i(a) \cdot \text{efficiency}^{\text{tot}}_i
-\\&= \text{abun}_S(a) \cdot \text{efficiency}^{\text{tot}}_S(a),
+  \tilde A_\tot^{(a)} 
+  &= \sum_{i\in S} A_i^{(a)} B_{i}^{\mtot}
+  \\&= A_\tot^{(a)} \bar B^{\mtot (a)}.
 \end{align}
-where $\text{efficiency}_{i}^{\text{tot}}(a)$ is the absolute measurement efficiency of species $i$ for the total-abundance measurement and $\text{efficiency}^{\text{tot}}_S(a)$ is the mean efficiency of the total-abundance measurement in the sample.
-<!-- Note, we have assumed that the total-abundance and MGS measurements are sensitive to the same species -->
+<!-- Note: We have assumed that only species in S contribute to the total abundance measurement. -->
 
-The resulting absolute-abundance measurements of individual species are affected by taxonomic bias in both the MGS and total-abundance measurement.
-We can compute this effect by substituting Equations \@ref(eq:prop-error) and \@ref(eq:total-density-error) into Equation \@ref(eq:density-prop-meas), yielding
+Species abundance measurements derived by this method are affected by taxonomic bias in both the MGS and total-abundance measurement.
+We can determine the resulting fold error (FE) by substituting Equations \@ref(eq:prop-error) and \@ref(eq:total-density-error) into Equation \@ref(eq:density-prop-meas), yielding
 \begin{align}
   (\#eq:density-prop-error)
-  \widehat{\text{abun}}_{i}(a) 
-  = \text{abun}_{i}(a) \cdot \frac{\text{efficiency}_{i} \cdot \text{efficiency}^{\text{tot}}_S(a)}{\text{efficiency}_S(a)}.
-%  \\ \\
-%  \widetilde{\sum A_i^{(a)}}
-%  = \left(\sum A_i^{(a)}\right) \cdot \frac{B_i \cdot \bar B^{\text{tot},(a)}}{\bar B^{(a)}}.
+  \tilde A_\tot^{(a)}
+  = A_\tot^{(a)} \cdot \frac{B_i \bar B^{\mtot (a)}}{\bar B^{(a)}}.
 \end{align}
 Equation \@ref(eq:density-prop-error) indicates that the FE in the measured absolute abundance of a species equals its MGS efficiency relative to the mean MGS efficiency in the sample, multiplied by the mean efficiency of the total measurement.
-As in the case of proportions (Equation \@ref(eq:prop-error)), the FE depends on sample composition through the two mean efficiency terms and so will vary across samples.
-Notably, if the mean efficiency of the total-abundance measurement mirrors that of the MGS measurement, then the two offset each other and lead to more stable FEs.
-We discuss how this possibility might be exploited in real experimental workflows in Section \@ref(solutions).
+As in the case of proportions (Equation \@ref(eq:prop-error)), the FE depends on sample composition through the two mean efficiency terms and so will vary across samples unless the two perfectly covary.
 
 ### Leveraging information about a reference species
 
-Suppose that the absolute abundance of a _reference species_ $r$ is known, either by experimental design or by direct measurement using a non-MGS method. 
-The absolute abundances of each species can be obtained by multiplying its read count by the abundance-to-reads ratio for species $r$,
+Suppose that the absolute abundance of a _reference species_ $r$ has been fixed by the experimenter or been measured by independent means.
+This known or measured abundance $\tilde A_{r}^{(a)}$ can be used in conjunction with the MGS read counts to obtain absolute abundances for all species.
+In the absence of taxonomic bias, the ratio of a species' absolute abundance to its MGS read count is the same for all species in a given sample (Equation \@ref{eq:mgs-model}).
+Hence the known ratio for the reference species can serve as conversion factor for obtaining the absolute abundance of a species $i$ from its read count,
 \begin{align}
   (\#eq:density-ratio-meas)
-  \widehat{\text{abun}}_{i}(a) = \text{reads}_{i}(a) \cdot \frac{\widehat{\text{abun}}_{r}(a)}{\text{reads}_{r}(a)}.
+  \tilde A_i^{(a)} &= M_i^{(a)} \cdot \frac{\tilde A_{r}^{(a)}}{M_i^{(a)}}.
 \end{align}
+Let $\FE[\tilde A_r^{(a)}] \equiv {\tilde A_r^{(a)}}/{A_r^{(a)}}$ be the FE in the reference measurement.
+The effect on $\tilde A_i^{(a)}$ of taxonomic bias in the MGS measurement can be determined by substituting Equation \@ref(eq:ratio-error) into Equation \@ref(eq:density-ratio-meas), yielding
+\begin{align}
+  (\#eq:density-ratio-error)
+  \tilde A_i^{(a)} = A_i^{(a)} \cdot \frac{B_i}{B_r} \cdot 
+%    \frac{\tilde A_r^{(a)}}{A_r^{(a)}}.
+    \FE \left[\tilde A_r^{(a)}\right].
+\end{align}
+The FE in $\tilde A_i^{(a)}$ consists of two terms: the relative efficiency of species $i$ to species $r$ in the MGS measurement (${B_i}/{B_r}$) and the FE in the reference species' abundance (${\tilde A_r^{(a)}}/{A_r^{(a)}}$).
 
 A common application of this approach involves adding a 'spike-in' (as described above) in a known (and typically constant) abundance across samples (@stammler2016adju, @ji2019quan, @harrison2021theq, REFs).
-In this case, the reference abundance $\widehat{\text{abun}}_{r}(a)$ is determined from the concentration of the spike-in stock multiplied by the ratio of the spike-in to sample volumes.
+In this case, the reference abundance $\tilde A_r^{(a)}$ is determined from the concentration of the spike-in stock multiplied by the ratio of the spike-in to sample volumes.
 (In practice, researchers in spike-in experiments have typically used a more indirect calculation to determine species abundances, but which yields identical results to \@ref(eq:density-ratio-meas); Appendix REF).
 
 Others have instead sought to determine naturally-occurring species that are thought to be constant across samples; we refer to such species as _housekeeping species_ by analogy with the housekeeping genes used for absolute-abundance conversion in gene-expression studies (REF).
 Housekeeping species can sometimes be identified using prior scientific knowledge; for example, in shotgun sequencing experiments, researchers have used sequencing reads from the plant or animal host as a reference (REFs).
 A related approach involves computationally identifying species that are constant between pairs of samples (@david2014host) or between sample conditions (@mandal2015anal, @kumar2018anal).
-The abundance of a housekeeping species is typically unknown; therefore, to estimate the abundances of other species, we simply set $\widehat{\text{abun}}_{r}(a)$ to 1 in Equation \@ref(eq:density-ratio-meas).
+The abundance of a housekeeping species is typically unknown; therefore, to estimate the abundances of other species, we simply set $\tilde A_r^{(a)}$ to 1 in Equation \@ref(eq:density-ratio-meas).
 The resulting abundance measurements have unknown but fixed units, which is sufficient for measuring fold changes across samples.
 
 We suggest an additional way of using the reference-species strategy even in the absence of a spike-in or constant species:
@@ -217,13 +202,3 @@ The most common form of targeted measurement involves using qPCR or ddPCR to mea
 It is also possible to directly measure cell concentration by performing ddPCR prior to DNA extraction (REFs), flow cytometry with species-specific florescent probes, or CFU counting on selective media.
 Appendix [REF] describes how using multiple reference species and/or statistical modeling can address the fact that any one native reference species is unlikely to be found in all samples.
 
-The effect of taxonomic bias on absolute abundance measurements derived from a reference species can be determined by substituting Equation \@ref(eq:ratio-error) into Equation \@ref(eq:density-ratio-meas), which indicates that the measured abundance of species $i$ is 
-\begin{align}
-  (\#eq:density-ratio-error)
-  \widehat{\text{abun}}_{i}(a) 
-  = \text{abun}_{i}(a) \cdot \frac{\text{efficiency}_{i}}{\text{efficiency}_{r}}
-  \cdot \underbrace{\frac{\widehat{\text{abun}_r}(a)}{\text{abun}_r(a)}}_{\substack{\text{fold error in} \\ \text{ref. species}}}.
-  % \cdot \begin{array}{c} \text{fold error in} \\ \widehat{\text{abun}_r}(a) 
-\end{align}
-The FE in $\widehat{\text{abun}}_{i}(a)$ consists of two terms: the relative efficiency of species $i$ to species $r$ in the MGS measurement, and the FE in the reference species' abundance.
-If bias is consistent across samples and the reference species can be spiked in or measured with a constant FE, then the FE in the $\widehat{\text{abun}}_{i}(a)$ will be constant.

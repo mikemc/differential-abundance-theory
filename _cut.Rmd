@@ -33,3 +33,12 @@ Methods for measuring species absolute abundance that involve measuring the abun
 a notable exception is if the mean efficiency of the total-abundance measurement mirrors that of the MGS measurement.
 Absolute-abundance methods that instead involve measuring or spiking individual reference species have constant FEs provided that the abundance of the reference species can be determined up to a constant FE.
 The efficiency of higher-order taxa may vary across samples even if the efficiencies of their constituent species are constant; as a result, all standard abundance measures can yield variable FEs at taxonomic resolutions higher than that at which bias is conserved.
+
+
+# How bias affects DA results {#differential-abundance}
+
+The previous section showed that for some methods of measurement, taxonomic bias creates constant FEs in the (relative or absolute) abundance of a species; but in others, bias creates FEs that vary inversely with the mean efficiency of the sample.
+This section describes how these constant or varying FEs affect DA results, finding conditions for significant inferential errors.
+
+The fact that some measures have constant FEs while others do not suggests that these DA analyses based on these measures will be more or less robust to bias.
+Here we rigorously evaluate this idea / explore in detail, finding precise conditions for significant error in DA results.

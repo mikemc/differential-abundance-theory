@@ -44,6 +44,10 @@ output:
     toc_depth: 2
     toc_unnumbered: yes
     toc_appendix: yes
+header-includes:
+  - \newcommand{\tot}{{\text{tot}}}
+  - \newcommand{\mtot}{{\text{[tot]}}}
+  - \DeclareMathOperator{\FE}{FE}
 ---
 
 # Preface {-}
