@@ -1,0 +1,9 @@
+# MGS measurement details
+
+## Alternative method for measuring species absolute abundances from a spike-in {#spike-in-alt}
+
+(stub)
+
+## Missing and multiple reference species {#multiple-references}
+
+(stub)

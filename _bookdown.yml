@@ -14,9 +14,9 @@ rmd_files: [
   "solutions.Rmd",
   "conclusion.Rmd",
   "appendix.Rmd",
-  "appendix-old.Rmd",
+  "appendix-measurement.Rmd",
   "appendix-regression.Rmd",
-  "appendix-notes.Rmd",
+  "appendix-diversity.Rmd",
   "supplemental-figures.Rmd",
   "references.Rmd",
 ]

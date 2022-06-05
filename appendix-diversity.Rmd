@@ -1,0 +1,41 @@
+# Alpha diversity and variation in the mean efficiency {#diversity-and-mean-efficiency}
+
+The diversity of order $q$ is given by
+\begin{align}
+  ^qD = \left(\sum_{i=1}^n p_i^q\right)^{1 /(1-q)},
+\end{align}
+where $^qD$ is understood to be given by the limit of the RHS when $q = 1$ (and so the given expression is undefined).
+The order-2 diversity is therefore
+\begin{align}
+  ^2D = \frac{1}{\sum_{i=1}^n {p_i^2}},
+\end{align}
+which is equivalent to the Inverse Simpson Index (REF Jost).
+
+Consider an infinite pool of species.
+Let $\sigma^{2}$ denote the variance in the relative efficiency among species in the pool.
+Consider a community that is assembled by randomly choosing $K \ge 1$ species from the pool and setting the abundances of the $K$ species in a manner that is independent of their efficiencies.
+
+**Claim:** 
+Let $\rho_{k}$ for $1 \le k \le K$ denote the proportions of the $K$ species in the community; this new notation serves as a reminder that the subscript $k$ indexes a random species specific to this particular community.
+Conditional on the order-2 diversity $^2D$ of a community, the arithmetic variance in the mean efficiency is
+\begin{align}
+  Var[\bar B \mid ^2D] 
+% = \sigma^2 \sum_{k=1}^K \rho_k^2
+  = \frac{\sigma^2}{^2D}.
+\end{align}
+
+**Proof:** Let $\beta_{k}$ denote the efficiency of the $k$-th sampled species.
+The mean efficiency is therefore $\bar B = \sum_k \rho_k \beta_k$.
+Conditional on the proportions $\{\rho_{k}\}$, the variance in the mean efficiency is
+\begin{align}
+  Var[\bar B \mid \{\rho_{k}\}]
+  &= \sum_{k=1}^K \rho_k^2 Var[\beta_k]
+  \\&= \left(\sum_{k=1}^K p_k^2\right) \sigma^2.
+\end{align}
+The first line follows from the fact that the $\beta_{k}$ are independent.
+The summation in the final line is equal to $1/2^D$, thus proving the result.
+
+**Note:** 
+We have showed that the arithmetic (additive) variance of $\bar B$ decreases with $^2D$; however, the geometric (multiplicative) variance is most relevant for understanding the effect of bias on DA.
+As $2^D$ increases, the distribution of $\bar B$ will converge (by the central limit theorem) to a normal distribution, and both the arithmetic and geometric variance will decrease.
+
