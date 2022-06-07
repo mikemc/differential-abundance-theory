@@ -33,8 +33,8 @@ Therefore, this error does not cancel when calculating the FD in the proportion,
   (\#eq:prop-fc-error)
 \underbrace{\frac{\tilde P_i^{(b)}}{\tilde P_i^{(a)}}}_\text{measured FD}
   = \frac
-    {P_i(b) \cdot \cancel{B_i} / \bar B^{(b)}}
-    {P_i(a) \cdot \cancel{B_i} / \bar B^{(a)}}
+    {P_i^{(b)} \cdot \cancel{B_i} / \bar B^{(b)}}
+    {P_i^{(a)} \cdot \cancel{B_i} / \bar B^{(a)}}
   =
   \underbrace{\frac{P_i^{(b)}}{P_i^{(a)}}}_\text{actual FD}
   \cdot
@@ -46,13 +46,17 @@ Notably, this FE is the same for every species.
 
 The different effects of taxonomic bias on the measured FDs in proportions versus ratios are illustrated in a hypothetical example in Figure \@ref(fig:error-proportions) (bottom row).
 In this example, the mean efficiency decreases 2.6-fold from Sample 1 to Sample 2 (FD of 0.4), causing the FD in the proportion of each species to appear 2.6-fold larger than its true value.
+<!-- 0.4 is 1 / 2.6? Is there a reason why 0.4 is the canonical FD rather than 2.6 -->
+
 Though the FE in the FD is the same for each species, the biological implications of the error vary.
 In particular, there are three distinct types of error: an increase in the magnitude of the measured FD, a decrease in that magnitude, and a change in the direction of the FD.
 We refer to the latter as a _sign error_ in reference to the sign of the measured log fold difference (LFD).
 We can see each type of error in Figure \@ref(fig:error-proportions).
 For Species 1, which increases in abundance and thus moves in the opposite direction of the mean efficiency, we see an increase in magnitude of the measured FD (actual FD: 2.3, measured FD: 6.5).
 For Species 2, which decreases and thus moves in the same direction as the mean efficiency but by a larger factor, we see a decrease in magnitude (actual FD: 0.15, measured FD: 0.44).
+<!-- I was initially confused by calling 0.44 a decrease in magnitude as compared with 0.15 as |0.44| > |0.15|, but see now that 0.15 is a larger multiplicative factor e.g. so that |log(0.44)| < |log(0.15)| -->
 For Species 2, which decreases by a smaller factor than the mean efficiency, we see a change in direction (actual FD: 0.6, measured FD: 1.8), such that the species actually appears to increase (a sign error).
+<!-- Again the sign error is on the log scale (unsure if being more explicit about this is helpful) -->
 In contrast, the ratios between species change by the same factors in the actual and measured taxonomic profiles.
 For example, the ratio of Species 2 to Species 3 changes from $1/1$ to $1/4$ in the actual profiles and from $3$ to $3/4$ in the measured profiles, a decrease by 4-fold either way.
 
