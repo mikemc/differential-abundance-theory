@@ -3,13 +3,15 @@
 ::: {#abstract .rmdnote}
 
 **Abstract:**
-To assess how the species in microbial communities vary across conditions, researchers often measure the relative or absolute abundances of all species simultaneously using marker-gene and metagenomic sequencing.
-However, these measurements are taxonomically biased: Some species are measured more efficiently than others, yielding measured abundances that are higher or lower than the truth.
-Taxonomic bias is generally ignored in _differential abundance (DA) analyses_, likely due to a combination of 1) a widespread belief that protocol standardization is sufficient to yield accurate differences between samples and 2) a lack of practical solutions for addressing it.
-We use theoretical arguments and case studies to analyze the impact of taxonomic bias on DA analyses of relative and absolute abundances.
-We show that taxonomic bias does create inferential errors for a class of popular DA methods; however, whether these errors are biologically significant depends on experimental context.
-We present several approaches to mitigating the effect of bias, suited to a range of experimental questions and systems.
-If adopted, they could improve the reproducibility and interpretability of sequencing-based studies of microbial communities.
+
+Differential-abundance (DA) analyses enable microbiome researchers to assess how microbial species vary in relative or absolute abundance with specific host or environmental conditions, such as health status or pH.
+These analyses, however, typically use sequencing-based community measurements that are taxonomically biased to measure some species more efficiently than others.
+Determining the effect that taxonomic bias has on the results of a DA method is essential for achieving reliable, translatable findings.
+Yet currently there is poor understanding of this effect and a lack of methods for correcting it.
+We used a combination of mathematical theory and data analysis of real and simulated case studies to characterize and find ways to minimize the effect of taxonomic bias on DA analyses of relative and absolute abundances.
+For a popular class of DA methods---those based on species proportions---taxonomic bias can cause significant errors in DA results if the average measurement efficiency of the community is associated with the condition of interest.
+These errors can be avoided by using more robust DA methods (based on species ratios) or quantified and corrected using appropriate controls.
+If adopted, our recommendations can improve the reproducibility, interpretability, and translatability of microbiome DA studies.
 
 :::
 
