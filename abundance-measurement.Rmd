@@ -20,7 +20,7 @@ We consider a set of microbiome samples measured by a specific MGS protocol that
 We make several simplifying assumptions to facilitate our analysis and presentation.
 First, we consider only species-level assignment, and suppose that reads that cannot be uniquely assigned to a single species in $S$ are discarded.
 Second, we ignore the possibility that reads are misassigned to the wrong species or the wrong sample.
-Third, we suppose that taxonomic bias acts consistently across samples at the level of species---that is, a given species is always measured more efficiently than another to the same degree, regardless of variation in changes in sub-species-level composition or the sample matrix.
+Third, we suppose that taxonomic bias acts consistently across samples at the species level---that is, a given species is always measured more efficiently than another to the same degree.
 Finally, unless otherwise stated, we treat sequencing measurements as deterministic, ignoring the 'random' variation in read counts that arise from the sampling of sequencing reads and other aspects of the MGS process.
 These assumptions, though unrealistic descriptions of most MGS experiments, serve the purpose of clearly demonstrating when and why consistent taxonomic bias creates errors in DA analysis.
 
@@ -169,11 +169,11 @@ As in the case of proportions (Equation \@ref(eq:prop-error)), the FE depends on
 
 Suppose that the absolute abundance of a _reference species_ $r$ has been fixed by the experimenter or been measured by independent means.
 This known or measured abundance $\tilde A_{r}^{(a)}$ can be used in conjunction with the MGS read counts to obtain absolute abundances for all species.
-In the absence of taxonomic bias, the ratio of a species' absolute abundance to its MGS read count is the same for all species in a given sample (Equation \@ref{eq:mgs-model}).
+In the absence of taxonomic bias, the ratio of a species' absolute abundance to its MGS read count is the same for all species in a given sample (Equation \@ref(eq:mgs-model)).
 Hence the known ratio for the reference species can serve as conversion factor for obtaining the absolute abundance of a species $i$ from its read count,
 \begin{align}
   (\#eq:density-ratio-meas)
-  \tilde A_i^{(a)} &= M_i^{(a)} \cdot \frac{\tilde A_{r}^{(a)}}{M_i^{(a)}}.
+  \tilde A_i^{(a)} &= M_i^{(a)} \cdot \frac{\tilde A_r^{(a)}}{M_r^{(a)}}.
 \end{align}
 Let $\FE[\tilde A_r^{(a)}] \equiv {\tilde A_r^{(a)}}/{A_r^{(a)}}$ be the FE in the reference measurement.
 The effect on $\tilde A_i^{(a)}$ of taxonomic bias in the MGS measurement can be determined by substituting Equation \@ref(eq:ratio-error) into Equation \@ref(eq:density-ratio-meas), yielding
