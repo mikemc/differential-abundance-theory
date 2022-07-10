@@ -60,7 +60,7 @@ We sought to understand the potential impact of bias on DA analysis of vaginal m
 We first examined variation in the mean efficiency across samples under the assumption that bias in the MOMS-PI study was accurately represented by the @brooks2015thet control measurements.
 Using taxonomic relatedness to impute the efficiencies of species not in the controls, we were able to calibrate the MOMS-PI profiles and estimate the mean efficiency of each sample (REF SI Analysis).
 The mean efficiency varies substantially across vaginal samples (Figure 4.1), with samples in which a _Lactobacillus_ species is most abundant typically having a mean efficiency that is 3-fold to 20-fold greater than samples in which _G. vaginalis_ is most abundant.
-The vaginal microbiome sometimes shifted between _Lactobacillus_-dominance and _Gardnerella_-dominance between consecutive visits in individual women (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)), which caused magnitude and sign errors in the trajectories of lower-abundance species (SI Figure \@ref(fig:momspi-trajectory)).
+The vaginal microbiome sometimes shifted between _Lactobacillus_-dominance and _Gardnerella_-dominance between consecutive visits in individual women (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)), which caused magnitude and direction errors in the trajectories of lower-abundance species (SI Figure \@ref(fig:momspi-trajectory)).
 
 <!-- begin figure -->
 
