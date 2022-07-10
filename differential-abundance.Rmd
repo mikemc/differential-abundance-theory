@@ -3,10 +3,10 @@
 <!-- Previous title: Differential-abundance methods vary in their robustness to taxonomic bias  -->
 
 We now turn to how the errors in MGS-based abundance measurements affect DA results.
-Our focus is on _multiplicative DA_---the fold differences (FD) in the relative or absolute abundance of species between samples or between experimental conditions.
-Multiplicative DA has a direct ecological interpretation via the multiplicative processes of exponential growth and decay and forms the basis for several popular DA methods (REF DESeq2, ALDEx2(?), and corncob; a LV paper; fido).
-We also consider non-parametric rank-based methods; these methods are popular in case-control studies for which ecological interpretability is often of secondary importance to discovering stable associations between species and the condition of interest (REFs).
-
+Our focus is on _multiplicative DA analyses_ that estimate the fold differences (FD) in the relative or absolute abundance of species across time points or between experimental conditions.
+Multiplicative DA has a direct ecological interpretation via the multiplicative processes of exponential growth and decay.
+Many DA methods operate on additive differences in log-transformed abundances and are therefore multiplicative; these include popular methods such as DESeq2 (@love2014mode), ALDEx2 (@fernandes2014unif), corncob (@martin2020mode), and time series methods based on the Lotka-Volterra model (e.g., @stein2013ecol).
+We also consider non-parametric rank-based methods; these methods are popular in case-control studies for which ecological interpretability is often of secondary importance to discovering stable associations between species and the condition of interest.
 
 ## Fold change between a pair of samples
 
@@ -27,14 +27,14 @@ This error completely cancels when calculating the FD of this ratio from sample 
   .
 \end{align}
 <!-- Proportions -->
-In contrast, bias created a FE in the proportion of a species (Equation \@ref(eq:prop-error)) that varied inversely with the mean efficiency of the sample.
+In contrast, bias creates a FE in the proportion of a species (Equation \@ref(eq:prop-error)) that varies inversely with the mean efficiency of the sample.
 Therefore, this error does not cancel when calculating the FD in the proportion,
 \begin{align}
   (\#eq:prop-fc-error)
 \underbrace{\frac{\tilde P_i^{(b)}}{\tilde P_i^{(a)}}}_\text{measured FD}
   = \frac
-    {P_i(b) \cdot \cancel{B_i} / \bar B^{(b)}}
-    {P_i(a) \cdot \cancel{B_i} / \bar B^{(a)}}
+    {P_i^{(b)} \cdot \cancel{B_i} / \bar B^{(b)}}
+    {P_i^{(a)} \cdot \cancel{B_i} / \bar B^{(a)}}
   =
   \underbrace{\frac{P_i^{(b)}}{P_i^{(a)}}}_\text{actual FD}
   \cdot
@@ -47,21 +47,20 @@ Notably, this FE is the same for every species.
 The different effects of taxonomic bias on the measured FDs in proportions versus ratios are illustrated in a hypothetical example in Figure \@ref(fig:error-proportions) (bottom row).
 In this example, the mean efficiency decreases 2.6-fold from Sample 1 to Sample 2 (FD of 0.4), causing the FD in the proportion of each species to appear 2.6-fold larger than its true value.
 Though the FE in the FD is the same for each species, the biological implications of the error vary.
-In particular, there are three distinct types of error: an increase in the magnitude of the measured FD, a decrease in that magnitude, and a change in the direction of the FD.
-We refer to the latter as a _sign error_ in reference to the sign of the measured log fold difference (LFD).
+In particular, there are three distinct types of error: an increase in the magnitude, a decrease in the magnitude, and a reversal in the direction of the measured FD.
 We can see each type of error in Figure \@ref(fig:error-proportions).
 For Species 1, which increases in abundance and thus moves in the opposite direction of the mean efficiency, we see an increase in magnitude of the measured FD (actual FD: 2.3, measured FD: 6.5).
-For Species 2, which decreases and thus moves in the same direction as the mean efficiency but by a larger factor, we see a decrease in magnitude (actual FD: 0.15, measured FD: 0.44).
-For Species 2, which decreases by a smaller factor than the mean efficiency, we see a change in direction (actual FD: 0.6, measured FD: 1.8), such that the species actually appears to increase (a sign error).
-In contrast, the ratios between species change by the same factors in the actual and measured taxonomic profiles.
-For example, the ratio of Species 2 to Species 3 changes from $1/1$ to $1/4$ in the actual profiles and from $3$ to $3/4$ in the measured profiles, a decrease by 4-fold either way.
+For Species 2, which decreases and thus moves in the same direction as the mean efficiency but by a larger factor, we see a decrease in magnitude of the measured FD (actual FD: 0.15, measured FD: 0.44).
+For Species 2, which decreases but by a smaller factor than the mean efficiency, the species actually appears to increase---a reversal in direction of the measured FD (actual FD: 0.6, measured FD: 1.8).
+In contrast, the FDs in the ratios among species are identical in the actual and measured taxonomic profiles.
+For example, the ratio of Species 2 to Species 3 shows the same 4-fold decrease in the actual profiles ($1$ to $1/4$) and in the measured profiles ($3$ to $3/4$).
 
 <!-- The ratios in sample 1 are Actual: 1:1:1, Observed: 1:18:6 -->
 <!-- The ratios in sample 2 are Actual: 15:1:4, Observed: 5:6:8 -->
 
 Taxonomic bias affects the measured FDs in a species' absolute abundance in a similar fashion.
 First, consider a species' abundance measurement $\tilde A_i^{(a)}$ derived from a non-MGS measurement of total-community abundance using Equation \@ref(eq:density-prop-meas).
-Equation \@ref(eq:density-prop-error) indicates that the FE in this measurement equals the (constant) species efficiency multiplied by ${B^{\mtot (a)}}/{\bar B^{(a)}}$, the ratio of the mean efficiency of the total-abundance measurement to that of the MGS measurement.
+Equation \@ref(eq:density-prop-error) indicates that the FE in this measurement equals the (constant) species efficiency multiplied by ${\bar B^{\mtot (a)}}/{\bar B^{(a)}}$, the ratio of the mean efficiency of the total-abundance measurement to that of the MGS measurement.
 This ratio can vary, creating error in the measured FD between samples.
 Notably, if the FDs in the mean efficiency of the total-abundance measurement mirrors that of the MGS measurement, then the two offset each other and lead to more stable FEs (and hence more accurate FDs) in $\tilde A_i^{(a)}$.
 We discuss how this possibility might be exploited in real experimental workflows in Section \@ref(solutions).
@@ -72,48 +71,42 @@ If the abundance of the reference species can determined up to constant FE, then
 
 ## Regression analysis of many samples
 
-Most DA analyses can be understood as a regression analysis.
-For example, the simple linear regression model,
+In most cases, a DA analysis can be understood as regression of microbial abundance variables against one or more covariates describing predictive properties of the sample.
+The simplest such regression relates a microbial abundance variable $y$ to a covariate $x$ and a _residual (or unexplained) error_ $\varepsilon$ via the simple linear regression formula
 \begin{align}
   (\#eq:regression)
-  y^{(a)} = \alpha + \beta x^{(a)} + \varepsilon^{(a)},
+  y^{(a)} = \alpha + \beta x^{(a)} + \varepsilon^{(a)}.
 \end{align}
-can be used to relate a microbial abundance variable $y$ to a _covariate_ $x$ and the _residual (or unexplained) error_ $\varepsilon$.
 For example, $y$ may be the log absolute abundance of species $i$ ($\log A_i^{(a)}$) and $x$ may be a continuous variable (such as pH) or a binary variable (such as $x=1$ for treated patients and $x=0$ for untreated controls).
 The regression coefficients $\alpha$ and $\beta$ are parameters to be estimated from the data.
-A DA analysis is primarily interested in the slope coefficient $\beta$, which determines how the average or expected value of $y$ increases with $x$.
+A DA regression analysis is primarily interested in the slope coefficient $\beta$, which determines how the average or expected value of $y$ increases with $x$.
 For a binary covariate, $\beta$ equals the average difference in $y$ between samples with $x=1$ versus those with $x=0$.
-Taking the response $y$ to be the logarithm of a species' relative or absolute abundance makes the DA analysis multiplicative, with the coefficient $\beta$ corresponding to the average log fold difference (LFD) in abundance between conditions or for a unit increase in $x$.
+Taking $y$ to be the logarithm of a species' relative or absolute abundance makes the DA analysis multiplicative, with the coefficient $\beta$ corresponding to the average log fold difference (LFD) in abundance between conditions or for a unit increase in $x$.
 
-Appendix \@ref(appendix-regression) derives mathematical results for the effect that measurement error in the response caused by taxonomic bias has on LFDs estimated via simple linear regression.
-Here we illustrate these results with an example.
-Suppose that we wish to estimate the average LFD in the absolute abundance of every species between samples from two conditions, such as treated and untreated patients.
-Further suppose that we have measured absolute abundances by multiplying the proportions from MGS with an accurate measurement of total-community abundance.
-For each species $i$, we set $y^{(a)}$ in Equation \@ref(eq:regression) equal to $\log \tilde A_{i}^{(a)}$, and use either Ordinary Least Squares (OLS) or Maximum Likelihood Estimation (MLE) to estimate the coefficients $\alpha$ and $\beta$.
-From Equation \@ref(eq:density-prop-error), we know that the FE in the abundance of each species equals its efficiency relative to the mean efficiency of the sample.
+Although researchers typically use more sophisticated models, the simple linear regression model in Equation \@ref(eq:regression) provides an intuitive basis for understanding the effect of taxonomic bias on regression-based DA analyses.
+Appendix \@ref(appendix-regression) describes a general framework for finding the error in the estimated slope coefficient $\beta$ caused by taxonomic bias; here, we summarize and illustrate these results for the various abundance measures decribed in Section \@ref(abundance-measurement).
+In each case, a multiplicative DA analysis can be conducted by setting $y$ equal to the logarithm of the untransformed abundance measurement ($\tilde P_i$, $\tilde R_{i/j}$, or $\tilde A_i$).
+Consider an abundance measure such as the ratio between species $i$ and $j$, $\tilde R_{i/j}$.
+Taxonomic bias creates a constant FE in $\tilde R_{i/j}$ that translates to a constant additive shift in $\log \tilde R_{i/j}$ and therefore does not affect the estimate of the slope $\hat \beta$.
 
-To understand how the FE in species abundances affects the estimated LFD for a given species, it is useful to consider three possible scenarios for how the mean efficiency varies across samples.
-In the first scenario, the mean efficiency remains stable across samples, such that the FE in $\log \tilde A_{i}^{(a)}$ is approximately constant. 
-In this case, the FE induced by bias _mostly cancels_ and does not substantially affect the estimated LFD.
-In the second scenario, the mean efficiency varies substantially but is not associated with the condition, creating random FEs in the individual sample measurements.
-In this case, the LFDs between individual samples will be highly distorted, but these errors will effectively average out in the regression and the estimated LFD remains reliable.
-Although the random FEs caused by bias do not create a systematic error in the LFD estimate, they will tend to reduce the precision (i.e., increase the standard error) of the estimate.
-In the third scenario, the mean efficiency systematically varies with the condition, causing a systematic error in the estimated LFD regardless of the number of samples.
-In particular, the portion of additive variation in the log mean efficiency that is linearly associated with $x$ creates an equal but opposite additive error in the estimated LFD for each species.
-Although the absolute additive error in the LFDs is the same for all species, its biological significance varies, depending on its magnitude relative to that of the species' true LFD.
+Now consider the absolute abundance of a species $i$ obtained by normalizing its proportion to an non-MGS measurement of total community abundance, which for illustration we assume to be completely accurate.
+The measured abundance $\tilde A_i$ thus has a FE that varies inversely with the mean efficiency $\bar B$.
+If $\bar B$ is stable across samples, then the additive error in $\log \tilde A_i$ will be approximately constant and $\hat \beta$ is again unaffected---bias has no effect on the DA result.
+If, on the other hand, $\log \bar B$ tends to linearly vary with the covariate $x$, then the additive error in $\log \tilde A_i$ will linearly vary in the opposite direction and cause a systematic error in $\hat \beta$ that is equal in magnitude but opposite in sign to the slope of $\log \bar B$ with $x$.
+A third possibility is that $\bar B$ varies in an essentially random manner that is independent of the covariate $x$.
+In this scenario, the error from taxonomic bias in the measurement $\log \tilde A_{i}$ acts to increase the noise in $\hat beta$ (i.e., increase its standard error), but does not cause a systematic error.
 
-Figure \@ref(fig:regression-example) shows a simulated example in which the mean efficiency varies systematically with the condition of interest.
-Here, the average log mean efficiency is higher in the condition corresponding to $x=1$, due to an increase of the high-efficiency Species 9.
-This systematic increase in the log mean efficiency causes an artificial decrease in the estimated LFD for each species by an equal amount.
-As we saw for the FD between individual samples, the biological significance of the systematic error in the LFD estimates varies by species, despite the absolute error being constant across species.
-We see decreases in the magnitude of the LFD estimate (Species 9, 10, and 1 in Figure \@ref(fig:regression-example)), changes in sign (Species 5), or increases in magnitude (remaining species) depending the value of the actual LFD relative to the error.
-The portion of the variation in the log mean efficiency that is uncorrelated with $x$ increases the standard errors for most species (Figure \@ref(fig:regression-example) D).
-The exception is Species 9, which is the primary driver of the mean efficiency dynamics in this example.
-Decreased magnitudes and increased standard errors can both cause associations to be missed that would otherwise have been detected (Species 10 and 1), while increased magnitudes can turn weak or statistically insignificant associations into strong and statistically significant ones (Species 7, 6 and 4).
+Figure \@ref(fig:regression-example) shows a simulated example of a regression analysis of the absolute abundances of 10 species across two conditions in which the mean efficiency is systematically greater in the condition $x=1$ than the in the condition $x=0$.
+The increase in the log mean efficiency from $x=0$ to $x=1$ (Figure \@ref(fig:regression-example) A and B) causes an artificial decrease in the estimated LFD between conditions for each species (Figure \@ref(fig:regression-example) C and D).
+The absolute error created by bias on the LFD estimate is the same for each species; however, its scientific impact varies.
+For the three species with large positive LFDs (Species 9, 10, and 1), bias decreases the magnitude of the LFD estimate.
+In contrast, for the three species with large negative LFDs (Species 8, 2, and 3), bias increases the magnitude of the estimate.
+For one species with a small positive LFD (Species 5), the effect of bias results in a negative LFD estimate (direction error).
+The three remaining species (Species 7, 6, and 4) have LFDs near zero, but bias causes them to have large negative LFDs.
 
 <!-- Figure: Regression example -->
 
-```{r regression-example, fig.cap = '(ref:regression-example)'}
+```{r regression-example, fig.cap = '(ref:regression-example)', out.width = '90%'}
 here::here(
   "notebook/_posts/2021-08-03-simulate-regression-example/",
   "simulate-regression-example_files/figure-html5",
@@ -122,22 +115,20 @@ here::here(
   include_svg
 ```
 
-(ref:regression-example) **Taxonomic bias distorts multi-sample differential abundance inference when the mean efficiency of samples is associated with the covariate of interest.** This figure shows the results of a regression analysis of simulated microbiomes consisting of 50 samples and 10 species from two environmental conditions indexed by $x=0$ and $x=1$. In this simulation, the species with the largest efficiency (Species 9) also has the largest positive LFC, which drives the positive association of the log mean efficiency with the condition (shown in Panels A and B). This positive LFC in the log mean efficiency induces a systematic negative shift in the estimated LFCs of all species (Panels C and D). Panel D shows the mean LFC (points) with 95% confidence intervals (CIs), for each species estimated from either the actual or the measured densities. The error (difference in LFC estimates on measured and actual) equals the negative LFC of the mean efficiency (shown in Panel B).
+(ref:regression-example) **Taxonomic bias distorts multi-sample differential abundance inference when the mean efficiency of samples is associated with the covariate of interest.** This figure shows the results of a regression analysis of simulated microbiomes consisting of 50 samples and 10 species from two environmental conditions indexed by $x=0$ and $x=1$. In this simulation, the species with the largest efficiency (Species 9) also has the largest positive LFD, which drives a positive association of the log mean efficiency with the condition (shown in Panels A and B). This positive LFD in the log mean efficiency induces a systematic negative shift in the estimated LFDs of all species (Panels C and D). Panel D shows the mean LFD (points) with 95% confidence intervals (CIs), for each species estimated from either the actual or measured abundances. The error (difference in LFD estimates on measured and actual) equals the negative LFD of the mean efficiency (shown in Panel B).
 
 <!-- end Figure -->
 
 ## Rank-based analyses 
 
-Rank-based or 'nonparametric' DA methods work by first applying a cross-sample rank-transformation to the abundance variable $y$: The sample in which $y$ has the smallest value receives a rank of 1, the sample with the second smallest value receives a rank of 2, etc.
-These methods then analyze how the average rank varies across conditions.
-Rank-based methods commonly used in microbiome DA analysis include the Wilcoxon-Mann-Whitney and Kruskal-Wallis tests for a discrete covariate (e.g. case vs control) and Spearman's rank correlation for a continuous covariate (e.g. pH).
-They have been applied to species proportions (REFs), ratios (REFs), and absolute abundances (REFs).
+Rank-based DA methods work by first applying a cross-sample rank-transformation to the abundance variable $y$: The sample in which $y$ has the smallest value receives a rank of 1, the sample with the second smallest value receives a rank of 2, etc.
+These methods then analyze how the average rank of $y$ varies across sample conditions (@conover2012ther).
+Rank-based methods commonly used in microbiome DA analysis include the Wilcoxon-Mann-Whitney and Kruskal-Wallis tests for a discrete covariate (e.g. case vs control) and Spearman's rank correlation for a continuous covariate (e.g. pH); these tests have collectively been applied to species proportions (@callahan2017repl,@fettweis2019thev), ratios (@fernandes2014unif), and absolute abundances (@vieirasilva2019quan).
 
-Multiplying a variable by a constant factor does not change its cross-sample ranks; thus rank-based DA methods are unaffected by constant FE in the abundance variable $y$.
-We therefore conclude that consistent taxonomic bias does not affect rank-based DA analyses of species ratios or absolute abundances derived from a reference species.
-In contrast, variable FE in $y$ (driven by variation in the mean efficiency) can affect the cross-sample ranks; if the FE is associated with the covariate $x$, it can cause systematic error in the DA result.
-Thus consistent bias may impact rank-based analyses of species proportions and absolute abundances derived from a total-community abundance measurement.
-Future work should consider whether rank-based DA methods are significantly more robust than multiplicative DA methods to variation in the mean efficiency.
+Multiplying a variable by a constant factor does not change its cross-sample ranks, making rank-based methods unaffected by a constant FE in the abundance variable $y$.
+Thus in our MGS measurement model, taxonomic bias does not affect rank-based DA analyses of species ratios or absolute abundances derived from a reference species.
+But for species proportions and absolute abundances derived from a total-community abundance measurement, variation in the mean efficiency $\bar B$ can affect the cross-sample ranks and cause error in DA results if $\bar B$ is associated with the covariate.
+Further work is needed to determine whether rank-based DA methods are significantly more robust to variation in $\bar B$ than multiplicative DA methods.
 
 
 
