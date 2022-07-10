@@ -5,13 +5,12 @@
 **Abstract:**
 
 Differential-abundance (DA) analyses enable microbiome researchers to assess how microbial species vary in relative or absolute abundance with specific host or environmental conditions, such as health status or pH.
-These analyses, however, typically use sequencing-based community measurements that are taxonomically biased to measure some species more efficiently than others.
-Determining the effect that taxonomic bias has on the results of a DA method is essential for achieving reliable, translatable findings.
-Yet currently there is poor understanding of this effect and a lack of methods for correcting it.
-We used a combination of mathematical theory and data analysis of real and simulated case studies to characterize and find ways to minimize the effect of taxonomic bias on DA analyses of relative and absolute abundances.
-For a popular class of DA methods---those based on species proportions---taxonomic bias can cause significant errors in DA results if the average measurement efficiency of the community is associated with the condition of interest.
+These analyses typically use sequencing-based community measurements that are taxonomically biased to measure some species more efficiently than others.
+Understanding the effects that taxonomic bias has on the results of a DA analysis is essential for achieving reliable and translatable findings; yet currently, these effects are unknown.
+Here, we characterized these effects for DA analyses of both relative and absolute abundances, using a combination of mathematical theory and data analysis of real and simulated case studies.
+We found that, for analyses based on species proportions, taxonomic bias can cause significant errors in DA results if the average measurement efficiency of the community is associated with the condition of interest.
 These errors can be avoided by using more robust DA methods (based on species ratios) or quantified and corrected using appropriate controls.
-If adopted, our recommendations can improve the reproducibility, interpretability, and translatability of microbiome DA studies.
+Wide adoption of our recommendations can improve the reproducibility, interpretability, and translatability of microbiome DA studies.
 
 :::
 
