@@ -49,12 +49,12 @@ n_samples <- 50
 species <- str_c("Species ", seq(n_species))
 ```
 
-## Actual densities
+## Actual abundances
 
 Log abundances are independent and follow a simple linear model,
 
 ```
-log density = a_0 + a_1 * X + epsilon
+log abundance = a_0 + a_1 * X + epsilon
 ```
 
 ```{r}
@@ -101,21 +101,21 @@ true_coeffs <- list('(Intercept)' = a_0, x1 = a_1) %>%
 ```{r}
 sam <- tibble(.sample = colnames(y), x) %>%
   mutate(across(x, factor))
-actual_dens <- phyloseq(
+actual_abun <- phyloseq(
   otu_table(y, taxa_are_rows = TRUE) %>% transform_sample_counts(exp),
   sample_data(sam)
 )
 ```
 
 ```{r}
-actual_dens %>%
+actual_abun %>%
   as_tibble %>%
   ggplot(aes(y = .otu, x = .abundance, fill = x)) +
   scale_x_log10() +
   stat_dots()
 ```
 
-## Taxonomic bias and measured densities
+## Taxonomic bias and measured abundances
 
 Draw efficiencies from a log normal distribution; set relative to the geometric mean efficiency.
 
@@ -168,17 +168,17 @@ Question: Is it true that the first species is driving the association?
 
 
 
-The measured (i.e. estimated) proportions and densities are given by perturbing the actual densties by the efficiencies, and normalizing to proportions or to the original (correct) total.
+The measured (i.e. estimated) proportions and abundances are given by perturbing the actual abundances by the efficiencies, and normalizing to proportions or to the original (correct) total.
 
 ```{r}
-measured_prop <- actual_dens %>% perturb(efficiency)
-measured_dens <- actual_dens %>% perturb(efficiency, norm = "keep")
+measured_prop <- actual_abun %>% perturb(efficiency)
+measured_abun <- actual_abun %>% perturb(efficiency, norm = "keep")
 ```
 
 ## Compute mean efficiencies
 
 ```{r mean-efficiency}
-mean_eff <- actual_dens %>%
+mean_eff <- actual_abun %>%
   transform_sample_counts(close_elts) %>%
   perturb(efficiency, norm = "none") %>%
   sample_sums %>%
@@ -196,27 +196,27 @@ mean_eff %>%
 
 # Plots
 
-## Estimated and actual densities
+## Estimated and actual abundances
 
 ```{r}
 lvls <- a_1 %>% sort(decreasing = TRUE) %>% names
 
-dens <- bind_rows(
-  Actual = actual_dens %>% as_tibble,
-  Measured = measured_dens %>% as_tibble,
+abun <- bind_rows(
+  Actual = actual_abun %>% as_tibble,
+  Measured = measured_abun %>% as_tibble,
   .id = 'type'
 ) %>%
-  rename(density = .abundance) %>%
+  rename(abundance = .abundance) %>%
   mutate(
-    log2_density = log2(density),
+    log2_abundance = log2(abundance),
     across(.otu, factor, levels = lvls)
   )
 ```
 
 ```{r}
-p_species_all <- dens %>%
-  ggplot(aes(x, log2_density, color = type)) +
-  labs(y = "Log density ") +
+p_species_all <- abun %>%
+  ggplot(aes(x, log2_abundance, color = type)) +
+  labs(y = "Log abundance ") +
   facet_grid(.otu~type, scales = "fixed") +
   geom_quasirandom(alpha = 0.3, groupOnX = TRUE) +
   # stat_summary(fun.data = "mean_cl_boot", geom = "pointrange") +
@@ -258,11 +258,11 @@ lm_results_mean_eff <- lm_fit_mean_eff %>%
 ```
 
 ```{r}
-lm_fits <- dens %>%
+lm_fits <- abun %>%
   group_by(.otu, type) %>%
   nest %>%
   mutate(
-    fit = map(data, ~lm(log2_density ~ 1 + x, .))
+    fit = map(data, ~lm(log2_abundance ~ 1 + x, .))
   )
 lm_results <- lm_fits %>%
   mutate(
@@ -289,7 +289,7 @@ start <- lm_results_slope %>% filter(type == 'Actual', .otu == 'Species 9') %>%
 
 p_coef_ci <- lm_results_slope %>% 
   ggplot(aes(y = .otu, x = estimate, color = type)) +
-  labs(x = "Log fold change", y = NULL) +
+  labs(x = "Log fold difference", y = NULL) +
   geom_vline(xintercept = 0, color = "grey") +
   geom_pointinterval(aes(xmin = conf.low, xmax = conf.high)) +
   theme(legend.position = 'top') +
@@ -315,7 +315,7 @@ p_coef_ci_mean_eff <- lm_results_mean_eff %>%
       min(lm_results_slope$conf.low), 
       max(lm_results_slope$conf.high)
   )) +
-  labs(x = "Log fold change", y = NULL) +
+  labs(x = "Log fold difference", y = NULL) +
   geom_vline(xintercept = 0, color = "grey") +
   geom_point() +
   annotate(
@@ -327,7 +327,7 @@ p_coef_ci_mean_eff <- lm_results_mean_eff %>%
 
 p_coef_dot <- lm_results_slope %>% 
   ggplot(aes(y = type, x = estimate, fill = type)) +
-  labs(x = "Log fold change", y = "Type") +
+  labs(x = "Log fold difference", y = "Type") +
   geom_vline(xintercept = 0, color = "grey") +
   stat_dots()
 
@@ -369,7 +369,7 @@ p_coef_ci1 <- p_coef_ci +
 
 # Set range of mean eff panel to match
 rng <- p_species_focal$data %>%
-  pull(log2_density) %>%
+  pull(log2_abundance) %>%
   {max(.) - min(.)}
 m <- p_mean_eff$data %>% pull(mean_efficiency) %>% log2 %>% mean
 p_mean_eff1 <- p_mean_eff + 
@@ -378,9 +378,9 @@ p_mean_eff1 <- p_mean_eff +
 
 ```{r main-figure, fig.dim = c(7, 7)}
 (p_mean_eff1 + ggtitle("Mean efficiency")) +
-  (p_coef_ci_mean_eff + ggtitle("LFC in mean efficiency")) + 
-  (p_species_focal + ggtitle("Actual and measured densities\nof select species")) + 
-  (p_coef_ci1 + ggtitle("Estimated LFCs of all species") +
+  (p_coef_ci_mean_eff + ggtitle("LFD in mean efficiency")) + 
+  (p_species_focal + ggtitle("Actual and measured\nabundances of select species")) + 
+  (p_coef_ci1 + ggtitle("Estimated LFDs of all species") +
     theme(legend.box.margin = margin(b = -15))
   ) + 
   plot_layout(ncol = 2, heights = c(0.2, 1)) +
@@ -409,7 +409,7 @@ lm_results %>%
   colorblindr::scale_color_OkabeIto()
 ```
 
-Can see that the standard error is generally increased in the measured density estimates except for Species 9, whose residual variation we expect to be correlated with the log mean efficiency and hence negatively correlated with the measurement error.
+Can see that the standard error is generally increased in the measured abundance estimates except for Species 9, whose residual variation we expect to be correlated with the log mean efficiency and hence negatively correlated with the measurement error.
 
 Let's confirm that the relationship between the SEs in the measured response, the actual response, and the mean efficiency agree with our theoretical expectation.
 To do so, we must compute the sample covariance of the residual of the actual response and the mean efficiency for each species.
@@ -426,14 +426,14 @@ aug <- lm_fits %>%
   select(-data, -fit) %>%
   unnest(c(.sample, augment)) %>%
   ungroup %>%
-  left_join(aug_mean_eff, by = c(".sample", "x"), suffix = c('.dens', '.mean_eff'))
+  left_join(aug_mean_eff, by = c(".sample", "x"), suffix = c('.abun', '.mean_eff'))
 ```
 
 ```{r}
 cov_actual_with_mean_eff <- aug %>%
   filter(type == 'Actual') %>%
   with_groups(.otu, summarize,
-    cov = cov(.resid.dens, .resid.mean_eff)
+    cov = cov(.resid.abun, .resid.mean_eff)
   ) %>%
   print
 ```
