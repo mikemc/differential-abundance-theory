@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>4 Case studies   | Characterizing and correcting the effect of taxonomic bias in microbial differential-abundance analysis</title>
+  <meta name="description" content="4 Case studies   | Characterizing and correcting the effect of taxonomic bias in microbial differential-abundance analysis" />
+  <meta name="generator" content="bookdown 0.27.3 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="4 Case studies   | Characterizing and correcting the effect of taxonomic bias in microbial differential-abundance analysis" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="4 Case studies   | Characterizing and correcting the effect of taxonomic bias in microbial differential-abundance analysis" />
+  
+  
+  
+
+<meta name="author" content="Michael R. McLaren" />
+<meta name="author" content="Jacob T. Nearing" />
+<meta name="author" content="Amy D. Willis" />
+<meta name="author" content="Karen G. Lloyd" />
+<meta name="author" content="Benjamin J. Callahan" />
+
+
+<meta name="date" content="2022-07-17" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="differential-abundance.html"/>
+<link rel="next" href="solutions.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    TeX: {extensions: ["cancel.js"]},
+});
+MathJax.Hub.Config({
+    TeX: {
+        Macros : {
+            md: '^{\\times}\\!/',
+        }
+    },
+});
+</script>
+
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a></li>
+<li class="chapter" data-level="1" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>1</b> Introduction</a></li>
+<li class="chapter" data-level="2" data-path="abundance-measurement.html"><a href="abundance-measurement.html"><i class="fa fa-check"></i><b>2</b> How bias affects abundance measurements</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="abundance-measurement.html"><a href="abundance-measurement.html#model-of-mgs-measurement"><i class="fa fa-check"></i><b>2.1</b> Model of MGS measurement</a></li>
+<li class="chapter" data-level="2.2" data-path="abundance-measurement.html"><a href="abundance-measurement.html#relative-abundance"><i class="fa fa-check"></i><b>2.2</b> Relative abundance</a></li>
+<li class="chapter" data-level="2.3" data-path="abundance-measurement.html"><a href="abundance-measurement.html#absolute-abundance"><i class="fa fa-check"></i><b>2.3</b> Absolute abundance</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="abundance-measurement.html"><a href="abundance-measurement.html#leveraging-information-about-total-community-abundance"><i class="fa fa-check"></i><b>2.3.1</b> Leveraging information about total-community abundance</a></li>
+<li class="chapter" data-level="2.3.2" data-path="abundance-measurement.html"><a href="abundance-measurement.html#leveraging-information-about-a-reference-species"><i class="fa fa-check"></i><b>2.3.2</b> Leveraging information about a reference species</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="differential-abundance.html"><a href="differential-abundance.html"><i class="fa fa-check"></i><b>3</b> How bias affects DA results</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="differential-abundance.html"><a href="differential-abundance.html#fold-change-between-a-pair-of-samples"><i class="fa fa-check"></i><b>3.1</b> Fold change between a pair of samples</a></li>
+<li class="chapter" data-level="3.2" data-path="differential-abundance.html"><a href="differential-abundance.html#regression-analysis-of-many-samples"><i class="fa fa-check"></i><b>3.2</b> Regression analysis of many samples</a></li>
+<li class="chapter" data-level="3.3" data-path="differential-abundance.html"><a href="differential-abundance.html#rank-based-analyses"><i class="fa fa-check"></i><b>3.3</b> Rank-based analyses</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="case-studies.html"><a href="case-studies.html"><i class="fa fa-check"></i><b>4</b> Case studies  </a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="case-studies.html"><a href="case-studies.html#foliar-fungi-experiment"><i class="fa fa-check"></i><b>4.1</b> Foliar fungi experiment</a></li>
+<li class="chapter" data-level="4.2" data-path="case-studies.html"><a href="case-studies.html#vaginal-microbiomes-of-pregnant-women"><i class="fa fa-check"></i><b>4.2</b> Vaginal microbiomes of pregnant women</a></li>
+<li class="chapter" data-level="4.3" data-path="case-studies.html"><a href="case-studies.html#human-gut-microbiomes"><i class="fa fa-check"></i><b>4.3</b> Human gut microbiomes</a></li>
+<li class="chapter" data-level="4.4" data-path="case-studies.html"><a href="case-studies.html#microbial-growth-in-marine-sediments"><i class="fa fa-check"></i><b>4.4</b> Microbial growth in marine sediments</a></li>
+<li class="chapter" data-level="4.5" data-path="case-studies.html"><a href="case-studies.html#summary-and-discussion"><i class="fa fa-check"></i><b>4.5</b> Summary and discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="solutions.html"><a href="solutions.html"><i class="fa fa-check"></i><b>5</b> Potential solutions</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="solutions.html"><a href="solutions.html#ratio-based-relative-da-analysis"><i class="fa fa-check"></i><b>5.1</b> Ratio-based relative DA analysis</a></li>
+<li class="chapter" data-level="5.2" data-path="solutions.html"><a href="solutions.html#calibrate-compositions"><i class="fa fa-check"></i><b>5.2</b> Calibration using community controls</a></li>
+<li class="chapter" data-level="5.3" data-path="solutions.html"><a href="solutions.html#choose-absolute-abundance-methods-with-more-stable-fes"><i class="fa fa-check"></i><b>5.3</b> Choose absolute-abundance methods with more stable FEs</a>
+<ul>
+<li class="chapter" data-level="5.3.1" data-path="solutions.html"><a href="solutions.html#use-complementary-mgs-and-total-abundance-measurements"><i class="fa fa-check"></i><b>5.3.1</b> Use complementary MGS and total-abundance measurements</a></li>
+<li class="chapter" data-level="5.3.2" data-path="solutions.html"><a href="solutions.html#normalize-to-a-reference-species"><i class="fa fa-check"></i><b>5.3.2</b> Normalize to a reference species</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="solutions.html"><a href="solutions.html#bias-sensitivity-analysis"><i class="fa fa-check"></i><b>5.4</b> Bias sensitivity analysis</a></li>
+<li class="chapter" data-level="5.5" data-path="solutions.html"><a href="solutions.html#bias-aware-meta-analysis"><i class="fa fa-check"></i><b>5.5</b> Bias-aware meta-analysis</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="conclusion.html"><a href="conclusion.html"><i class="fa fa-check"></i><b>6</b> Conclusion</a></li>
+<li class="appendix"><span><b>Appendix</b></span></li>
+<li class="chapter" data-level="A" data-path="mgs-measurement-details.html"><a href="mgs-measurement-details.html"><i class="fa fa-check"></i><b>A</b> MGS measurement details</a>
+<ul>
+<li class="chapter" data-level="A.1" data-path="mgs-measurement-details.html"><a href="mgs-measurement-details.html#spike-in-alt"><i class="fa fa-check"></i><b>A.1</b> Alternative method for measuring species absolute abundances from a spike-in</a></li>
+<li class="chapter" data-level="A.2" data-path="mgs-measurement-details.html"><a href="mgs-measurement-details.html#multiple-references"><i class="fa fa-check"></i><b>A.2</b> Missing and multiple reference species</a></li>
+</ul></li>
+<li class="chapter" data-level="B" data-path="appendix-regression.html"><a href="appendix-regression.html"><i class="fa fa-check"></i><b>B</b> Linear regression</a>
+<ul>
+<li class="chapter" data-level="B.1" data-path="appendix-regression.html"><a href="appendix-regression.html#simple-linear-regression"><i class="fa fa-check"></i><b>B.1</b> Simple linear regression</a>
+<ul>
+<li class="chapter" data-level="B.1.1" data-path="appendix-regression.html"><a href="appendix-regression.html#review-of-simple-linear-regression"><i class="fa fa-check"></i><b>B.1.1</b> Review of simple linear regression</a></li>
+<li class="chapter" data-level="B.1.2" data-path="appendix-regression.html"><a href="appendix-regression.html#measurement-error-in-the-response"><i class="fa fa-check"></i><b>B.1.2</b> Measurement error in the response</a></li>
+<li class="chapter" data-level="B.1.3" data-path="appendix-regression.html"><a href="appendix-regression.html#specific-application-to-taxonomic-bias"><i class="fa fa-check"></i><b>B.1.3</b> Specific application to taxonomic bias</a></li>
+</ul></li>
+<li class="chapter" data-level="B.2" data-path="appendix-regression.html"><a href="appendix-regression.html#gamma-poisson-regression"><i class="fa fa-check"></i><b>B.2</b> Gamma-Poisson regression</a>
+<ul>
+<li class="chapter" data-level="B.2.1" data-path="appendix-regression.html"><a href="appendix-regression.html#background"><i class="fa fa-check"></i><b>B.2.1</b> Background</a></li>
+<li class="chapter" data-level="B.2.2" data-path="appendix-regression.html"><a href="appendix-regression.html#inferring-lfcs-in-proportions-with-and-without-bias-correction"><i class="fa fa-check"></i><b>B.2.2</b> Inferring LFCs in proportions with and without bias correction</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="C" data-path="diversity-and-mean-efficiency.html"><a href="diversity-and-mean-efficiency.html"><i class="fa fa-check"></i><b>C</b> Alpha diversity and variation in the mean efficiency</a></li>
+<li class="chapter" data-level="D" data-path="supplemental-figures.html"><a href="supplemental-figures.html"><i class="fa fa-check"></i><b>D</b> Supplemental figures</a></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Characterizing and correcting the effect of taxonomic bias in microbial differential-abundance analysis</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="case-studies" class="section level1 hasAnchor" number="4">
+<h1><span class="header-section-number">4</span> Case studies  <a href="case-studies.html#case-studies" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>To better understand the potential impact of taxonomic bias on DA analysis in practice, we conducted several case studies spanning a range of biological scenarios and sequencing technologies.</p>
+<div id="foliar-fungi-experiment" class="section level2 hasAnchor" number="4.1">
+<h2><span class="header-section-number">4.1</span> Foliar fungi experiment<a href="case-studies.html#foliar-fungi-experiment" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The taxonomic bias species present in ‘mock communities’ of known composition can be directly measured, and the measured bias can then be used to correct downstream DA analysis (<span class="citation">McLaren, Willis, and Callahan (<a href="#ref-mclaren2019cons" role="doc-biblioref">2019</a>)</span>).
+In practice it is difficult to construct control communities that span the many species present in complex natural communities.
+However, gnotobiotic community experiments are well suited to this form of <em>calibration via community controls</em> since, unlike most natural ecosystems, it is possible to assemble mock communities containing all species in known relative abundances.</p>
+<p>In a study of host-commensal-pathogen interactions, <span class="citation">Leopold and Busby (<a href="#ref-leopold2020host" role="doc-biblioref">2020</a>)</span> inoculated plants with 8 commensal fungal species and subsequently exposed plants to a fungal pathogen.
+The authors used ITS amplicon sequencing to measure communities before and after pathogen infection.
+Motivated by the substantial ribosomal copy-number variation (CNV) in fungi (<span class="citation">Lofgren et al. (<a href="#ref-lofgren2019geno" role="doc-biblioref">2019</a>)</span>), the authors also performed control measurements of mock communities that they constructed from quantified genomic DNA of the 9 species in the experiment; these controls were used to measure taxonomic bias with the method of <span class="citation">McLaren, Willis, and Callahan (<a href="#ref-mclaren2019cons" role="doc-biblioref">2019</a>)</span>.
+The authors found a 13-fold difference between the most and least efficiently measured commensal, while the pathogen was measured 40-fold more efficiently than the least efficiently measured commensal.</p>
+<p><span class="citation">Leopold and Busby (<a href="#ref-leopold2020host" role="doc-biblioref">2020</a>)</span> performed two related DA analyses on the pre-infection communities: the first characterized the relative importance of host genetics and species arrival order on species relative abundances in the fully-established community, and the second quantified the strength of ‘priority effects’—the advantage gained by a species from being allowed to colonize first.
+Both analyses were based on fold differences (FDs) in species proportions and so in principle were sensitive to taxonomic bias.
+To improve accuracy, the authors incorporated the bias measured from the control samples with analysis-specific calibration procedures.</p>
+<p>We repeated the two DA analyses of <span class="citation">Leopold and Busby (<a href="#ref-leopold2020host" role="doc-biblioref">2020</a>)</span> with and without calibration and found that the results did not meaningfully differ
+(<a href="https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-06-leopold2020host-original-regression-analysis/">SI Analysis of host genetics and arrival order</a>,
+<a href="https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-05-leopold2020host-priority-effects/">SI Analysis of priority effects</a>).
+To understand why, we examined the variation in species proportions and the mean efficiency across the pre-infection communities
+(<a href="https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-08-leopold2020host-case-study/">SI Analysis</a>,
+SI Figure <a href="supplemental-figures.html#fig:leopold2020host-variation">D.1</a>).
+Despite the 13-fold variation in the efficiencies among species, the mean efficiency hardly varied across samples (SI Figure <a href="supplemental-figures.html#fig:leopold2020host-variation">D.1</a>C), having a geometric range of 1.62 and a geometric standard deviation of 1.05.
+This consistency in the mean efficiency was despite the fact that each species each showed substantial multiplicative variation (SI Figure <a href="supplemental-figures.html#fig:leopold2020host-variation">D.1</a>A).
+But the pre-infection samples were always dominated by the three species with the highest efficiencies, which varied by 3-fold and by just 1.5-fold between the two most dominant.
+The mean efficiency, equal to the proportion-weighted arithmetic average of species efficiencies, is insensitive to species present at low relative abundance and so remained relatively constant across samples.
+Because the multiplicative variation in the mean efficiency was much smaller than that in the proportions of individual species, it had a negligible impact on the inferred FDs and the DA analyses based on them.</p>
+<p>We performed an additional DA analysis on the data from <span class="citation">Leopold and Busby (<a href="#ref-leopold2020host" role="doc-biblioref">2020</a>)</span> to investigate whether any commensals increased in absolute concentration in response to infection (<a href="https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-08-leopold2020host-case-study/#change-in-commensals-due-to-infection">SI Analysis</a>).
+The pathogen is absent in pre-infection samples but tends to dominate the community post-infection, resulting in a substantially higher mean efficiency in post-infection samples (SI Figure <a href="supplemental-figures.html#fig:leopold2020host-infection-mean-efficiency-dist">D.2</a>).
+Across different host genotypes, the average post-infection increase in mean efficiency ranged from 2.5-fold to 5.2-fold.
+Using gamma-Poisson (or negative-binomial) regression of the observed read counts, we estimated the average LFD in commensal species proportions following infection with and without calibration (SI Figure <a href="supplemental-figures.html#fig:leopold2020host-infection-lfc">D.3</a>).
+Commensals typically decreased post-infection, which is expected given the pathogen’s growth to most abundant community member and the sum-to-one constraint faced by proportions.
+However, failure to account for bias caused the decrease to be overestimated, by an amount corresponding to the inverse change in log mean efficiency.
+For commensal-host pairs with relatively small observed decreases, bias correction greatly reduced the magnitude of the negative LFDs or, in several cases, resulted in LFDs that were near 0 or slightly positive.</p>
+<p>Although <span class="citation">Leopold and Busby (<a href="#ref-leopold2020host" role="doc-biblioref">2020</a>)</span> did not include absolute-abundance measurements, we can consider the impact taxonomic bias would have on an absolute DA analysis in a simple scenario in which total genome concentration of each pre- and post-infection sample is perfectly known.
+The total genomic concentrations of each sample, combined with the species proportions measured by MGS, can be combined into a measurement of species concentrations using the total-abundance normalization method (Equation <a href="abundance-measurement.html#eq:density-prop-meas">(2.11)</a>).
+In this case, the bias in the MGS measurements will create absolute errors in the estimated LFDs of genome concentration of equal magnitude to the errors in the LFD estimates for proportions.
+The scientific error, however, might become worse.
+Suppose that total abundance increased by 2-fold due to pathogen growth; in this case, species whose proportions remained approximately constant would have increased in absolute abundance by around 2-fold.
+Bias shifts FD estimates downwards by 2.5-fold to 5.2-fold (depending on host genotype).
+Hence, without bias correction, we would instead conclude that these species decreased.</p>
+</div>
+<div id="vaginal-microbiomes-of-pregnant-women" class="section level2 hasAnchor" number="4.2">
+<h2><span class="header-section-number">4.2</span> Vaginal microbiomes of pregnant women<a href="case-studies.html#vaginal-microbiomes-of-pregnant-women" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>A growing number of MGS studies have used DA analysis to describe associations between members of the vaginal microbiome and health conditions including urinary tract infections, sexually-transmitted infections, bacterial vaginosis, and preterm birth.
+However, these associations often vary between studies.
+DA analyses of the vaginal microbiome are commonly based on proportions, creating an opportunity for taxonomic bias to impact results.
+Substantial taxonomic bias has been experimentally demonstrated in MGS protocols applied to vaginal samples or in vitro samples of vaginally-associated species (<span class="citation">Yuan et al. (<a href="#ref-yuan2012eval" role="doc-biblioref">2012</a>)</span>, <span class="citation">Brooks et al. (<a href="#ref-brooks2015thet" role="doc-biblioref">2015</a>)</span>, <span class="citation">Gill et al. (<a href="#ref-gill2016eval" role="doc-biblioref">2016</a>)</span>, <span class="citation">Graspeuntner et al. (<a href="#ref-graspeuntner2018sele" role="doc-biblioref">2018</a>)</span>).
+The different biases of different MGS protocols have been proposed as one explanation for discrepancies in DA results across studies (<span class="citation">Callahan et al. (<a href="#ref-callahan2017repl" role="doc-biblioref">2017</a>)</span>).</p>
+<p>As part of the Multi-Omic Microbiome Study: Pregnancy Initiative (MOMS-PI) study, <span class="citation">Fettweis et al. (<a href="#ref-fettweis2019thev" role="doc-biblioref">2019</a>)</span> collected longitudinal samples from over 1500 pregnant women, including nearly 600 that were taxonomically profiled by amplicon sequencing of the 16S V1-V3 hypervariable region.
+The taxonomic bias of the MOMS-PI MGS protocol was previously quantified by <span class="citation">McLaren, Willis, and Callahan (<a href="#ref-mclaren2019cons" role="doc-biblioref">2019</a>)</span> using control measurements by <span class="citation">Brooks et al. (<a href="#ref-brooks2015thet" role="doc-biblioref">2015</a>)</span> of cellular mock communities of seven common, clinically-relevant vaginal bacterial species.
+Of these, <em>Lactobacillus iners</em> had the highest efficiency, which was nearly 30-fold larger than that of the species with the lowest efficiency, <em>Gardnerella vaginalis</em>.
+A second <em>Lactobacillus</em> species, <em>L. crispatus</em>, had an efficiency that was approximately 2-fold less than <em>L. iners</em> and 15-fold greater than <em>G. vaginalis</em>.
+These species, along with the unculturable <em>Lachnospiraceae BVAB1</em>, are most frequently the most abundant species in a sample and commonly reach high proportions of over 70%
+(<a href="https://mikemc.github.io/differential-abundance-theory/notebook/posts/2021-11-01-momspi-summary/">SI Analysis</a>).
+Therefore, shifts between these dominant species could drive large changes in the sample mean efficiency, which might in turn distort DA analyses.</p>
+<p>We sought to understand the potential impact of bias on DA analysis of vaginal microbiome profiles from the MOMS-PI study.
+We first examined variation in the mean efficiency across samples under the assumption that bias in the MOMS-PI study was accurately represented by the <span class="citation">Brooks et al. (<a href="#ref-brooks2015thet" role="doc-biblioref">2015</a>)</span> control measurements.
+Using taxonomic relatedness to impute the efficiencies of species not in the controls, we were able to calibrate the MOMS-PI profiles and estimate the mean efficiency of each sample
+(<a href="https://mikemc.github.io/differential-abundance-theory/notebook/posts/2021-11-01-momspi-summary/">SI Analysis</a>).
+The mean efficiency varies substantially across vaginal samples (Figure <a href="case-studies.html#fig:momspi-mean-efficiency-dist">4.1</a>), with samples in which a <em>Lactobacillus</em> species is most abundant typically having a mean efficiency that is 3-fold to 20-fold greater than samples in which <em>G. vaginalis</em> is most abundant.
+The vaginal microbiome sometimes shifted between <em>Lactobacillus</em>-dominance and <em>Gardnerella</em>-dominance between consecutive visits in individual women (SI Figure <a href="supplemental-figures.html#fig:momspi-mean-efficiency-fcs">D.4</a>), which caused magnitude and direction errors in the trajectories of lower-abundance species (SI Figure <a href="supplemental-figures.html#fig:momspi-trajectory">D.5</a>).</p>
+<!-- begin figure -->
+<div class="figure"><span style="display:block;" id="fig:momspi-mean-efficiency-dist"></span>
+<img src="notebook/_posts/2021-11-01-momspi-summary/momspi-summary_files/figure-html5/momspi-mean-efficiency-dist-1.svg" alt="The mean efficiency in vaginal samples from the MOMS-PI study varies with the most abundant species."  />
+<p class="caption">
+Figure 4.1: <strong>The mean efficiency in vaginal samples from the MOMS-PI study varies with the most abundant species.</strong>
+</p>
+</div>
+
+<!-- end figure -->
+<p>These observations suggest that a proportion-based DA analysis of a health condition that is associated with <em>Lactobacillus</em> and/or <em>Gardnerella</em> would be prone to spurious results.
+To demonstrate this possibility, we performed a DA analysis of the MOMS-PI samples with respect to a simulated health condition
+(<a href="https://mikemc.github.io/differential-abundance-theory/notebook/posts/2021-12-15-momspi-regression-diversity">SI Analysis</a>).
+Bacterial vaginosis (BV) has been repeatedly found to be associated with a dramatically reduced proportion of <em>Lactobacillus spp.</em>, an increased proportion of <em>G. vaginalis</em>, and higher within-community (alpha) diversity (<span class="citation">Srinivasan et al. (<a href="#ref-srinivasan2012bact" role="doc-biblioref">2012</a>)</span>, <span class="citation">Cartwright et al. (<a href="#ref-cartwright2018mult" role="doc-biblioref">2018</a>)</span>).
+As a proxy for clinical BV, we split samples into high diversity (BV-like), intermediate diversity, and low diversity (non-BV-like) groups based on Shannon diversity in observed (uncalibrated) microbiome profiles.
+The mean efficiency was lower in the high-diversity BV-like samples (mean LFD of -1.6) due to a lower abundance of <em>Lactobacillus spp.</em>.
+We estimated the LFD in proportion from non-BV-like to BV-like samples for 30 prevalent bacterial species, with and without bias correction, using gamma-Poisson (or negative-binomial) regression of the observed read counts to fit a linear model to log species proportions.
+We accounted for bias by including an offset term in the linear model equal to the log ratio of the species’ efficiency to the sample mean efficiency.
+As expected, bias correction reduced the estimated LFD from non-BV-like to BV-like groups for every species tested, though the importance of this effect varied among species (SI Figure <a href="supplemental-figures.html#fig:momspi-regression">D.6</a>).</p>
+</div>
+<div id="human-gut-microbiomes" class="section level2 hasAnchor" number="4.3">
+<h2><span class="header-section-number">4.3</span> Human gut microbiomes<a href="case-studies.html#human-gut-microbiomes" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>We wondered whether DA studies of the human gut microbiome might be less affected by bias than studies of the vaginal microbiome, due to the greater alpha diversity observed within gut microbiome samples.
+Recall that the mean efficiency is an abundance-weighted average over the species in a sample.
+Thus, all else equal, we expect the mean efficiency to vary less across samples from ecosystems where samples have higher alpha (within-sample) diversity, as is the case for stool samples relative to vaginal samples (<span class="citation">Huttenhower et al. (<a href="#ref-huttenhower2012stru" role="doc-biblioref">2012</a>)</span>).
+On the other hand, the proportion of individual species may also vary less less across samples when alpha diversity is higher, in which case the effect of bias on DA results need not diminish.</p>
+<p>To investigate this question, we analyzed bacterial species profiles of vaginal and stool samples derived from shotgun sequencing in the Human Microbiome Project
+(<span class="citation">Huttenhower et al. (<a href="#ref-huttenhower2012stru" role="doc-biblioref">2012</a>)</span>, <a href="https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-30-hmp-stool-vagina-comparison/">SI Analysis</a>).
+On average, stool profiles had substantially greater order-2 alpha diversity than vaginal profiles (SI Figure <a href="supplemental-figures.html#fig:gut">D.7</a>A; GM <span class="math inline">\(\md\)</span> GSD of 6.3 <span class="math inline">\(\md\)</span> 1.7 in stool samples and 1.4 <span class="math inline">\(\md\)</span> 1.6 in vaginal samples).
+To assess the potential importance of bias for proportion-based DA analyses in the two ecosystems, we quantified the multiplicative variation in the mean efficiency across samples for a large number of possible taxonomic biases under the assumption that the measured profiles reflected the truth.
+Across simulation replicates, the GSD in the mean efficiency was typically lower in stool than in vaginal samples (SI Figure <a href="supplemental-figures.html#fig:gut">D.7</a>B; ratio of GSD in vaginal samples to GSD in stool samples of 1.6 <span class="math inline">\(\md\)</span> 1.5 across 1000 simulations).
+Notably, however, the multiplicative variation in species also tended to be lower (SI Figure <a href="supplemental-figures.html#fig:gut">D.7</a>C), which the GSD in the proportion of a gut species across gut samples an average of 1.75-fold lower than that of a vaginal species across vaginal samples.
+Recall that the importance of bias estimation of the FD in a species’ proportion depends on GSD in the mean efficiency relative the GSD in the species’ proportion (Section <a href="differential-abundance.html#differential-abundance">3</a>).
+Thus these results suggest that although the mean efficiency likely varies less across stool than vaginal samples, bias may be just as problematic for proportion-based DA analyses.</p>
+</div>
+<div id="microbial-growth-in-marine-sediments" class="section level2 hasAnchor" number="4.4">
+<h2><span class="header-section-number">4.4</span> Microbial growth in marine sediments<a href="case-studies.html#microbial-growth-in-marine-sediments" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The surface layers of marine sediments harbor diverse and abundant microbiomes.
+Total cell density and species richness decrease with depth as resources are consumed in older, deeper sediment layers; however, some taxa are able to grow and increase in density as they are slowly buried.
+<span class="citation">Lloyd et al. (<a href="#ref-lloyd2020evid" role="doc-biblioref">2020</a>)</span> performed a systematic assessment of growth rates of bacterial and archaeal taxa over a depth of 10 cm (corresponding to ~40 years of burial time) in sediment of the White Oak River estuary.
+Taxa proportions were measured with 16S amplicon sequencing and total community densities were measured by counting cells using epifluorescence microscopy.
+The authors then calculated cell concentrations for each taxon by multiplying the taxon’s proportion by the total concentration, a method they referred to as FRAxC measurements for ‘fraction of 16S reads times total cell counts’.
+Taxon-specific growth rates were inferred from the slope of a simple linear regression of the log of the calculated concentration of each taxon against burial time over the first 3 cm below the bioirrigation layer (corresponding to ~8 years of burial).</p>
+<p>The FRAxC concentration measurements made by <span class="citation">Lloyd et al. (<a href="#ref-lloyd2020evid" role="doc-biblioref">2020</a>)</span> correspond to the total-abundance approach to inferring absolute abundance (Equation <a href="abundance-measurement.html#eq:density-prop-meas">(2.11)</a>).
+Accordingly, taxonomic bias could lead to systematic error in FRAxC-derived growth rates if sample mean efficiency tends to systematically vary with burial time.
+Such systematic variation could occur if microbes with tougher cell walls both persist longer in the sediment and are more difficult to extract DNA from than microbes with weaker cell walls.
+In this scenario, the relative abundance of tougher species will increase with burial time, as the cells of weaker species degrade.
+This shifting composition will cause the sample mean efficiency to decrease with time, leading to inflated growth-rate estimates for all taxa.
+Taxa that decay with depth sufficiently slowly would mistakenly be inferred to have positive growth from the FRAxC-calculated abundances.</p>
+<p>Importantly, <span class="citation">Lloyd et al. (<a href="#ref-lloyd2020evid" role="doc-biblioref">2020</a>)</span> also used qPCR to measure the absolute abundance of two taxa from these same samples.
+By comparing qPCR to FRAxC growth rates for these taxa, we can estimate the systematic error in FRAxC growth rates (<a href="https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-08-lloyd2020evi-case-study/">SI Analysis</a>)
+Because the systematic error that bias causes in the regression slope is the same for each taxon (Section <a href="differential-abundance.html#differential-abundance">3</a>), these comparisons allow us to draw conclusions about the accuracy of FRAxC growth rates for all taxa.</p>
+<p>The first soil core included qPCR measurements of a single archaeal taxon, <em>Bathyarchaeota</em>, for which growth rates by qPCR and FRAxC were nearly identical (doubling rates of 0.099/yr by FRAxC and 0.097/yr by qPCR).
+The second soil core included qPCR measurements of <em>Bathyarchaeota</em> and a second taxon, <em>Thermoprofundales</em>/MBG-D.
+In this core, FRAxC and qPCR growth rates differed more substantially, with growth rates from FRAxC being larger by 0.012/yr for <em>Bathyarchaeota</em> (0.112/yr by FRAxC and 0.1/yr by qPCR) and by 0.086/yr for <em>Thermoprofundales</em>/MBG-D (0.294/yr by FRAxC and 0.208/yr by qPCR).
+Uncertainty in the FRAxC- and qPCR-derived growth rates is not reported and is likely substantial; however, the fact that the FRAxC-derived rates are larger than qPCR-derived rates in all three cases is consistent with our hypothesis that mean efficiency decreased with depth in a manner that systematically biased FRAxC-derived rates to higher values.
+The differences in growth rate are small in absolute terms; however, the maximum observed difference of 0.086/yr suggests an error large enough to impact results for some taxa classified as positive growers, whose FRAxC growth rates ranged between 0.04/yr and 0.5/yr.
+In summary, the comparison between FRAxC and qPCR measurements supports the overall study conclusions, but also suggests that species at the low end of positive FRAxC-derived rates may be merely persisting or even slowly declining in abundance.</p>
+</div>
+<div id="summary-and-discussion" class="section level2 hasAnchor" number="4.5">
+<h2><span class="header-section-number">4.5</span> Summary and discussion<a href="case-studies.html#summary-and-discussion" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The effect that consistent taxonomic bias has on proportion-based DA analyses depends on the MGS protocol, the biological system, and the sample comparisons under investigation.
+Our case studies explore a limited range of possibilities; however, we can begin to form some general conclusions by placing them within the context of the three scenarios described in Section <a href="differential-abundance.html#differential-abundance">3</a>.</p>
+<p>We saw several cases where the mean efficiency is stable across samples, so that bias does not affect LFD estimates (Scenario 1).
+In the pre-infection fungal microbiome samples of <span class="citation">Leopold and Busby (<a href="#ref-leopold2020host" role="doc-biblioref">2020</a>)</span>, we observed that the mean efficiency remained stable despite substantial bias and large multiplicative variation in species proportions among samples.
+Because the variation in the mean efficiency was much less than that of the individual species, the impact of bias on DA analysis was negligible.
+In the vaginal case study, we also observed that the mean efficiency was relative stable across vaginal microbiomes that were dominated by the same species, despite substantial bias and large LFDs in non-dominant species.
+In both cases, the stability of the mean efficiency can be understood by the fact that it is an additive average over species and so is primarily determined by the most abundant species in the sample.</p>
+<p>Yet we also observed cases where the mean efficiency varied substantially.
+In several cases, the mean efficiency varied systematically with the condition of interest sufficient to cause substantial systematic error in LFD estimates (Scenario 3).
+Examples include the comparison of foliar fungal microbiomes pre- and post-infection, for which the mean efficiency increased post-infection, and the comparison of vaginal microbiomes with low versus high diversity in the MOMS-PI study, for which the mean efficiency was typically lower in high-diversity samples.
+Our analysis of marine sediment communities is consistent with a systematic decline of the mean efficiency with burial time that is sufficient to substantially inflate the estimated growth rates of slowly changing species.
+The mean efficiency cannot differ by more than the species proportions constituting it.
+Therefore, the error in the estimated LFDs tend to be practically significant only for species whose LFDs are substantially smaller in magnitude than the largest LFD.</p>
+<p>Variation in the mean efficiency may also be substantial, yet unassociated with the condition of interest (Scenario 2).
+Although we did not directly observe this scenario directly, we have reason to think that it may be common in real microbiome studies.
+Our simulation analysis of gut microbiomes suggest that even in diverse ecosystems, bias will often cause multiplicative variation in the mean efficiency that is comparable to that of individual species.
+This variation is much less problematic for DA results when it not associated with the condition under study, since any loss in precision can in principle be offset by an increase in sample size.
+For certain applications, however, it will be important to remember that the LFDs between individual samples remain unreliable.</p>
+<p>Under what conditions should we expect the problematic third scenario?
+Our case studies suggest one prominent mechanism for causing systematic variation in the mean efficiency: the existence of one or more species with unusually high or low efficiencies that tend to dominate the community more often in one sample condition than another.
+This mechanism was responsible for the negative effect of bias in our DA analyses of foliar fungal microbiomes following infection and of vaginal microbiomes with low versus high diversity.
+In experimental systems where no one species frequently forms a large fraction of the community, systematic variation of the mean efficiency can still arise through the collective change of many species that are associated with the condition of interest.
+We described a plausible instance in the marine-sediment case study, where increased burial time selects for lysis-resistant (and so lower efficiency) species.
+As another example, treatment with an antibiotic might selectively kill Gram negative species, which also tend to be easier to lyse, thereby decreasing the mean efficiency in fecal samples collected after treatment.
+A generic mechanism which might spawn such condition-efficiency associations stems from the evolutionary relationships among species.
+Species with recent common ancestry are expected to share a number of traits that determine measurement efficiency, including cell wall structure, genome size, ribosomal copy number, and PCR binding sequence.
+They are also expected to share traits related to the condition of interest.
+If related species tend to have similar efficiencies and similar associations with the condition, then they may drive an association of the mean efficiency with the condition.</p>
+<p>These observations provide reasons to both worry and hope.
+It seems likely that in many studies, the mean efficiency is consistent (first scenario) or is at least not associated with the condition (second scenario), so that DA inferences remain valid.
+Yet it is not obvious which scenario any study falls into.
+There are plausible mechanisms leading to systematic variation of the mean efficiency even in ecosystems with high species diversity.
+Moreover, our explorations suggest that random variation in the mean efficiency is common and distorts comparisons between individual samples.
+Thus while we should not discount the large set of existing DA results, we should seek ways to better assess the robustness of results from previous studies and to measure and correct the error caused by bias in future ones.</p>
+
+</div>
+</div>
+<h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-brooks2015thet" class="csl-entry">
+Brooks, J Paul, David J Edwards, Michael D Harwich, Maria C Rivera, Jennifer M Fettweis, Myrna G Serrano, Robert A Reris, et al. 2015. <span>“<span class="nocase">The truth about metagenomics: quantifying and counteracting bias in 16S rRNA studies</span>.”</span> <em>BMC Microbiol.</em> 15 (1): 66. <a href="https://doi.org/10.1186/s12866-015-0351-6">https://doi.org/10.1186/s12866-015-0351-6</a>.
+</div>
+<div id="ref-callahan2017repl" class="csl-entry">
+Callahan, Benjamin J, Daniel B DiGiulio, Daniela S Aliaga Goltsman, Christine L Sun, Elizabeth K Costello, Pratheepa Jeganathan, Joseph R Biggio, et al. 2017. <span>“<span class="nocase">Replication and refinement of a vaginal microbial signature of preterm birth in two racially distinct cohorts of US women</span>.”</span> <em>Proc. Natl. Acad. Sci. U. S. A.</em> 114 (37): 9966–71. <a href="https://doi.org/10.1073/pnas.1705899114">https://doi.org/10.1073/pnas.1705899114</a>.
+</div>
+<div id="ref-cartwright2018mult" class="csl-entry">
+Cartwright, Charles P., Amanda J. Pherson, Ayla B. Harris, Matthew S. Clancey, and Melinda B. Nye. 2018. <span>“<span class="nocase">Multicenter study establishing the clinical validity of a nucleic-acid amplification–based assay for the diagnosis of bacterial vaginosis</span>.”</span> <em>Diagn. Microbiol. Infect. Dis.</em> 92 (3): 173–78. <a href="https://doi.org/10.1016/j.diagmicrobio.2018.05.022">https://doi.org/10.1016/j.diagmicrobio.2018.05.022</a>.
+</div>
+<div id="ref-fettweis2019thev" class="csl-entry">
+Fettweis, Jennifer M., Myrna G. Serrano, Jamie Paul Brooks, David J. Edwards, Philippe H. Girerd, Hardik I. Parikh, Bernice Huang, et al. 2019. <span>“<span class="nocase">The vaginal microbiome and preterm birth</span>.”</span> <em>Nat. Med.</em> 25 (6): 1012–21. <a href="https://doi.org/10.1038/s41591-019-0450-2">https://doi.org/10.1038/s41591-019-0450-2</a>.
+</div>
+<div id="ref-gill2016eval" class="csl-entry">
+Gill, Christina, Janneke H. H. M. van de Wijgert, Frances Blow, and Alistair C. Darby. 2016. <span>“<span class="nocase">Evaluation of Lysis Methods for the Extraction of Bacterial DNA for Analysis of the Vaginal Microbiota</span>.”</span> Edited by Peter E. Larsen. <em>PLoS One</em> 11 (9): e0163148. <a href="https://doi.org/10.1371/journal.pone.0163148">https://doi.org/10.1371/journal.pone.0163148</a>.
+</div>
+<div id="ref-graspeuntner2018sele" class="csl-entry">
+Graspeuntner, Simon, Nathalie Loeper, Sven Künzel, John F. Baines, and Jan Rupp. 2018. <span>“<span class="nocase">Selection of validated hypervariable regions is crucial in 16S-based microbiota studies of the female genital tract</span>.”</span> <em>Sci. Rep.</em> 8 (1): 9678. <a href="https://doi.org/10.1038/s41598-018-27757-8">https://doi.org/10.1038/s41598-018-27757-8</a>.
+</div>
+<div id="ref-huttenhower2012stru" class="csl-entry">
+Huttenhower, Curtis, Dirk Gevers, Rob Knight, Sahar Abubucker, Jonathan H. Badger, Asif T. Chinwalla, Heather H. Creasy, et al. 2012. <span>“<span class="nocase">Structure, function and diversity of the healthy human microbiome</span>.”</span> <em>Nature</em> 486 (7402): 207–14. <a href="https://doi.org/10.1038/nature11234">https://doi.org/10.1038/nature11234</a>.
+</div>
+<div id="ref-leopold2020host" class="csl-entry">
+Leopold, Devin R, and Posy E Busby. 2020. <span>“<span class="nocase">Host Genotype and Colonist Arrival Order Jointly Govern Plant Microbiome Composition and Function</span>.”</span> <em>Curr. Biol.</em> 30 (16): 3260–3266.e5. <a href="https://doi.org/10.1016/j.cub.2020.06.011">https://doi.org/10.1016/j.cub.2020.06.011</a>.
+</div>
+<div id="ref-lloyd2020evid" class="csl-entry">
+Lloyd, Karen G., Jordan T. Bird, Joy Buongiorno, Emily Deas, Richard Kevorkian, Talor Noordhoek, Jacob Rosalsky, and Taylor Roy. 2020. <span>“<span class="nocase">Evidence for a Growth Zone for Deep-Subsurface Microbial Clades in Near-Surface Anoxic Sediments</span>.”</span> <em>Appl. Environ. Microbiol.</em> 86 (19): 1–15. <a href="https://doi.org/10.1128/AEM.00877-20">https://doi.org/10.1128/AEM.00877-20</a>.
+</div>
+<div id="ref-lofgren2019geno" class="csl-entry">
+Lofgren, Lotus A., Jessie K. Uehling, Sara Branco, Thomas D. Bruns, Francis Martin, and Peter G. Kennedy. 2019. <span>“<span class="nocase">Genome‐based estimates of fungal rDNA copy number variation across phylogenetic scales and ecological lifestyles</span>.”</span> <em>Mol. Ecol.</em> 28 (4): 721–30. <a href="https://doi.org/10.1111/mec.14995">https://doi.org/10.1111/mec.14995</a>.
+</div>
+<div id="ref-mclaren2019cons" class="csl-entry">
+McLaren, Michael R, Amy D Willis, and Benjamin J Callahan. 2019. <span>“<span class="nocase">Consistent and correctable bias in metagenomic sequencing experiments</span>.”</span> <em>Elife</em> 8 (September): 46923. <a href="https://doi.org/10.7554/eLife.46923">https://doi.org/10.7554/eLife.46923</a>.
+</div>
+<div id="ref-srinivasan2012bact" class="csl-entry">
+Srinivasan, Sujatha, Noah G. Hoffman, Martin T. Morgan, Frederick A. Matsen, Tina L. Fiedler, Robert W. Hall, Frederick J. Ross, et al. 2012. <span>“<span class="nocase">Bacterial Communities in Women with Bacterial Vaginosis: High Resolution Phylogenetic Analyses Reveal Relationships of Microbiota to Clinical Criteria</span>.”</span> Edited by Adam J. Ratner. <em>PLoS One</em> 7 (6): e37818. <a href="https://doi.org/10.1371/journal.pone.0037818">https://doi.org/10.1371/journal.pone.0037818</a>.
+</div>
+<div id="ref-yuan2012eval" class="csl-entry">
+Yuan, Sanqing, Dora B. Cohen, Jacques Ravel, Zaid Abdo, and Larry J. Forney. 2012. <span>“<span class="nocase">Evaluation of Methods for the Extraction and Purification of DNA from the Human Microbiome</span>.”</span> Edited by Jack Anthony Gilbert. <em>PLoS One</em> 7 (3): e33865. <a href="https://doi.org/10.1371/journal.pone.0033865">https://doi.org/10.1371/journal.pone.0033865</a>.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="differential-abundance.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="solutions.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": true,
+"facebook": false,
+"twitter": false,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/mikemc/differential-abundance-theory/edit/main/case-studies.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": "https://github.com/mikemc/differential-abundance-theory/commits/main/case-studies.Rmd",
+"text": null
+},
+"view": {
+"link": "https://github.com/mikemc/differential-abundance-theory/blob/main/case-studies.Rmd",
+"text": null
+},
+"download": ["_main.pdf"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
