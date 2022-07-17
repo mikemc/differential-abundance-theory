@@ -17,15 +17,19 @@ The authors found a 13-fold difference between the most and least efficiently me
 Both analyses were based on fold differences (FDs) in species proportions and so in principle were sensitive to taxonomic bias.
 To improve accuracy, the authors incorporated the bias measured from the control samples with analysis-specific calibration procedures.
 
-We repeated the two DA analyses of @leopold2020host with and without calibration and found that the results did not meaningfully differ.
-To understand why, we examined the variation in species proportions and the mean efficiency across the pre-infection communities (SI Figure \@ref(fig:leopold2020host-variation)).
+We repeated the two DA analyses of @leopold2020host with and without calibration and found that the results did not meaningfully differ
+([SI Analysis of host genetics and arrival order](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-06-leopold2020host-original-regression-analysis/),
+[SI Analysis of priority effects](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-05-leopold2020host-priority-effects/)).
+To understand why, we examined the variation in species proportions and the mean efficiency across the pre-infection communities 
+([SI Analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-08-leopold2020host-case-study/), 
+SI Figure \@ref(fig:leopold2020host-variation)).
 Despite the 13-fold variation in the efficiencies among species, the mean efficiency hardly varied across samples (SI Figure \@ref(fig:leopold2020host-variation)C), having a geometric range of 1.62 and a geometric standard deviation of 1.05.
 This consistency in the mean efficiency was despite the fact that each species each showed substantial multiplicative variation (SI Figure \@ref(fig:leopold2020host-variation)A).
 But the pre-infection samples were always dominated by the three species with the highest efficiencies, which varied by 3-fold and by just 1.5-fold between the two most dominant.
 The mean efficiency, equal to the proportion-weighted arithmetic average of species efficiencies, is insensitive to species present at low relative abundance and so remained relatively constant across samples.
 Because the multiplicative variation in the mean efficiency was much smaller than that in the proportions of individual species, it had a negligible impact on the inferred FDs and the DA analyses based on them.
 
-We performed an additional DA analysis on the data from @leopold2020host to investigate whether any commensals increased in absolute concentration in response to infection.
+We performed an additional DA analysis on the data from @leopold2020host to investigate whether any commensals increased in absolute concentration in response to infection ([SI Analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-08-leopold2020host-case-study/#change-in-commensals-due-to-infection)).
 The pathogen is absent in pre-infection samples but tends to dominate the community post-infection, resulting in a substantially higher mean efficiency in post-infection samples (SI Figure \@ref(fig:leopold2020host-infection-mean-efficiency-dist)).
 Across different host genotypes, the average post-infection increase in mean efficiency ranged from 2.5-fold to 5.2-fold.
 Using gamma-Poisson (or negative-binomial) regression of the observed read counts, we estimated the average LFD in commensal species proportions following infection with and without calibration (SI Figure \@ref(fig:leopold2020host-infection-lfc)).
@@ -53,13 +57,15 @@ As part of the Multi-Omic Microbiome Study: Pregnancy Initiative (MOMS-PI) study
 The taxonomic bias of the MOMS-PI MGS protocol was previously quantified by @mclaren2019cons using control measurements by @brooks2015thet of cellular mock communities of seven common, clinically-relevant vaginal bacterial species.
 Of these, _Lactobacillus iners_ had the highest efficiency, which was nearly 30-fold larger than that of the species with the lowest efficiency, _Gardnerella vaginalis_.
 A second _Lactobacillus_ species, _L. crispatus_, had an efficiency that was approximately 2-fold less than _L. iners_ and 15-fold greater than _G. vaginalis_.
-These species, along with the unculturable _Lachnospiraceae BVAB1_, are most frequently the most abundant species in a sample and commonly reach high proportions of over 70% (REF SI analysis).
+These species, along with the unculturable _Lachnospiraceae BVAB1_, are most frequently the most abundant species in a sample and commonly reach high proportions of over 70% 
+([SI Analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2021-11-01-momspi-summary/)).
 Therefore, shifts between these dominant species could drive large changes in the sample mean efficiency, which might in turn distort DA analyses.
 
 We sought to understand the potential impact of bias on DA analysis of vaginal microbiome profiles from the MOMS-PI study.
 We first examined variation in the mean efficiency across samples under the assumption that bias in the MOMS-PI study was accurately represented by the @brooks2015thet control measurements.
-Using taxonomic relatedness to impute the efficiencies of species not in the controls, we were able to calibrate the MOMS-PI profiles and estimate the mean efficiency of each sample (REF SI Analysis).
-The mean efficiency varies substantially across vaginal samples (Figure 4.1), with samples in which a _Lactobacillus_ species is most abundant typically having a mean efficiency that is 3-fold to 20-fold greater than samples in which _G. vaginalis_ is most abundant.
+Using taxonomic relatedness to impute the efficiencies of species not in the controls, we were able to calibrate the MOMS-PI profiles and estimate the mean efficiency of each sample
+([SI Analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2021-11-01-momspi-summary/)).
+The mean efficiency varies substantially across vaginal samples (Figure \@ref(fig:momspi-mean-efficiency-dist)), with samples in which a _Lactobacillus_ species is most abundant typically having a mean efficiency that is 3-fold to 20-fold greater than samples in which _G. vaginalis_ is most abundant.
 The vaginal microbiome sometimes shifted between _Lactobacillus_-dominance and _Gardnerella_-dominance between consecutive visits in individual women (SI Figure \@ref(fig:momspi-mean-efficiency-fcs)), which caused magnitude and direction errors in the trajectories of lower-abundance species (SI Figure \@ref(fig:momspi-trajectory)).
 
 <!-- begin figure -->
@@ -77,7 +83,8 @@ fs::path(
 <!-- end figure -->
 
 These observations suggest that a proportion-based DA analysis of a health condition that is associated with _Lactobacillus_ and/or _Gardnerella_ would be prone to spurious results.
-To demonstrate this possibility, we performed a DA analysis of the MOMS-PI samples with respect to a simulated health condition.
+To demonstrate this possibility, we performed a DA analysis of the MOMS-PI samples with respect to a simulated health condition
+([SI Analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2021-12-15-momspi-regression-diversity)).
 Bacterial vaginosis (BV) has been repeatedly found to be associated with a dramatically reduced proportion of _Lactobacillus spp._, an increased proportion of _G. vaginalis_, and higher within-community (alpha) diversity (@srinivasan2012bact, @cartwright2018mult).
 As a proxy for clinical BV, we split samples into high diversity (BV-like), intermediate diversity, and low diversity (non-BV-like) groups based on Shannon diversity in observed (uncalibrated) microbiome profiles.
 The mean efficiency was lower in the high-diversity BV-like samples (mean LFD of -1.6) due to a lower abundance of _Lactobacillus spp._.
@@ -87,12 +94,10 @@ As expected, bias correction reduced the estimated LFD from non-BV-like to BV-li
 
 ## Human gut microbiomes
 
-We wondered whether DA in the human gut microbiome might be less affected by bias than the vaginal microbiome, due to its greater species diversity.
-Recall that the mean efficiency is an abundance-weighted average over species in a sample; thus we might expect it to become more stable as the within-sample (alpha) diversity increases.
-In fact, one can show that for communities that are randomly assembled from a large species pool, the additive variance in the mean efficiency is inversely proportional to order-2 diversity $^2D$ (also known as the Inverse Simpson diversity index) (Appendix \@ref(diversity-and-mean-efficiency)).
-But real communities are assembled through complex processes that create positive and negative associations among species (REF).
-Thus there is unlikely to be a simple 1-1 relationship between alpha diversity and variation in the mean efficiency.
-Moreover, even if the mean efficiency does vary less across the more diverse gut samples, if the proportion of each species also varies less, then the importance of bias for DA analyses need not diminish.
+We wondered whether DA studies of the human gut microbiome might be less affected by bias than studies of the vaginal microbiome, due to the greater alpha diversity observed within gut microbiome samples.
+Recall that the mean efficiency is an abundance-weighted average over the species in a sample.
+Thus, all else equal, we expect the mean efficiency to vary less across samples from ecosystems where samples have higher alpha (within-sample) diversity, as is the case for stool samples relative to vaginal samples (@huttenhower2012stru).
+On the other hand, the proportion of individual species may also vary less less across samples when alpha diversity is higher, in which case the effect of bias on DA results need not diminish.
 
 ```{r gut-stats, message = FALSE}
 hmp_div_stats <- fs::path(
@@ -119,7 +124,8 @@ hmp_species_diff <- hmp_species_stats %>%
   pull(1)
 ```
 
-To investigate this question, we analyzed bacterial species profiles of vaginal and stool samples derived from shotgun sequencing in the Human Microbiome Project (@huttenhower2012stru, SI Methods \@ref(methods-gut)).
+To investigate this question, we analyzed bacterial species profiles of vaginal and stool samples derived from shotgun sequencing in the Human Microbiome Project 
+(@huttenhower2012stru, [SI Analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-30-hmp-stool-vagina-comparison/)).
 On average, stool profiles had substantially greater order-2 alpha diversity than vaginal profiles (SI Figure \@ref(fig:gut)A; GM $\md$ GSD of `r hmp_div_stats['stool', 'gm'] %>% round(1)` $\md$ `r hmp_div_stats['stool', 'gsd'] %>% round(1)` in stool samples and `r hmp_div_stats['vagina', 'gm'] %>% round(1)` $\md$ `r hmp_div_stats['vagina', 'gsd'] %>% round(1)` in vaginal samples).
 To assess the potential importance of bias for proportion-based DA analyses in the two ecosystems, we quantified the multiplicative variation in the mean efficiency across samples for a large number of possible taxonomic biases under the assumption that the measured profiles reflected the truth.
 Across simulation replicates, the GSD in the mean efficiency was typically lower in stool than in vaginal samples (SI Figure \@ref(fig:gut)B; ratio of GSD in vaginal samples to GSD in stool samples of `r hmp_me_stats['iid', 'gm'] %>% round(1)` $\md$ `r hmp_me_stats['iid', 'gsd'] %>% round(1)` across 1000 simulations).
@@ -144,7 +150,7 @@ This shifting composition will cause the sample mean efficiency to decrease with
 Taxa that decay with depth sufficiently slowly would mistakenly be inferred to have positive growth from the FRAxC-calculated abundances.
 
 Importantly, @lloyd2020evid also used qPCR to measure the absolute abundance of two taxa from these same samples.
-By comparing qPCR to FRAxC growth rates for these taxa, we can estimate the systematic error in FRAxC growth rates.
+By comparing qPCR to FRAxC growth rates for these taxa, we can estimate the systematic error in FRAxC growth rates ([SI Analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-08-lloyd2020evi-case-study/))
 Because the systematic error that bias causes in the regression slope is the same for each taxon (Section \@ref(differential-abundance)), these comparisons allow us to draw conclusions about the accuracy of FRAxC growth rates for all taxa.
 
 ```{r}
