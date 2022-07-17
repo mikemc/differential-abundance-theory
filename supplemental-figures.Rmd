@@ -96,14 +96,3 @@ fs::path(
 <br><br>
 
 <!-- Solutions -->
-
-```{r sensitivity-example, fig.cap = '(ref:cap-sensitivity-example)'}
-fs::path(
-  "notebook/_posts/2021-10-18-evaluate-robustness-example/",
-  "evaluate-robustness-example_files/figure-html5/summary_plot-1.svg"
-) %>%
-  include_svg
-```
-
-(ref:cap-sensitivity-example) **A bias-sensivity analysis can be performed to examine how sensitive the results of a DA analysis are to assumptions about taxonomic bias in community measurements.** The figure shows the results of a bias-sensitivity analysis used to study the effect of bias on the association of _Gardnerella vaginalis_ and preterm birth that was investigated by @callahan2017repl. 100 random efficiency vectors were drawn at 6 different bias strengths (quantified by the variance in log efficiency, $\sigma_{e}^{2}$). Each efficiency vector was used to calibrate the MGS profiles and perform a DA association test of _G. vaginalis_ versus the host's preterm birth outcome; regression coefficients $\hat \beta$ indicate the increase of average logit proportion of  _G. vaginalis_ in women who experienced preterm birth.
-
