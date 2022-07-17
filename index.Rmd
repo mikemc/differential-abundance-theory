@@ -1,7 +1,7 @@
 ---
 title: "Characterizing and correcting the effect of taxonomic bias in microbial differential-abundance analysis"
 author:
-  - Michael R. McLaren^[North Carolina State University; send correspondence to m.mclaren42@gmail.com]
+  - Michael R. McLaren^[Massachusetts Institute of Technology; send correspondence to m.mclaren42@gmail.com]
   - Jacob T. Nearing^[Dalhousie University]
   - Amy D. Willis^[University of Washington]
   - Karen G. Lloyd^[University of Tennessee]
@@ -77,5 +77,5 @@ We describe the basic problem posed by taxonomic bias for measuring changes in t
 Analyses of both relative and absolute abundances are considered.
 The manuscript is licensed under a [CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/).
 See [the Zenodo record](https://doi.org/10.5281/zenodo.4552717) for how to cite the latest version.
-Supporting data analyses can be found in the accompanying [computational research notebook] (https://mikemc.github.io/differential-abundance-theory/notebook/).
+Supporting data analyses can be found in the accompanying [computational research notebook](https://mikemc.github.io/differential-abundance-theory/notebook/).
 
