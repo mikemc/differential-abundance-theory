@@ -1,23 +1,23 @@
 # Conclusion
 
-It is commonly thought that analyses of the differences between samples are robust to the taxonomic bias inherent in MGS measurement as long as all samples have been subjected to the same MGS workflow.
-But our results show that consistent taxonomic bias is still capable of creating scientific errors in common forms of DA analysis.
-In particular, we showed mathematically that bias affects DA analysis methods based on proportions or in absolute abundances derived from them (using total-abundance normalization), due to variation in the mean efficiency across samples of varying taxonomic composition.
-<!-- This is assuming consistent bias at the taxonomic level of analysis; things could be worse if we're analyzing higher taxonomic units than at which bias is conserved. -->
-<!-- Perhaps state that we showed this theoretically, in mock communities, and in real case studies -->
-The error, however, varies by experimental context and may often be negligible in a practical sense.
-<!-- It is negligible if the mean efficiency is stable across samples, and may be unimportant if it is not correlated with the focal covariate in a regression analysis. -->
-Moreover, it can be quantified and corrected through the use of reference-taxon measurements and/or community calibration controls.
-In addition, bias-aware sensitivity and meta-analyses make it possible to rigorously account for bias even in the absence of such controls.
-Applications of these methods will gradually improve our understanding of the experimental contexts in which variation in the mean efficiency is likely to be problematic and should be accounted for.
+It is commonly assumed that differential abundance (DA) analysis is robust to taxonomic bias, so long as all samples have been subjected to the same MGS workflow.
+In contrast, our results show that consistent taxonomic bias can distort the results of DA methods that are based on species proportions.
+This distortion occurs because the fold error in a species' proportion depends on the sample mean efficiency, which can vary across samples and conditions in accordance with the overall community composition.
+This problem continues to apply for analyses of absolute abundance that are based on multiplying the proportions from MGS by the total abundance of the community.
+In contrast, DA methods based on species ratios are invariant to consistent bias, since the error in the ratio between species is independent of community composition.
+In Section \@ref(solutions), we describe how ratio-based methods can thus provide a more robust approach to analyzing relative and absolute abundances;
+in addition, calibration with community controls, bias-sensitivity analysis, and bias-aware meta-analysis provide additional ways to correct or mitigate the effect of bias.
 
-We also showed that other DA methods are more robust---perhaps even entirely invariant---to consistent taxonomic bias.
-In particular, analyses based on multiplicative variation in ratios and of absolute abundances derived from them (using reference-species normalization) are invariant to bias in the MGS measurement, as bias causes a constant multiplicative error that cancels in cross-sample comparisons.
-In addition, careful pairing of total-abundance and MGS measurement methods can counter the variation in mean efficiency of the MGS measurement, leading to more consistent fold errors across samples.
+Proportion-based DA methods encompass many of the most popular methods for analyzing relative and absolute abundances.
+Importantly, however, we found that the degree and significance of the error due to bias depends on experimental context and may often be negligible.
+In particular, if the mean efficiency is approximately constant across samples, then bias has a negligible effect on multiplicative and rank-based cross-sample comparisons, and DA results will be unaffected.
+If the mean efficiency varies but is unassociated with the condition of interest, then bias merely serves to increase noise and does not create systematic errors in DA results.
+It is only when the mean efficiency is associated with the condition being analyzed that large systematic errors can occur.
+Our case studies suggest that this problematic scenario can occur but may well be the exception rather than the rule.
+Thus our results are still consistent with taxonomic bias having had a limited impact on extant DA results.
+Systematic investigation of how the mean efficiency affects DA results across a wide range of studies may increase our confidence in previous DA results and/or alert us to the conditions in which they are most suspect.
 
-Important open questions and future research directions remain.
-<!-- Taxonomic aggregation and non-FC analyses are left out because I'm assuming they will be addressed in the manuscript -->
-Key open questions include 1) determining the extent to which bias is consistent across samples for different taxonomic levels, MGS methods, and sample types; 2) assessing the validity of post-extraction measurements as measures of pre-extraction abundance; 3) understanding how the multiplicative error from bias interacts with the non-multiplicative error from contamination and taxonomic misassignment; and 4) understanding how different underlying community dynamics, and in particular the source of zero counts in MGS measurements, affect bias sensitivity.
+Important open questions include 1) determining the extent to which bias is consistent across samples for different taxonomic levels, MGS methods, and sample types; 2) assessing the validity of post-extraction measurements as measures of pre-extraction abundance; 3) understanding how the multiplicative error from bias interacts with the non-multiplicative error from contamination and taxonomic misassignment; and 4) understanding how different underlying community dynamics, and in particular the source of zero counts in MGS measurements, affect bias sensitivity.
 In addition, while we have showed some simple methods for incorporating bias and control measurements into DA analyses, more sophisticated statistical tools are needed to properly account for both taxonomic bias and random variation in the underlying MGS and supplemental (e.g. qPCR) measurements.
 Finally, more concrete experimental recommendations and user-friendly statistical workflows are needed for implementing the solutions we propose in various experimental contexts.
 
