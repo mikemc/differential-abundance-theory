@@ -144,7 +144,7 @@ By accounting for the contribution of unknown species when computing proportions
 ## Using reference species for total-density normalization {#total-density-ref}
 
 Constant reference species are sometimes used to measure total density of $S$ by the ratio of $S$ reads to $R$ reads.
-For example, a study of *Arabidopsis* microbiomes used the ratio of bacterial to host reads in shotgun sequencing as a proxy for total bacterial density, which they then used for total-community normalization of 16S amplicon sequencing measurements (@karasov2020ther, @regalado2019comb).
+For example, a study of *Arabidopsis* microbiomes used the ratio of bacterial to host reads in shotgun sequencing as a proxy for total bacterial density, which they then used for total-community normalization of 16S amplicon sequencing measurements (@karasov2020ther, @regalado2020comb).
 @chng2020meta similarly used the ratio of bacterial to host or diet reads in shotgun sequencing of mouse fecal samples as a proxy for total bacterial density (though they did not use this measurement for community normalization).
 @smets2016amet similarly used the ratio of non-spike-in to spike-in reads to estimate total density.
 
@@ -247,7 +247,7 @@ We use _housekeeping species_ (by analogy with housekeeping genes used for norma
 
 Housekeeping species can sometimes be identified from prior scientific knowledge.
 Several studies that have employed shotgun sequencing of host-associated microbiomes have use the plant or animal host for this purpose.
-A study of *Arabidopsis* microbiomes used the ratio of bacterial to host reads in shotgun sequencing as a proxy for total bacterial density, which they then used for total-community normalization of 16S amplicon sequencing measurements (@karasov2020ther, @regalado2019comb).
+A study of *Arabidopsis* microbiomes used the ratio of bacterial to host reads in shotgun sequencing as a proxy for total bacterial density, which they then used for total-community normalization of 16S amplicon sequencing measurements (@karasov2020ther, @regalado2020comb).
 @chng2020meta similarly used the ratio of bacterial to host reads in shotgun sequencing of mouse fecal samples as a proxy for total bacterial density (though they did not use this measurement for community normalization).
 They also use reads from dietary plants for the same purpose.
 @wallace2021thed used shotgun sequencing to study the virome of _Drosophila_, and normalized virus reads to _Drosophila_ reads to measure viral abundance per fly.

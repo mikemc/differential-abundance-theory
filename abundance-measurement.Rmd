@@ -142,7 +142,7 @@ Total-abundance measurements recently used for this purpose include counting cel
 
 Importantly, these methods of measuring total abundance are themselves subject to taxonomic bias.
 Flow cytometry may, for example, yield lower cell counts for species whose cells tend to clump together or are prone to lysis during steps involved in sample collection, storage, and preparation.
-Marker-gene concentrations measured by qPCR are affected by variation among species in extraction efficiency, marker-gene copy number, and PCR binding and amplification efficiency.
+Marker-gene concentrations measured by qPCR are affected by variation among species in extraction efficiency, marker-gene copy number, and PCR binding and amplification efficiency (@lloyd2013meta).
 We can easily understand the impact of taxonomic bias on total-abundance measurement under simplifying assumptions analogous to those in our MGS model.
 Suppose that each species $i$ has an _absolute efficiency_ $B_{i}^{\mtot}$ for the total-abundance measurement that is constant across samples.
 Further, let $\bar B^{\mtot (a)}$ be the abundance-weighted average of these efficiencies in sample $a$---that is, the mean efficiency of the total-abundance measurement.
@@ -185,12 +185,12 @@ The effect on $\tilde A_i^{(a)}$ of taxonomic bias in the MGS measurement can be
 \end{align}
 The FE in $\tilde A_i^{(a)}$ consists of two terms: the relative efficiency of species $i$ to species $r$ in the MGS measurement (${B_i}/{B_r}$) and the FE in the reference species' abundance (${\tilde A_r^{(a)}}/{A_r^{(a)}}$).
 
-A common application of this approach involves adding a 'spike-in' (as described above) in a known (and typically constant) abundance across samples (@stammler2016adju, @ji2019quan, @harrison2021theq, REFs).
+A common application of this approach involves adding a 'spike-in' (as described above) in a known (and typically constant) abundance across samples (@stammler2016adju, @ji2019quan, @tkacz2018abso, @harrison2021theq, @rao2021mult).
 In this case, the reference abundance $\tilde A_r^{(a)}$ is determined from the concentration of the spike-in stock multiplied by the ratio of the spike-in to sample volumes.
-(In practice, researchers in spike-in experiments have typically used a more indirect calculation to determine species abundances, but which yields identical results to \@ref(eq:density-ratio-meas); Appendix REF).
+(In practice, researchers in spike-in experiments have typically used a more indirect calculation to determine species abundances, but which yields identical results to \@ref(eq:density-ratio-meas); Appendix TODO).
 
-Others have instead sought to determine naturally-occurring species that are thought to be constant across samples; we refer to such species as _housekeeping species_ by analogy with the housekeeping genes used for absolute-abundance conversion in gene-expression studies (REF).
-Housekeeping species can sometimes be identified using prior scientific knowledge; for example, in shotgun sequencing experiments, researchers have used sequencing reads from the plant or animal host as a reference (REFs).
+Others have instead sought to determine naturally-occurring species that are thought to be constant across samples; we refer to such species as _housekeeping species_ by analogy with the housekeeping genes used for absolute-abundance conversion in gene-expression studies (@silver2006sele).
+Housekeeping species can sometimes be identified using prior scientific knowledge; for example, in shotgun sequencing experiments, researchers have used sequencing reads from the plant or animal host as a reference (@karasov2020ther, @regalado2020comb, @wallace2021thed).
 A related approach involves computationally identifying species that are constant between pairs of samples (@david2014host) or between sample conditions (@mandal2015anal, @kumar2018anal).
 The abundance of a housekeeping species is typically unknown; therefore, to estimate the abundances of other species, we simply set $\tilde A_r^{(a)}$ to 1 in Equation \@ref(eq:density-ratio-meas).
 The resulting abundance measurements have unknown but fixed units, which is sufficient for measuring fold changes across samples.
@@ -199,6 +199,6 @@ We suggest an additional way of using the reference-species strategy even in the
 Performing targeted measurements of the absolute abundance of one or more naturally occurring species.
 These species can then be used as reference species in Equation \@ref(eq:density-ratio-meas) to measure the absolute abundances of all species.
 The most common form of targeted measurement involves using qPCR or ddPCR to measure the concentration of a marker-gene in the extracted DNA.
-It is also possible to directly measure cell concentration by performing ddPCR prior to DNA extraction (REFs), flow cytometry with species-specific florescent probes, or CFU counting on selective media.
-Appendix [REF] describes how using multiple reference species and/or statistical modeling can address the fact that any one native reference species is unlikely to be found in all samples.
+It is also possible to directly measure cell concentration by performing ddPCR prior to DNA extraction (@morella2018rapi), flow cytometry with species-specific florescent probes, or CFU counting on selective media.
+Appendix TODO describes how using multiple reference species and/or statistical modeling can address the fact that any one native reference species is unlikely to be found in all samples.
 
