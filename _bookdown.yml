@@ -16,7 +16,6 @@ rmd_files: [
   "appendix.Rmd",
   "appendix-measurement.Rmd",
   "appendix-regression.Rmd",
-  "appendix-diversity.Rmd",
   "supplemental-figures.Rmd",
   "references.Rmd",
 ]
