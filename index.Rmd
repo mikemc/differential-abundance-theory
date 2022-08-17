@@ -1,5 +1,5 @@
 ---
-title: "Characterizing and correcting the effect of taxonomic bias in microbial differential-abundance analysis"
+title: "Implications of taxonomic bias for microbial differential-abundance analysis"
 author:
   - Michael R. McLaren^[Massachusetts Institute of Technology; send correspondence to m.mclaren42@gmail.com]
   - Jacob T. Nearing^[Dalhousie University]
