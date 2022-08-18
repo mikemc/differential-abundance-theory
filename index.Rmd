@@ -50,32 +50,37 @@ header-includes:
   - \DeclareMathOperator{\FE}{FE}
 ---
 
-# Preface {-}
+# Abstract {-}
+
+<!-- **Abstract:** -->
+Differential-abundance (DA) analyses enable microbiome researchers to assess how microbial species vary in relative or absolute abundance with specific host or environmental conditions, such as health status or pH.
+These analyses typically use sequencing-based community measurements that are taxonomically biased to measure some species more efficiently than others.
+Understanding the effects that taxonomic bias has on the results of a DA analysis is essential for achieving reliable and translatable findings; yet currently, these effects are unknown.
+Here, we characterized these effects for DA analyses of both relative and absolute abundances, using a combination of mathematical theory and data analysis of real and simulated case studies.
+We found that, for analyses based on species proportions, taxonomic bias can cause significant errors in DA results if the average measurement efficiency of the community is associated with the condition of interest.
+These errors can be avoided by using more robust DA methods (based on species ratios) or quantified and corrected using appropriate controls.
+Wide adoption of our recommendations can improve the reproducibility, interpretability, and translatability of microbiome DA studies.
+
 
 ```{r}
 repo <- git2r::repository(".")
 sha <- repo %>% git2r::commits(n = 1) %>% .[[1]] %>% git2r::sha()
+sha_short <- str_sub(sha, 1, 7)
 status <- repo %>% git2r::status()
 ```
 
+::: {#preface-note .rmdnote}
+
+This manuscript was rendered from commit `r sha_short` of https://github.com/mikemc/differential-abundance-theory.
+Supporting data analyses can be found in the accompanying [computational research notebook](https://mikemc.github.io/differential-abundance-theory/notebook/).
+Please post comments or questions on [GitHub](https://github.com/mikemc/differential-abundance-theory).
+The manuscript is licensed under a [CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/).
+See the [GitHub Releases](https://github.com/mikemc/differential-abundance-theory/releases) or [Zenodo record](https://doi.org/10.5281/zenodo.4552717) for earlier versions.
+
 ```{r}
-print(status)
+if (!identical(status %>% unlist %>% length, 0L))
+  print(status)
 ```
 
-_This manuscript was rendered from commit `r sha`._
-
-::: {#preface-warning .rmdnote}
-
-**This in-progress manuscript is not intended for general scientific use.**
-It is incomplete, has not been carefully reviewed, and may contain mistakes or other inaccuracies.
-Please post comments or questions on the [GitHub Issues page](https://github.com/mikemc/differential-abundance-theory/issues) or [email Mike](m.mclaren42@gmail.com).
-
 :::
-
-This manuscript addresses the effect that the taxonomic bias inherent in microbiome measurement has on microbial differential-abundance analysis.
-We describe the basic problem posed by taxonomic bias for measuring changes in the abundance of particular taxa across conditions and describe new strategies for mitigating the errors it induces.
-Analyses of both relative and absolute abundances are considered.
-The manuscript is licensed under a [CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/).
-See [the Zenodo record](https://doi.org/10.5281/zenodo.4552717) for how to cite the latest version.
-Supporting data analyses can be found in the accompanying [computational research notebook](https://mikemc.github.io/differential-abundance-theory/notebook/).
 
