@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>A Linear regression | Implications of taxonomic bias for microbial differential-abundance analysis</title>
+  <meta name="description" content="A Linear regression | Implications of taxonomic bias for microbial differential-abundance analysis" />
+  <meta name="generator" content="bookdown 0.27.3 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="A Linear regression | Implications of taxonomic bias for microbial differential-abundance analysis" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="A Linear regression | Implications of taxonomic bias for microbial differential-abundance analysis" />
+  
+  
+  
+
+<meta name="author" content="Michael R. McLaren" />
+<meta name="author" content="Jacob T. Nearing" />
+<meta name="author" content="Amy D. Willis" />
+<meta name="author" content="Karen G. Lloyd" />
+<meta name="author" content="Benjamin J. Callahan" />
+
+
+<meta name="date" content="2022-08-18" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="conclusion.html"/>
+<link rel="next" href="supplemental-figures.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    TeX: {extensions: ["cancel.js"]},
+});
+MathJax.Hub.Config({
+    TeX: {
+        Macros : {
+            md: '^{\\times}\\!/',
+        }
+    },
+});
+</script>
+
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Abstract</a></li>
+<li class="chapter" data-level="1" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>1</b> Introduction</a></li>
+<li class="chapter" data-level="2" data-path="abundance-measurement.html"><a href="abundance-measurement.html"><i class="fa fa-check"></i><b>2</b> How bias affects abundance measurements</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="abundance-measurement.html"><a href="abundance-measurement.html#a-model-of-mgs-measurements"><i class="fa fa-check"></i><b>2.1</b> A model of MGS measurements</a></li>
+<li class="chapter" data-level="2.2" data-path="abundance-measurement.html"><a href="abundance-measurement.html#relative-abundance"><i class="fa fa-check"></i><b>2.2</b> Relative abundance</a></li>
+<li class="chapter" data-level="2.3" data-path="abundance-measurement.html"><a href="abundance-measurement.html#absolute-abundance"><i class="fa fa-check"></i><b>2.3</b> Absolute abundance</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="abundance-measurement.html"><a href="abundance-measurement.html#leveraging-information-about-total-community-abundance"><i class="fa fa-check"></i><b>2.3.1</b> Leveraging information about total-community abundance</a></li>
+<li class="chapter" data-level="2.3.2" data-path="abundance-measurement.html"><a href="abundance-measurement.html#leveraging-information-about-a-reference-species"><i class="fa fa-check"></i><b>2.3.2</b> Leveraging information about a reference species</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="differential-abundance.html"><a href="differential-abundance.html"><i class="fa fa-check"></i><b>3</b> How bias affects DA results</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="differential-abundance.html"><a href="differential-abundance.html#fold-change-between-a-pair-of-samples"><i class="fa fa-check"></i><b>3.1</b> Fold change between a pair of samples</a></li>
+<li class="chapter" data-level="3.2" data-path="differential-abundance.html"><a href="differential-abundance.html#regression-analysis-of-many-samples"><i class="fa fa-check"></i><b>3.2</b> Regression analysis of many samples</a></li>
+<li class="chapter" data-level="3.3" data-path="differential-abundance.html"><a href="differential-abundance.html#rank-based-analyses"><i class="fa fa-check"></i><b>3.3</b> Rank-based analyses</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="case-studies.html"><a href="case-studies.html"><i class="fa fa-check"></i><b>4</b> Case studies  </a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="case-studies.html"><a href="case-studies.html#foliar-fungi-experiment"><i class="fa fa-check"></i><b>4.1</b> Foliar fungi experiment</a></li>
+<li class="chapter" data-level="4.2" data-path="case-studies.html"><a href="case-studies.html#vaginal-microbiomes-of-pregnant-women"><i class="fa fa-check"></i><b>4.2</b> Vaginal microbiomes of pregnant women</a></li>
+<li class="chapter" data-level="4.3" data-path="case-studies.html"><a href="case-studies.html#human-gut-microbiomes"><i class="fa fa-check"></i><b>4.3</b> Human gut microbiomes</a></li>
+<li class="chapter" data-level="4.4" data-path="case-studies.html"><a href="case-studies.html#microbial-growth-in-marine-sediments"><i class="fa fa-check"></i><b>4.4</b> Microbial growth in marine sediments</a></li>
+<li class="chapter" data-level="4.5" data-path="case-studies.html"><a href="case-studies.html#summary-and-discussion"><i class="fa fa-check"></i><b>4.5</b> Summary and discussion</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="solutions.html"><a href="solutions.html"><i class="fa fa-check"></i><b>5</b> Solutions</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="solutions.html"><a href="solutions.html#ratio-based-relative-da-analysis"><i class="fa fa-check"></i><b>5.1</b> Ratio-based relative DA analysis</a></li>
+<li class="chapter" data-level="5.2" data-path="solutions.html"><a href="solutions.html#calibrate-compositions"><i class="fa fa-check"></i><b>5.2</b> Calibration using community controls</a></li>
+<li class="chapter" data-level="5.3" data-path="solutions.html"><a href="solutions.html#absolute-abundance-methods-with-more-stable-fes"><i class="fa fa-check"></i><b>5.3</b> Absolute-abundance methods with more stable FEs</a>
+<ul>
+<li class="chapter" data-level="5.3.1" data-path="solutions.html"><a href="solutions.html#use-complementary-mgs-and-total-abundance-measurements"><i class="fa fa-check"></i><b>5.3.1</b> Use complementary MGS and total-abundance measurements</a></li>
+<li class="chapter" data-level="5.3.2" data-path="solutions.html"><a href="solutions.html#normalize-to-a-reference-species"><i class="fa fa-check"></i><b>5.3.2</b> Normalize to a reference species</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="solutions.html"><a href="solutions.html#bias-sensitivity-analysis"><i class="fa fa-check"></i><b>5.4</b> Bias sensitivity analysis</a></li>
+<li class="chapter" data-level="5.5" data-path="solutions.html"><a href="solutions.html#bias-aware-meta-analysis"><i class="fa fa-check"></i><b>5.5</b> Bias-aware meta-analysis</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="conclusion.html"><a href="conclusion.html"><i class="fa fa-check"></i><b>6</b> Conclusion</a></li>
+<li class="appendix"><span><b>Appendix</b></span></li>
+<li class="chapter" data-level="A" data-path="appendix-regression.html"><a href="appendix-regression.html"><i class="fa fa-check"></i><b>A</b> Linear regression</a>
+<ul>
+<li class="chapter" data-level="A.1" data-path="appendix-regression.html"><a href="appendix-regression.html#simple-linear-regression"><i class="fa fa-check"></i><b>A.1</b> Simple linear regression</a>
+<ul>
+<li class="chapter" data-level="A.1.1" data-path="appendix-regression.html"><a href="appendix-regression.html#review-of-simple-linear-regression"><i class="fa fa-check"></i><b>A.1.1</b> Review of simple linear regression</a></li>
+<li class="chapter" data-level="A.1.2" data-path="appendix-regression.html"><a href="appendix-regression.html#measurement-error-in-the-response"><i class="fa fa-check"></i><b>A.1.2</b> Measurement error in the response</a></li>
+<li class="chapter" data-level="A.1.3" data-path="appendix-regression.html"><a href="appendix-regression.html#specific-application-to-taxonomic-bias"><i class="fa fa-check"></i><b>A.1.3</b> Specific application to taxonomic bias</a></li>
+</ul></li>
+<li class="chapter" data-level="A.2" data-path="appendix-regression.html"><a href="appendix-regression.html#gamma-poisson-regression"><i class="fa fa-check"></i><b>A.2</b> Gamma-Poisson regression</a>
+<ul>
+<li class="chapter" data-level="A.2.1" data-path="appendix-regression.html"><a href="appendix-regression.html#background"><i class="fa fa-check"></i><b>A.2.1</b> Background</a></li>
+<li class="chapter" data-level="A.2.2" data-path="appendix-regression.html"><a href="appendix-regression.html#inferring-lfcs-in-proportions-with-and-without-bias-correction"><i class="fa fa-check"></i><b>A.2.2</b> Inferring LFCs in proportions with and without bias correction</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="B" data-path="supplemental-figures.html"><a href="supplemental-figures.html"><i class="fa fa-check"></i><b>B</b> Supplemental figures</a></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Implications of taxonomic bias for microbial differential-abundance analysis</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="appendix-regression" class="section level1 hasAnchor" number="7">
+<h1><span class="header-section-number">A</span> Linear regression<a href="appendix-regression.html#appendix-regression" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="simple-linear-regression" class="section level2 hasAnchor" number="7.1">
+<h2><span class="header-section-number">A.1</span> Simple linear regression<a href="appendix-regression.html#simple-linear-regression" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>This section derives the theoretical results of Section <a href="differential-abundance.html#differential-abundance">3</a> for the effect of taxonomic bias on regression-based DA analyses.
+As in Section <a href="differential-abundance.html#differential-abundance">3</a>, we restrict our attention to DA analyses that can be expressed in terms of the simple linear regression model in which the response is log absolute abundance or log proportion of individual species or the log ratio of a pair of species.</p>
+<div id="review-of-simple-linear-regression" class="section level3 hasAnchor" number="7.1.1">
+<h3><span class="header-section-number">A.1.1</span> Review of simple linear regression<a href="appendix-regression.html#review-of-simple-linear-regression" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<table>
+<caption><span id="tab:statistical-notation">Table A.1: </span> Statistical notation used in this section.</caption>
+<colgroup>
+<col width="23%" />
+<col width="38%" />
+<col width="38%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Notation</th>
+<th align="left">Mathematical definition</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><span class="math inline">\(x\)</span>, <span class="math inline">\(y\)</span>, <span class="math inline">\(z\)</span>, <span class="math inline">\(d\)</span></td>
+<td align="left"></td>
+<td align="left">Random variables, defined in text</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(x(a)\)</span></td>
+<td align="left"></td>
+<td align="left">Value of <span class="math inline">\(x\)</span> in sample <span class="math inline">\(a\)</span></td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\bar x\)</span></td>
+<td align="left"><span class="math inline">\(\frac{1}{n}\sum_a x(a)\)</span></td>
+<td align="left">Sample mean of <span class="math inline">\(x\)</span></td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(s(x,y)\)</span></td>
+<td align="left"><span class="math inline">\(\frac{1}{n}\sum_a (x(a) - \bar x) (y(a) - \bar y)\)</span></td>
+<td align="left">Sample covariance between <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span></td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(s^{2}(x)\)</span></td>
+<td align="left"><span class="math inline">\(s(x,x)\)</span></td>
+<td align="left">Sample variance of <span class="math inline">\(x\)</span></td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(s(x)\)</span></td>
+<td align="left"><span class="math inline">\(\sqrt{s^{2}(x)}\)</span></td>
+<td align="left">Sample standard deviation of <span class="math inline">\(x\)</span></td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(r(x,y)\)</span></td>
+<td align="left"><span class="math inline">\(\frac{s(x,y)}{s(x) s(y)}\)</span></td>
+<td align="left">Sample correlation between <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span></td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\alpha\)</span>, <span class="math inline">\(\beta\)</span>, <span class="math inline">\(\sigma\)</span></td>
+<td align="left"></td>
+<td align="left">Parameters of the regression model</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\hat \alpha\)</span>, <span class="math inline">\(\hat \beta\)</span>, <span class="math inline">\(\hat \sigma\)</span></td>
+<td align="left"></td>
+<td align="left">Parameter estimates</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\epsilon(a)\)</span></td>
+<td align="left"><span class="math inline">\(y(a) - (\alpha + \beta x(a))\)</span></td>
+<td align="left">Error for sample <span class="math inline">\(a\)</span></td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\hat \epsilon(a)\)</span></td>
+<td align="left"><span class="math inline">\(y(a) - (\hat \alpha + \hat \beta x(a))\)</span></td>
+<td align="left">Residual for sample <span class="math inline">\(a\)</span></td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\text{se}(\hat \beta)\)</span>, <span class="math inline">\(\hat{\text{se}}(\hat \beta)\)</span></td>
+<td align="left"></td>
+<td align="left">Standard error of <span class="math inline">\(\hat \beta\)</span> and its estimate</td>
+</tr>
+</tbody>
+</table>
+<p>We begin by reviewing definitions, notation, and results for the analysis of the simple linear regression model.
+Our presentation follows <span class="citation">Wasserman (<a href="#ref-wasserman2004allo" role="doc-biblioref">2004</a>)</span> Chapter 13 with additional interpretation of the estimated regression coefficients.
+<!-- to support our subsequent consideration of measurement error caused by bias. -->
+Statistical notation is defined in Table <a href="appendix-regression.html#tab:statistical-notation">A.1</a>.</p>
+<p>Consider a response variable <span class="math inline">\(y\)</span> and a covariate <span class="math inline">\(x\)</span>.
+Following <span class="citation">Wasserman (<a href="#ref-wasserman2004allo" role="doc-biblioref">2004</a>)</span>, we define the <em>simple linear regression model</em> by
+<span class="math display" id="eq:lm">\[\begin{align}
+  \tag{A.1}
+  y(a) &amp;= \alpha + \beta x(a) + \varepsilon(a),
+\end{align}\]</span>
+where <span class="math inline">\(E[\varepsilon(a) \mid x(a)] = 0\)</span> and <span class="math inline">\(V[\varepsilon(a) \mid x(a)] = \sigma^2\)</span>.
+That is, conditional on the value of <span class="math inline">\(x\)</span> in a sample <span class="math inline">\(a\)</span>, the response <span class="math inline">\(y\)</span> is given by <span class="math inline">\(\alpha + \beta x\)</span> with a random error <span class="math inline">\(\varepsilon\)</span> that has an expected value of <span class="math inline">\(0\)</span> and a constant variance <span class="math inline">\(\sigma^2\)</span>.</p>
+<!-- Note that we distinguish between the statistical model being fit to the data, and the actual data generating process. -->
+<!-- These results for the regression model estimates hold regardless of whether the simple linear model is a good one for the data. -->
+<p>Given data <span class="math inline">\((y, x)\)</span>, we <em>fit</em> the model by finding estimates for the parameters <span class="math inline">\(\alpha\)</span>, <span class="math inline">\(\beta\)</span>, and <span class="math inline">\(\sigma^2\)</span> that best reflect the data under the assumption that the model is correct and according to our chosen criterion that defines ‘best’.
+Here we consider the least-squares estimates for the coefficients <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span>, which are also the maximum likelihood estimates if we further assume that the errors <span class="math inline">\(\varepsilon\)</span> are normally distributed.
+<!-- Defining the residuals as $\hat \varepsilon(a) = y(a) - (\hat \alpha + \hat \beta x(a))$,  -->
+The least-squares estimates of <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> are the values that minimize the residual sum of squares, <span class="math inline">\(\text{RSS} = \sum_{a} \hat \varepsilon(a)^2\)</span>.
+These estimates can be conveniently expressed in terms of the sample means and covariances or correlations of <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span>,
+<span class="math display" id="eq:lm-hat">\[\begin{align}
+  \tag{A.2}
+  \hat \alpha &amp;= \bar y - \hat \beta \bar x \\
+  \hat \beta &amp;= \frac{s(y,x)}{s^2(x)} = r(y,x) \cdot \frac{s(y)}{s(x)}.
+\end{align}\]</span>
+<!-- (@wasserman2004allo Chapter 13), -->
+The estimate for the slope coefficient, <span class="math inline">\(\hat \beta\)</span>, equals the ratio of the sample covariance of <span class="math inline">\(y\)</span> with <span class="math inline">\(x\)</span> relative to the variance in <span class="math inline">\(x\)</span> or, equivalently, the correlation of <span class="math inline">\(y\)</span> with <span class="math inline">\(x\)</span> multiplied by the ratio of their standard deviations.
+The estimate for the intercept, <span class="math inline">\(\hat \alpha\)</span>, is the value such that the sample means follow the regression relationship, <span class="math inline">\(\bar y = \hat \alpha + \hat \beta \bar x\)</span>.
+<!-- We are most interested in the estimate of the slope coefficient, $\hat \beta$ -->
+The standard unbiased and maximum likelihood estimates for the variance <span class="math inline">\(\sigma^{2}\)</span> are both approximately given by the sample variance of the residuals,
+<span class="math display" id="eq:lm-var">\[\begin{align}
+  \tag{A.3}
+  \hat{\sigma}^2(\hat \beta) \approx s^2(\hat \varepsilon).
+\end{align}\]</span></p>
+<p>We are most interested in the estimated slope coefficient, <span class="math inline">\(\hat \beta\)</span>.
+Besides the point estimate indicating our best guess at the value, we also wish to understand the uncertainty or precision of the estimate.
+This uncertainty is quantified by the standard error, <span class="math inline">\(\text{se}(\hat \beta)\)</span>, estimated by
+<span class="math display" id="eq:lm-se">\[\begin{align}
+  \tag{A.4}
+  \hat{\text{se}}(\hat \beta)
+  = \frac{\hat \sigma}{s(x) \sqrt{n}}
+  \approx \frac{s(\hat \varepsilon)}{s(x) \sqrt{n}},
+\end{align}\]</span>
+<!-- (@wasserman2004allo Equation 13.13). -->
+Approximate 95% confidence intervals for <span class="math inline">\(\beta\)</span> are given by <span class="math inline">\(\hat \beta \pm 2\; \hat{\text{se}}(\hat \beta)\)</span>.</p>
+</div>
+<div id="measurement-error-in-the-response" class="section level3 hasAnchor" number="7.1.2">
+<h3><span class="header-section-number">A.1.2</span> Measurement error in the response<a href="appendix-regression.html#measurement-error-in-the-response" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Now consider a researcher who would like to regress a biological quantity <span class="math inline">\(y\)</span> (the response) on a second quantity <span class="math inline">\(x\)</span> (the covariate).
+But instead of <span class="math inline">\(y\)</span>, they only know a proxy <span class="math inline">\(z\)</span>, which is related to <span class="math inline">\(y\)</span> via the difference <span class="math inline">\(d = z - y\)</span>.
+For instance, <span class="math inline">\(y\)</span> might be the log abundance of a species, <span class="math inline">\(z\)</span> is the abundance that is measured via MGS, and <span class="math inline">\(x\)</span> is a numerical quantity like pH or a boolean variable indicting case versus control.
+Lacking a direct measurement of <span class="math inline">\(y\)</span>, the researcher instead regresses <span class="math inline">\(z\)</span> on <span class="math inline">\(x\)</span> and interprets the fitted model as informing them about the relationship between <span class="math inline">\(y\)</span> and <span class="math inline">\(x\)</span>.
+We wish to understand the accuracy of their conclusions.</p>
+<p>To understand how the measurement error in <span class="math inline">\(y\)</span> impacts the researcher’s regression analysis, consider the three linear regression equations for <span class="math inline">\(y\)</span>, <span class="math inline">\(z\)</span>, and <span class="math inline">\(d\)</span>,
+<span class="math display" id="eq:lm-y">\[\begin{align}
+  \tag{A.5}
+  y(a) &amp;= \alpha_y + \beta_y x(a) + \varepsilon_y(a),
+\end{align}\]</span>
+<span class="math display" id="eq:lm-z">\[\begin{align}
+  \tag{A.6}
+  z(a) &amp;= \alpha_z + \beta_z x(a) + \varepsilon_z(a),
+\end{align}\]</span>
+<span class="math display" id="eq:lm-d">\[\begin{align}
+  \tag{A.7}
+  d(a) &amp;= \alpha_d + \beta_d x(a) + \varepsilon_d(a).
+\end{align}\]</span>
+The researcher would like to fit the model for <span class="math inline">\(y\)</span> (Equation <a href="appendix-regression.html#eq:lm-y">(A.5)</a>), but instead can only fit the model for <span class="math inline">\(z\)</span> (Equation <a href="appendix-regression.html#eq:lm-z">(A.6)</a>).
+The two are related via the Equation <a href="appendix-regression.html#eq:lm-z">(A.6)</a> for <span class="math inline">\(d\)</span>.
+It is helpful to imagine that <span class="math inline">\(y\)</span> and <span class="math inline">\(d\)</span> are known and so we can fit all three models <a href="appendix-regression.html#eq:lm-y">(A.5)</a>, <a href="appendix-regression.html#eq:lm-z">(A.6)</a>, and <a href="appendix-regression.html#eq:lm-d">(A.7)</a>.
+From Equation <a href="appendix-regression.html#eq:lm-hat">(A.2)</a> and the linearity of sample means and covariances it follows that
+<span class="math display" id="eq:lm-hat-rel">\[\begin{align}
+  \tag{A.8}
+  \hat \alpha_z &amp;= \hat \alpha_y + \hat \alpha_d \\
+  \hat \beta_z &amp;= \hat \beta_y + \hat \beta_d.
+\end{align}\]</span>
+That is, the estimated coefficients for <span class="math inline">\(y\)</span>, <span class="math inline">\(z\)</span>, and <span class="math inline">\(d\)</span> mirror the relationship between the variables themselves, <span class="math inline">\(z = y + d\)</span>.
+Consequently, we see that the measurement error <span class="math inline">\(d\)</span> creates absolute errors in the regression coefficients <span class="math inline">\(\hat \alpha\)</span> and <span class="math inline">\(\hat \beta\)</span> equal to
+<span class="math display" id="eq:lm-hat-err">\[\begin{align}
+  \tag{A.9}
+  \text{abs. error}(\hat \alpha) &amp;\equiv \hat \alpha_z - \hat \alpha_y = \hat \alpha_d \\
+  \text{abs. error}(\hat \beta) &amp;\equiv \hat \beta_z - \hat \beta_y = \hat \beta_d.
+\end{align}\]</span>
+<!-- These absolute errors correspond to the _statistical bias_ in the coefficient estimates. -->
+Expressed in terms of sample means and covariances, these errors are
+<span class="math display" id="eq:lm-hat-err-1">\[\begin{align}
+  \tag{A.10}
+  \text{abs. error}(\hat \alpha) &amp;= \bar d - \hat \beta_d \bar x \\
+  \text{abs. error}(\hat \beta)  &amp;= \frac{s(d,x)}{s^2(x)} = r(d,x) \cdot \frac{s(d)}{s(x)}.
+\end{align}\]</span></p>
+<p>We are mainly interested in the estimated slope coefficient, <span class="math inline">\(\hat \beta\)</span>.
+We see that the absolute error is large when the covariance of <span class="math inline">\(d\)</span> with <span class="math inline">\(x\)</span> is large.
+This error is large in a practical sense when <span class="math inline">\(\hat \beta_{d}\)</span> is large (in magnitude) relative to <span class="math inline">\(\hat \beta_y\)</span> (Equation <a href="appendix-regression.html#eq:lm-hat">(A.2)</a>), which occurs when <span class="math inline">\(s(d,x)\)</span> is large relative to <span class="math inline">\(s(y,x)\)</span>.
+<!-- Thus the relative error in $\hat \beta$ is large when the covariance of $d$ with $x$ is large relative to the covariance of $y$ with $x$. -->
+A sign error occurs when <span class="math inline">\(s(d,x)\)</span> is larger in magnitude than <span class="math inline">\(s(y,x)\)</span> and of opposite sign.</p>
+<p>We can also consider how the measurement error affects the residual variation and the standard error of the slope estimate.
+The residuals of <span class="math inline">\(y\)</span>, <span class="math inline">\(z\)</span>, and <span class="math inline">\(d\)</span> are related through <span class="math inline">\(\hat \varepsilon_z = \hat \varepsilon_y + \hat \varepsilon_d\)</span>.
+It follows that the sample variance of the <span class="math inline">\(z\)</span> residuals equal
+<span class="math display">\[\begin{align}
+  s^2(\hat \varepsilon_{z})
+  = s^2(\hat \varepsilon_y + \hat \varepsilon_{d})
+  = s^2(\hat \varepsilon_y) + s^2(\hat \varepsilon_{d}) + 2 s(\hat \varepsilon_y, \hat \varepsilon_{d}).
+\end{align}\]</span>
+The variance of the <span class="math inline">\(z\)</span> residuals is increased above that of the <span class="math inline">\(y\)</span> residuals when the <span class="math inline">\(d\)</span> residuals are either uncorrelated or positively correlated with the <span class="math inline">\(y\)</span> residuals, but may be decreased when the <span class="math inline">\(y\)</span> and <span class="math inline">\(d\)</span> residuals are negatively correlated.
+An increased residual variance will lead to a larger estimate for <span class="math inline">\(\sigma\)</span> as well as larger standard errors in the slope coefficient <span class="math inline">\(\beta\)</span>.</p>
+</div>
+<div id="specific-application-to-taxonomic-bias" class="section level3 hasAnchor" number="7.1.3">
+<h3><span class="header-section-number">A.1.3</span> Specific application to taxonomic bias<a href="appendix-regression.html#specific-application-to-taxonomic-bias" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>These general results can be used to understand how taxonomic bias affects DA analyses that can be expressed as linear regression of log (relative or absolute) abundance.</p>
+<p>First, we illustrate for the particular example of absolute DA analysis, where species absolute abundance is measured with the total-abundance normalization method and we assume that the total abundances have been accurately measured.
+Consider the regression of log abundance of species <span class="math inline">\(i\)</span> on a covariate <span class="math inline">\(x\)</span>.
+In this case, <span class="math inline">\(y(a)= \log \text{abun}_{i}(a)\)</span> is the actual log abundance of species <span class="math inline">\(i\)</span> and <span class="math inline">\(z(a)=\log \widehat{\text{abun}}_i(a)\)</span> is the log abundance we’ve measured.
+From Equation <a href="abundance-measurement.html#eq:density-prop-error">(2.13)</a>, the measurement error <span class="math inline">\(d(a)\)</span> due to taxonomic bias in the MGS measurement is
+<span class="math display">\[\begin{align}
+  d(a)
+  \equiv z(a) - y(a)
+  = \log \text{efficiency}_i - \log \text{efficiency}_S(a).
+\end{align}\]</span>
+The absolute error in <span class="math inline">\(\hat \beta\)</span> equals the scaled covariance of <span class="math inline">\(d\)</span> with <span class="math inline">\(x\)</span> (Equation <a href="appendix-regression.html#eq:lm-hat-err-1">(A.10)</a>).
+<!-- The first term, $\log \text{efficiency}_i$, is constant across samples; thus it affects $\hat \alpha_d$ (via its effect on $\bar d$) but does not affect $\hat \beta_d$. -->
+In the above expression for <span class="math inline">\(d(a)\)</span>, only the second term, <span class="math inline">\(- \log \text{efficiency}_S(a)\)</span>, varies across samples and thus affects the covariance, leading to
+<span class="math display">\[\begin{align}
+  \text{abs. error}(\hat \beta)
+    &amp;= - \frac{s[\log \text{efficiency}_S, x]}{s^2(x)}.
+%    = - \frac{r[\log \text{efficiency}_S, x] \cdot s[\log \text{efficiency}_S]}{s(x)}, \\
+\end{align}\]</span>
+Thus the absolute error in <span class="math inline">\(\hat \beta\)</span> is the negative of the scaled covariance of the log mean efficiency.</p>
+<p>Although the absolute error is the same for each species, its practical significance varies.
+Recall from Equation <a href="appendix-regression.html#eq:lm-hat">(A.2)</a> that the correct value for <span class="math inline">\(\hat \beta\)</span> (i.e., the estimate without measurement error) is
+<span class="math display">\[\begin{align}
+  \hat \beta &amp;= \frac{s[\log \text{abun}_i, x]}{s^2(x)}.
+\end{align}\]</span>
+For species whose log abundance covaries with <span class="math inline">\(x\)</span> much more than the log mean efficiency, the error will be relatively small.
+This situation can occur either because the mean efficiency varies relatively little across samples or because its variation is relatively uncorrelated with <span class="math inline">\(x\)</span>.
+For species whose log abundance covaries with <span class="math inline">\(x\)</span> similar or less than the log mean efficiency, the error will be significant.
+A sign error occurs when the species covariance is of <em>equal sign and smaller in magnitude</em> than the covariance of the log mean efficiency.</p>
+<p>We can also consider how the standard errors in the slope estimate are affected by bias.
+In our case, the <span class="math inline">\(d\)</span> residuals equal the negative residuals of the log mean efficiency.
+It is plausible that for most species, their residual variation will have a small covariance with log mean efficiency and the net effect of variation in the mean efficiency will be to increase the estimated standard errors, as occurs with most species in Figure <a href="differential-abundance.html#fig:regression-example">3.1</a>.
+However, high-efficiency species that vary substantially in proportion across samples may be strongly positively correlated with log mean efficiency such that the estimated standard errors decrease, as we see with Species 9 in Figure <a href="differential-abundance.html#fig:regression-example">3.1</a>.</p>
+<p>Now, suppose we were instead performing a DA analysis of a response whose fold error is constant across samples, such as the log ratio of two species.
+For the log ratio of species <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span>, the error is <span class="math inline">\(d(a) = \log \text{efficiency}_i / \text{efficiency}_j\)</span> and is constant across samples.
+Thus the covariance of <span class="math inline">\(d\)</span> with <span class="math inline">\(x\)</span> is 0 and taxonomic bias causes no error the slope estimate <span class="math inline">\(\hat \beta\)</span>, only the intercept estimate <span class="math inline">\(\hat \alpha\)</span>.</p>
+</div>
+</div>
+<div id="gamma-poisson-regression" class="section level2 hasAnchor" number="7.2">
+<h2><span class="header-section-number">A.2</span> Gamma-Poisson regression<a href="appendix-regression.html#gamma-poisson-regression" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>This section describes how gamma-Poisson regression can, with appropriate choice of offsets, be used to estimate log fold changes (LFCs) in proportions from MGS count data either with or without bias correction.</p>
+<div id="background" class="section level3 hasAnchor" number="7.2.1">
+<h3><span class="header-section-number">A.2.1</span> Background<a href="appendix-regression.html#background" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The gamma-Poisson distribution, also known as the negative binomial distribution, is a distribution that is commonly used to model sequencing count data (<span class="citation">Holmes and Huber (<a href="#ref-holmes2018mode" role="doc-biblioref">2018</a>)</span>).
+Its key advantage over the simple linear regression model is that it directly models the random sampling of reads that occurs during a sequencing experiment and, in this way, naturally accounts for the imprecision associated with an observation of zero or a small positive count for a given species and sample.
+The gamma-Poisson distribution has two parameters, which jointly determine the mean and the standard deviation.
+We use the parameterization used by the rstanarm R package (<span class="citation">Goodrich et al. (<a href="#ref-rstanarm" role="doc-biblioref">2020</a>)</span>), which we use for fitting gamma-Poisson GLMs in our case-study analyses.
+Suppose that <span class="math inline">\(y^{(a)}\)</span> has a gamma-Poisson distribution conditional on a covariate <span class="math inline">\(x\)</span>.
+Define two parameters <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\phi\)</span> such that
+<span class="math display">\[\begin{align}
+  E[y^{(a)} \mid x]  &amp;= \mu^{(a)} \\
+  sd[y^{(a)} \mid x] &amp;= \sqrt{
+    E[y^{(a)} \mid x] + E[y^{(a)} \mid x]^2 / \phi
+  };
+\end{align}\]</span>
+thus <span class="math inline">\(\mu\)</span> equals the mean and <span class="math inline">\(\phi\)</span>, known as the ‘reciprocal dispersion’, increases the standard deviation as it approaches 0 and causes the standard deviation to approach <span class="math inline">\(\sqrt{\mu}\)</span> (that of a Poisson distribution) as it approaches infinity.</p>
+<p>For use in gamma-Poisson GLM regression of MGS data, we partition the mean into two factors, <span class="math inline">\(\mu^{(a)} = u^{(a)} \theta^{(a)}\)</span> (<span class="citation">Gelman, Hill, and Vehtari (<a href="#ref-gelman2020regr" role="doc-biblioref">2020</a>)</span>).
+Here, <span class="math inline">\(\theta^{(a)} = e^{\alpha + \beta x^{(a)}}\)</span> is the quantity of primary interest, whose average LFC equals <span class="math inline">\(\beta\)</span>.
+The factor <span class="math inline">\(u^{(a)}\)</span> is a sample-specific <em>exposure</em> parameter that determines the overall scale of counts.
+We can equivalently write <span class="math inline">\(\mu^{(a)} = e^{\alpha + \beta x^{(a)} + \log u^{(a)}}\)</span>;
+the logarithm of the exposure, <span class="math inline">\(\log u^{(a)}\)</span>, is known as the <em>offset</em> of the GLM.
+Performing gamma-Poisson regression with standard statistical software requires that the offsets are provided as known values.</p>
+</div>
+<div id="inferring-lfcs-in-proportions-with-and-without-bias-correction" class="section level3 hasAnchor" number="7.2.2">
+<h3><span class="header-section-number">A.2.2</span> Inferring LFCs in proportions with and without bias correction<a href="appendix-regression.html#inferring-lfcs-in-proportions-with-and-without-bias-correction" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Our goal is to use gamma-Poisson regression to estimate the LFC in a species proportion from the observed read counts.
+We therefore equate the counts <span class="math inline">\(M_i^{(a)}\)</span> with <span class="math inline">\(y^{(a)}\)</span> and the proportion <span class="math inline">\(P_{i}^{(a)}\)</span> with <span class="math inline">\(\theta^{(a)}\)</span>; it remains to determine the offsets that are consistent with our MGS model.
+To do so, we relax the deterministic assumption of our original model and instead suppose that the right-hand side of Equation <a href="abundance-measurement.html#eq:mgs-model">(2.1)</a> equals the <em>expected</em> read count of species <span class="math inline">\(i\)</span> in sample <span class="math inline">\(a\)</span>,
+<span class="math display" id="eq:mgs-model-gp">\[\begin{align}
+  \tag{A.11}
+  E[M_i^{(a)}] = A_i^{(a)} B_i F^{(a)}.
+\end{align}\]</span>
+The total expected count is
+<span class="math display" id="eq:total-reads-gp">\[\begin{align}
+  \tag{A.12}
+  E[M_S^{(a)}] &amp;= \sum_{i \in S} E[M_i^{(a)}]
+  \\&amp;= \left( \sum_{i \in S} A_i^{(a)} B_i \right) F^{(a)}
+  \\&amp;= A_S^{(a)} B_S^{(a)} F^{(a)}.
+\end{align}\]</span>
+Under the gamma-Poisson model for <span class="math inline">\(M_i^{(a)}\)</span>, we have that <span class="math inline">\(E[M_i^{(a)}] = u_i^{(a)} P_i^{(a)}\)</span>.
+Equating this expression for <span class="math inline">\(E[M_i^{(a)}]\)</span> with Equation <a href="appendix-regression.html#eq:mgs-model-gp">(A.11)</a> lets us solve for the exposure,
+<span class="math display" id="eq:exposure">\[\begin{align}
+  \tag{A.13}
+  u_i^{(a)}
+    &amp;= \frac{A_i^{(a)} B_i F^{(a)}}{P_i^{(a)}}
+  \\&amp;= B_i A_S^{(a)} F^{(a)}
+  \\&amp;= \frac{B_i}{B_S} \cdot E[M_S^{(a)}].
+\end{align}\]</span>
+The second line follows from <span class="math inline">\(P_i^{(a)} \equiv A_i^{(a)}/ A_S^{(a)}\)</span>, and the third line from Equation <a href="appendix-regression.html#eq:total-reads-gp">(A.12)</a>.</p>
+<p>The final expression in Equation <a href="appendix-regression.html#eq:exposure">(A.13)</a> can be used to compute offsets for the regression.
+The three terms <span class="math inline">\(B_i\)</span>, <span class="math inline">\(B_S^{(a)}\)</span>, and <span class="math inline">\(E[M_S^{(a)}]\)</span> are each unknown, so we instead substitute estimates for these terms to obtain an estimated exposure <span class="math inline">\(\hat u_{i}^{(a)}\)</span>; we then set the offset in the linear model to <span class="math inline">\(\log \hat u_{i}^{(a)}\)</span>.
+We can estimate <span class="math inline">\(E[M_S^{(a)}]\)</span> by the observed total count, <span class="math inline">\(M_S^{(a)}\)</span>.
+In the absence of bias correction, we set <span class="math inline">\(B_{i} = B_{S}^{(a)} = 1\)</span>; our estimate of the exposure is then just
+<span class="math display">\[\begin{align}
+  \hat u_i^{(a)} = M_S^{(a)}.
+\end{align}\]</span>
+We can apply bias correction using estimates of the efficiencies, <span class="math inline">\(\hat B_{i}\)</span>, derived from community control measurements.
+From these estimates and the observed counts, we can estimate the mean efficiency in the sample by
+<span class="math display">\[\begin{align}
+  \hat B_S^{(a)} = \sum_{i\in S} B_i \hat P_i^{(a)},
+\end{align}\]</span>
+where <span class="math inline">\(\hat P_i^{(a)}\)</span> are the calibrated proportions obtained from a simple plug-in procedure,
+<span class="math display">\[\begin{align}
+  \hat P_i^{(a)} = \frac{M_i^{(a)} / B_i}{\sum_j M_j^{(a)} / B_j}.
+\end{align}\]</span>
+Equivalently, we can calculate <span class="math inline">\(\hat B_S^{(a)}\)</span> directly from the observed counts,
+<span class="math display">\[\begin{align}
+  \text{B}_S^{(a)} =
+  \left[\sum_j \frac{M_j^{(a)}}{M_S^{(a)} \text{B}_j}\right]^{-1}.
+\end{align}\]</span>
+We then estimate the exposure by
+<span class="math display">\[\begin{align}
+  \hat u_i^{(a)} = \frac{\hat B_i}{\hat B_S} \cdot M_S^{(a)}.
+\end{align}\]</span></p>
+
+</div>
+</div>
+</div>
+<h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-gelman2020regr" class="csl-entry">
+Gelman, Andrew, Jennifer Hill, and Aki Vehtari. 2020. <em>Regression and Other Stories</em>. Cambridge University Press.
+</div>
+<div id="ref-rstanarm" class="csl-entry">
+Goodrich, Ben, Jonah Gabry, Imad Ali, and Sam Brilleman. 2020. <span>“Rstanarm: <span>Bayesian</span> Applied Regression Modeling via <span>Stan</span>.”</span> <a href="https://mc-stan.org/rstanarm">https://mc-stan.org/rstanarm</a>.
+</div>
+<div id="ref-holmes2018mode" class="csl-entry">
+Holmes, Susan, and Wolfgang Huber. 2018. <em>Modern Statistics for Modern Biology</em>. Cambridge University Press.
+</div>
+<div id="ref-wasserman2004allo" class="csl-entry">
+Wasserman, Larry. 2004. <em><span class="nocase">All of Statistics</span></em>. Springer Texts in Statistics. New York, NY: Springer New York. <a href="https://doi.org/10.1007/978-0-387-21736-9">https://doi.org/10.1007/978-0-387-21736-9</a>.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="conclusion.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="supplemental-figures.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": true,
+"facebook": false,
+"twitter": false,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/mikemc/differential-abundance-theory/edit/main/appendix-regression.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": "https://github.com/mikemc/differential-abundance-theory/commits/main/appendix-regression.Rmd",
+"text": null
+},
+"view": {
+"link": "https://github.com/mikemc/differential-abundance-theory/blob/main/appendix-regression.Rmd",
+"text": null
+},
+"download": ["_main.pdf"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
