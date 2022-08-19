@@ -58,16 +58,16 @@ For example, the ratio of Species 2 to Species 3 shows the same 4-fold decrease 
 <!-- The ratios in sample 1 are Actual: 1:1:1, Observed: 1:18:6 -->
 <!-- The ratios in sample 2 are Actual: 15:1:4, Observed: 5:6:8 -->
 
-Taxonomic bias affects the measured FDs in a species' absolute abundance in a similar fashion.
+Taxonomic bias affects measured FDs in a species' absolute abundance in a similar fashion.
 First, consider a species' abundance measurement $\tilde A_i^{(a)}$ derived from a non-MGS measurement of total-community abundance using Equation \@ref(eq:density-prop-meas).
 Equation \@ref(eq:density-prop-error) indicates that the FE in this measurement equals the (constant) species efficiency multiplied by ${\bar B^{\mtot (a)}}/{\bar B^{(a)}}$, the ratio of the mean efficiency of the total-abundance measurement to that of the MGS measurement.
 This ratio can vary, creating error in the measured FD between samples.
-Notably, if the FDs in the mean efficiency of the total-abundance measurement mirrors that of the MGS measurement, then the two offset each other and lead to more stable FEs (and hence more accurate FDs) in $\tilde A_i^{(a)}$.
+A notable special case is if the FDs in the mean efficiency of the total-abundance measurement mirrors that of the MGS measurement; then, the two will offset each other and lead to more stable FEs (and hence more accurate FDs) in $\tilde A_i^{(a)}$.
 We discuss how this possibility might be exploited in real experimental workflows in Section \@ref(solutions).
 
 Now consider a species' abundance derived from a reference species using Equation \@ref(eq:density-ratio-meas).
 Equation \@ref(eq:density-ratio-error) indicates that the FE equals a constant ratio in species' efficiencies multiplied by the FE in the measurement of the reference species' abundance.
-If the abundance of the reference species can determined up to constant FE, then the FE in $\tilde A_i^{(a)}$ will also be constant, leading to accurate FDs.
+If the abundance of the reference species can be determined up to constant FE across samples, then the FE in $\tilde A_i^{(a)}$ will also be constant, leading to accurate FDs.
 
 ## Regression analysis of many samples
 
@@ -83,8 +83,8 @@ A DA regression analysis is primarily interested in the slope coefficient $\beta
 For a binary covariate, $\beta$ equals the average difference in $y$ between samples with $x=1$ versus those with $x=0$.
 Taking $y$ to be the logarithm of a species' relative or absolute abundance makes the DA analysis multiplicative, with the coefficient $\beta$ corresponding to the average log fold difference (LFD) in abundance between conditions or for a unit increase in $x$.
 
-Although researchers typically use more sophisticated models, the simple linear regression model in Equation \@ref(eq:regression) provides an intuitive basis for understanding the effect of taxonomic bias on regression-based DA analyses.
-Appendix \@ref(appendix-regression) describes a general framework for finding the error in the estimated slope coefficient $\beta$ caused by taxonomic bias; here, we summarize and illustrate these results for the various abundance measures decribed in Section \@ref(abundance-measurement).
+Although researchers often use more sophisticated models, the simple linear regression model in Equation \@ref(eq:regression) provides an intuitive basis for understanding the effect of taxonomic bias on regression-based DA analyses.
+Appendix \@ref(appendix-regression) describes a general framework for finding the error in the estimated slope coefficient $\beta$ caused by taxonomic bias; here, we summarize and illustrate these results for the various abundance measures described in Section \@ref(abundance-measurement).
 In each case, a multiplicative DA analysis can be conducted by setting $y$ equal to the logarithm of the untransformed abundance measurement ($\tilde P_i$, $\tilde R_{i/j}$, or $\tilde A_i$).
 Consider an abundance measure such as the ratio between species $i$ and $j$, $\tilde R_{i/j}$.
 Taxonomic bias creates a constant FE in $\tilde R_{i/j}$ that translates to a constant additive shift in $\log \tilde R_{i/j}$ and therefore does not affect the estimate of the slope $\hat \beta$.
@@ -94,7 +94,7 @@ The measured abundance $\tilde A_i$ thus has a FE that varies inversely with the
 If $\bar B$ is stable across samples, then the additive error in $\log \tilde A_i$ will be approximately constant and $\hat \beta$ is again unaffected---bias has no effect on the DA result.
 If, on the other hand, $\log \bar B$ tends to linearly vary with the covariate $x$, then the additive error in $\log \tilde A_i$ will linearly vary in the opposite direction and cause a systematic error in $\hat \beta$ that is equal in magnitude but opposite in sign to the slope of $\log \bar B$ with $x$.
 A third possibility is that $\bar B$ varies in an essentially random manner that is independent of the covariate $x$.
-In this scenario, the error from taxonomic bias in the measurement $\log \tilde A_{i}$ acts to increase the noise in $\hat beta$ (i.e., increase its standard error), but does not cause a systematic error.
+In this scenario, the error from taxonomic bias in the measurement $\log \tilde A_{i}$ acts to increase the noise in $\hat \beta$ (i.e., increase its standard error), but does not cause a systematic error.
 
 Figure \@ref(fig:regression-example) shows a simulated example of a regression analysis of the absolute abundances of 10 species across two conditions in which the mean efficiency is systematically greater in the condition $x=1$ than the in the condition $x=0$.
 The increase in the log mean efficiency from $x=0$ to $x=1$ (Figure \@ref(fig:regression-example) A and B) causes an artificial decrease in the estimated LFD between conditions for each species (Figure \@ref(fig:regression-example) C and D).

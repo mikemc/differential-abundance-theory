@@ -1,9 +1,9 @@
 # How bias affects abundance measurements {#abundance-measurement}
 
-This section extends the theoretical results of @mclaren2019cons to describe the effect that consistent taxonomic bias within an MGS experiment affects the relative and absolute abundances measured for various microbial species.
+This section extends the theoretical results of @mclaren2019cons to describe how taxonomic bias in an MGS experiment affects the relative and absolute abundances measured for various microbial species.
 We show that some approaches to quantifying species abundance yield constant fold errors (FEs), while others yield FEs that depend on overall community composition and thus can vary across samples.
 
-## Model of MGS measurement
+## A model of MGS measurements
 
 Our primary tool for understanding the impact of taxonomic bias on MGS measurement is the theoretical model of MGS measurement developed and empirically validated by @mclaren2019cons.
 This model describes the mathematical relationship between the read counts obtained by MGS and the (actual) abundances of the various species in a sample.
@@ -49,7 +49,7 @@ is the _sample mean efficiency_, defined as the mean efficiency of all species w
 ## Relative abundance {#relative-abundance}
 
 We distinguish between two types of species-level *relative abundances* within a sample.
-The *proportion* $P_{i}^{(a)}$ of species $i$ in sample $a$ equals its abundance relative to the total abundance of all species in $S$,
+The *proportion* $P_{i}^{(a)}$ of species $i$ in sample $a$ equals its abundance divided by the total abundance of all species in $S$,
 \begin{align}
   (\#eq:prop)
   P_{i}^{(a)} &\equiv \frac{A_i^{(a)}}{A_\tot^{(a)}}.
@@ -71,8 +71,7 @@ From Equations \@ref(eq:mgs-model), \@ref(eq:total-reads), and \@ref(eq:prop-mea
   (\#eq:prop-error)
   \tilde P_{i}^{(a)} &= P_{i}^{(a)} \cdot \frac{B_i}{\bar B^{(a)}}.
 \end{align}
-<!-- Taxonomic bias thus creates a fold-error (FE) in the measured proportion $\tilde P_{i}^{(a)}$ of species $i$ equal to the efficiency $B_i$ of species $i$ $divided by the mean efficiency $\bar B^{(a)}$ in the sample. -->
-Taxonomic bias thus creates a fold-error (FE) in the measured proportion of a species that is equal to its efficiency divided by the mean efficiency in the sample.
+Taxonomic bias creates a fold-error (FE) in the measured proportion of a species that is equal to its efficiency divided by the mean efficiency in the sample.
 Since the mean efficiency varies across samples, so does the FE.
 This phenomenon can be seen for Species 3 in the two hypothetical communities in Figure \@ref(fig:error-proportions). 
 Species 3, which has an efficiency of 6, is under-measured in Sample 1 (FE < 1) but over-measured (FE > 1) in Sample 2.
@@ -89,8 +88,8 @@ From Equations \@ref(eq:mgs-model) and \@ref(eq:ratio-meas), it follows that the
   (\#eq:ratio-error)
   \tilde R_{i/j}^{(a)} = R_{i/j}^{(a)} \cdot \frac{B_i}{B_j}.
 \end{align}
-Taxonomic bias thus creates a FE in the measured ratio that is equal to the ratio in the species' efficiencies; the FE is therefore constant across samples.
-For instance, in Figure \@ref(fig:error-proportions), the ratio of Species 3 (with an efficiency of 6) to Species 1 (with an efficiency of 1) is over-estimated by a factor of 6 in both communities despite their varying compositions.
+Taxonomic bias creates a FE in the measured ratio that is equal to the ratio in the species' efficiencies; the FE is therefore constant across samples.
+For instance, in Figure \@ref(fig:error-proportions), the ratio of Species 3 (with an efficiency of 6) to Species 1 (with an efficiency of 1) is over-measured by a factor of 6 in both communities despite their varying compositions.
 A demonstration in bacterial mock communities is shown in [Figure 3D](https://doi.org/10.7554/eLife.46923.004) of @mclaren2019cons.
 
 <!-- begin figure -->
@@ -113,10 +112,10 @@ We further define the efficiency of taxon $I$ as the abundance-weighted average 
   (\#eq:efficiency-general)
   B_I^{(a)} \equiv \frac{\sum_{i\in I} A_{i}^{(a)} B_{i}}{\sum_{i\in I} A_{i}^{(a)}}.
 \end{align}
-With these definitions, the read count for taxon $I$ can be expressed as
+With these definitions, the read count for higher-order taxon $I$ can be expressed as
 $M_{I}^{(a)} = A_{I}^{(a)} B_I^{(a)} F^{(a)}$.
-Thus $B_I^{(a)}$ plays a role analogous to the efficiency of an individual species, but differs in that it need not be constant across samples:
-If the constituent species have different efficiencies, then the efficiency of the higher-order taxon $I$ depends on the relative abundances of its constituents and so will tend to vary across samples (@mclaren2019cons).
+Thus $B_I^{(a)}$ plays a role analogous to the efficiency of an individual species, but differs in that it is not constant across samples:
+If the constituent species have different efficiencies, then the efficiency of the higher-order taxon $I$ depends on the relative abundances of its constituents and so will vary across samples (@mclaren2019cons).
 As an example, suppose that Species 1 and Species 2 in Figure \@ref(fig:error-proportions) were in the same phylum.
 The efficiency of the phylum would then be $\tfrac{1}{2} \cdot 1 + \tfrac{1}{2} \cdot 18 = 9.5$ in Sample 1 and $\tfrac{15}{16} \cdot 1 + \tfrac{1}{16} \cdot 18 \approx 2.1$ in Sample 2.
 Equations \@ref(eq:prop-error) and \@ref(eq:ratio-error) continue to describe the measurement error in proportions and ratios involving higher-order taxa, so long as the sample-dependent, higher-order taxa efficiencies $B_I^{(a)}$ and $B_J^{(a)}$ are used. 
@@ -126,22 +125,22 @@ In this way, we see that both proportions and ratios among higher-order taxa may
 
 Several extensions of the standard MGS experiment make it possible to measure absolute species abundances.
 These extensions fall into two general approaches.
-The first approach leverages information about the abundance of the total community; for example, @vandeputte2017quan measured total-community abundance using flow cytometry and multiplied this number by MGS genus proportions to obtain the absolute abundances of individual genera (@vandeputte2017quan).
+The first approach leverages information about the abundance of the total community; for example, @vandeputte2017quan measured total-community abundance using flow cytometry and multiplied this number by genus proportions measured by MGS to quantify the absolute abundances of individual genera (@vandeputte2017quan).
 A second approach leverages information about the abundance of one or more individual species; for example, a researcher might 'spike in' a known, fixed amount of an extraneous species to all samples prior to MGS, and normalize the read counts of all species to the spike-in species (@harrison2021theq).
 We consider each approach in detail to determine how taxonomic bias affects the resulting absolute-abundance measurements.
 
 ### Leveraging information about total-community abundance
 
 Suppose that the total abundance of all species in the sample, $A_{\tot}^{(a)}$, has been measured by a non-MGS method, yielding a measurement $\tilde A_\tot^{(a)}$.
-The absolute abundance of an individual species can be measured by multiplying the species' proportion from MGS by this total-abundance measurement,
+The absolute abundance of an individual species can be quantified by multiplying the species' proportion from MGS by this total-abundance measurement,
 \begin{align}
   (\#eq:density-prop-meas)
   \tilde A_i^{(a)} &= \tilde P_i^{(a)} \tilde A_\tot^{(a)}.
 \end{align}
 Total-abundance measurements recently used for this purpose include counting cells with microscopy (@lloyd2020evid) or flow cytometry (@props2017abso, @vandeputte2017quan, @galazzo2020howt), measuring the concentration of a marker-gene with qPCR or ddPCR (@zhang2017soil, @barlow2020aqau, @galazzo2020howt, @tettamantiboshier2020comp), and measuring bulk DNA concentration with a florescence-based DNA quantification method (@contijoch2019gutm).
 
-Importantly, these methods of measuring total abundance are themselves subject to taxonomic bias.
-Flow cytometry may, for example, yield lower cell counts for species whose cells tend to clump together or are prone to lysis during steps involved in sample collection, storage, and preparation.
+Importantly, these methods of measuring total abundance are themselves subject to taxonomic bias that is analogous to, but quantitatively different from, the MGS relative abundance measurements.
+Flow cytometry may yield lower cell counts for species whose cells tend to clump together or are prone to lysis during steps involved in sample collection, storage, and preparation.
 Marker-gene concentrations measured by qPCR are affected by variation among species in extraction efficiency, marker-gene copy number, and PCR binding and amplification efficiency (@lloyd2013meta).
 We can easily understand the impact of taxonomic bias on total-abundance measurement under simplifying assumptions analogous to those in our MGS model.
 Suppose that each species $i$ has an _absolute efficiency_ $B_{i}^{\mtot}$ for the total-abundance measurement that is constant across samples.
@@ -155,15 +154,15 @@ Neglecting other error sources, the total-abundance measurement equals
 \end{align}
 <!-- Note: We have assumed that only species in S contribute to the total abundance measurement. -->
 
-Species abundance measurements derived by this method are affected by taxonomic bias in both the MGS and total-abundance measurement.
-We can determine the resulting fold error (FE) by substituting Equations \@ref(eq:prop-error) and \@ref(eq:total-density-error) into Equation \@ref(eq:density-prop-meas), yielding
+Species abundance measurements derived by this method (Equation \@ref(eq:density-prop-meas)) are affected by taxonomic bias in both the MGS and total-abundance measurement.
+We can determine the resulting fold error (FE) in the estimate $\tilde A_i^{(a)}$ by substituting Equations \@ref(eq:prop-error) and \@ref(eq:total-density-error) into Equation \@ref(eq:density-prop-meas), yielding
 \begin{align}
   (\#eq:density-prop-error)
   \tilde A_\tot^{(a)}
   = A_\tot^{(a)} \cdot \frac{B_i \bar B^{\mtot (a)}}{\bar B^{(a)}}.
 \end{align}
 Equation \@ref(eq:density-prop-error) indicates that the FE in the measured absolute abundance of a species equals its MGS efficiency relative to the mean MGS efficiency in the sample, multiplied by the mean efficiency of the total measurement.
-As in the case of proportions (Equation \@ref(eq:prop-error)), the FE depends on sample composition through the two mean efficiency terms and so will vary across samples unless the two perfectly covary.
+As in the case of proportions (Equation \@ref(eq:prop-error)), the FE depends on sample composition through the two mean efficiency terms and so will, in general, vary across samples.
 
 ### Leveraging information about a reference species
 

@@ -9,12 +9,10 @@ In Section \@ref(solutions), we describe how ratio-based methods can thus provid
 in addition, calibration with community controls, bias-sensitivity analysis, and bias-aware meta-analysis provide additional ways to correct or mitigate the effect of bias.
 
 Proportion-based DA methods encompass many of the most popular methods for analyzing relative and absolute abundances.
-Importantly, however, we found that the degree and significance of the error due to bias depends on experimental context and may often be negligible.
-In particular, if the mean efficiency is approximately constant across samples, then bias has a negligible effect on multiplicative and rank-based cross-sample comparisons, and DA results will be unaffected.
+Importantly, however, if the mean efficiency is approximately constant across samples, then bias has a negligible effect on multiplicative and rank-based DA results.
 If the mean efficiency varies but is unassociated with the condition of interest, then bias merely serves to increase noise and does not create systematic errors in DA results.
 It is only when the mean efficiency is associated with the condition being analyzed that large systematic errors can occur.
-Our case studies suggest that this problematic scenario can occur but may well be the exception rather than the rule.
-Thus our results are still consistent with taxonomic bias having had a limited impact on extant DA results.
+Our case studies suggest that this problematic scenario does occur, but it may be the exception rather than the rule.
 Systematic investigation of how the mean efficiency affects DA results across a wide range of studies may increase our confidence in previous DA results and/or alert us to the conditions in which they are most suspect.
 
 Important open questions include 1) determining the extent to which bias is consistent across samples for different taxonomic levels, MGS methods, and sample types; 2) assessing the validity of post-extraction measurements as measures of pre-extraction abundance; 3) understanding how the multiplicative error from bias interacts with the non-multiplicative error from contamination and taxonomic misassignment; and 4) understanding how different underlying community dynamics, and in particular the source of zero counts in MGS measurements, affect bias sensitivity.

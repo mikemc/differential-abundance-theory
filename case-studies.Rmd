@@ -6,7 +6,7 @@ To better understand the potential impact of taxonomic bias on DA analysis in pr
 
 The taxonomic bias species present in 'mock communities' of known composition can be directly measured, and the measured bias can then be used to correct downstream DA analysis (@mclaren2019cons).
 In practice it is difficult to construct control communities that span the many species present in complex natural communities.
-However, gnotobiotic community experiments are well suited to this form of _calibration via community controls_ since, unlike most natural ecosystems, it is possible to assemble mock communities containing all species in known relative abundances.
+However, gnotobiotic community experiments are well suited to this form of _calibration via community controls_ since it is possible to assemble mock communities containing all species in known relative abundances.
 
 In a study of host-commensal-pathogen interactions, @leopold2020host inoculated plants with 8 commensal fungal species and subsequently exposed plants to a fungal pathogen.
 The authors used ITS amplicon sequencing to measure communities before and after pathogen infection.
@@ -15,7 +15,7 @@ The authors found a 13-fold difference between the most and least efficiently me
 
 @leopold2020host performed two related DA analyses on the pre-infection communities: the first characterized the relative importance of host genetics and species arrival order on species relative abundances in the fully-established community, and the second quantified the strength of 'priority effects'---the advantage gained by a species from being allowed to colonize first.
 Both analyses were based on fold differences (FDs) in species proportions and so in principle were sensitive to taxonomic bias.
-To improve accuracy, the authors incorporated the bias measured from the control samples with analysis-specific calibration procedures.
+To improve accuracy, the authors incorporated the bias measured from the control samples into analysis-specific calibration procedures.
 
 We repeated the two DA analyses of @leopold2020host with and without calibration and found that the results did not meaningfully differ
 ([SI Analysis of host genetics and arrival order](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-06-leopold2020host-original-regression-analysis/),
@@ -24,7 +24,7 @@ To understand why, we examined the variation in species proportions and the mean
 ([SI Analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-08-leopold2020host-case-study/), 
 SI Figure \@ref(fig:leopold2020host-variation)).
 Despite the 13-fold variation in the efficiencies among species, the mean efficiency hardly varied across samples (SI Figure \@ref(fig:leopold2020host-variation)C), having a geometric range of 1.62 and a geometric standard deviation of 1.05.
-This consistency in the mean efficiency was despite the fact that each species each showed substantial multiplicative variation (SI Figure \@ref(fig:leopold2020host-variation)A).
+This consistency in the mean efficiency was despite the fact that each species showed substantial multiplicative variation (SI Figure \@ref(fig:leopold2020host-variation)A).
 But the pre-infection samples were always dominated by the three species with the highest efficiencies, which varied by 3-fold and by just 1.5-fold between the two most dominant.
 The mean efficiency, equal to the proportion-weighted arithmetic average of species efficiencies, is insensitive to species present at low relative abundance and so remained relatively constant across samples.
 Because the multiplicative variation in the mean efficiency was much smaller than that in the proportions of individual species, it had a negligible impact on the inferred FDs and the DA analyses based on them.
@@ -32,8 +32,8 @@ Because the multiplicative variation in the mean efficiency was much smaller tha
 We performed an additional DA analysis on the data from @leopold2020host to investigate whether any commensals increased in absolute concentration in response to infection ([SI Analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-08-leopold2020host-case-study/#change-in-commensals-due-to-infection)).
 The pathogen is absent in pre-infection samples but tends to dominate the community post-infection, resulting in a substantially higher mean efficiency in post-infection samples (SI Figure \@ref(fig:leopold2020host-infection-mean-efficiency-dist)).
 Across different host genotypes, the average post-infection increase in mean efficiency ranged from 2.5-fold to 5.2-fold.
-Using gamma-Poisson (or negative-binomial) regression of the observed read counts, we estimated the average LFD in commensal species proportions following infection with and without calibration (SI Figure \@ref(fig:leopold2020host-infection-lfc)).
-Commensals typically decreased post-infection, which is expected given the pathogen's growth to most abundant community member and the sum-to-one constraint faced by proportions.
+Using gamma-Poisson regression of the observed read counts, we estimated the average LFD in commensal species proportions following infection with and without calibration (SI Figure \@ref(fig:leopold2020host-infection-lfc)).
+The commensals' proportions typically decreased post-infection, which is expected given the pathogen's growth to most abundant community member and the sum-to-one constraint faced by proportions.
 However, failure to account for bias caused the decrease to be overestimated, by an amount corresponding to the inverse change in log mean efficiency.
 For commensal-host pairs with relatively small observed decreases, bias correction greatly reduced the magnitude of the negative LFDs or, in several cases, resulted in LFDs that were near 0 or slightly positive.
 
@@ -126,10 +126,10 @@ hmp_species_diff <- hmp_species_stats %>%
 
 To investigate this question, we analyzed bacterial species profiles of vaginal and stool samples derived from shotgun sequencing in the Human Microbiome Project 
 (@huttenhower2012stru, [SI Analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-30-hmp-stool-vagina-comparison/)).
-On average, stool profiles had substantially greater order-2 alpha diversity than vaginal profiles (SI Figure \@ref(fig:gut)A; GM $\md$ GSD of `r hmp_div_stats['stool', 'gm'] %>% round(1)` $\md$ `r hmp_div_stats['stool', 'gsd'] %>% round(1)` in stool samples and `r hmp_div_stats['vagina', 'gm'] %>% round(1)` $\md$ `r hmp_div_stats['vagina', 'gsd'] %>% round(1)` in vaginal samples).
+On average, stool profiles had substantially greater order-2 alpha diversity than vaginal profiles (SI Figure \@ref(fig:gut)A; geometric mean (GM) $\md$ geometric standard deviation (GSD) of `r hmp_div_stats['stool', 'gm'] %>% round(1)` $\md$ `r hmp_div_stats['stool', 'gsd'] %>% round(1)` in stool samples and `r hmp_div_stats['vagina', 'gm'] %>% round(1)` $\md$ `r hmp_div_stats['vagina', 'gsd'] %>% round(1)` in vaginal samples).
 To assess the potential importance of bias for proportion-based DA analyses in the two ecosystems, we quantified the multiplicative variation in the mean efficiency across samples for a large number of possible taxonomic biases under the assumption that the measured profiles reflected the truth.
 Across simulation replicates, the GSD in the mean efficiency was typically lower in stool than in vaginal samples (SI Figure \@ref(fig:gut)B; ratio of GSD in vaginal samples to GSD in stool samples of `r hmp_me_stats['iid', 'gm'] %>% round(1)` $\md$ `r hmp_me_stats['iid', 'gsd'] %>% round(1)` across 1000 simulations).
-Notably, however, the multiplicative variation in species also tended to be lower (SI Figure \@ref(fig:gut)C), which the GSD in the proportion of a gut species across gut samples an average of `r hmp_species_diff %>% round(2)`-fold lower than that of a vaginal species across vaginal samples.
+Notably, however, the multiplicative variation in species also tended to be lower (SI Figure \@ref(fig:gut)C); the GSD in the proportion of a gut species across gut samples was an average of `r hmp_species_diff %>% round(2)`-fold lower than that of a vaginal species across vaginal samples.
 Recall that the importance of bias estimation of the FD in a species' proportion depends on GSD in the mean efficiency relative the GSD in the species' proportion (Section \@ref(differential-abundance)).
 Thus these results suggest that although the mean efficiency likely varies less across stool than vaginal samples, bias may be just as problematic for proportion-based DA analyses.
 
@@ -203,8 +203,8 @@ In the vaginal case study, we also observed that the mean efficiency was relativ
 In both cases, the stability of the mean efficiency can be understood by the fact that it is an additive average over species and so is primarily determined by the most abundant species in the sample.
 
 Yet we also observed cases where the mean efficiency varied substantially.
-In several cases, the mean efficiency varied systematically with the condition of interest sufficient to cause substantial systematic error in LFD estimates (Scenario 3).
-Examples include the comparison of foliar fungal microbiomes pre- and post-infection, for which the mean efficiency increased post-infection, and the comparison of vaginal microbiomes with low versus high diversity in the MOMS-PI study, for which the mean efficiency was typically lower in high-diversity samples.
+In several cases, the (log) mean efficiency co-varied sufficiently strongly with the condition of interest to cause substantial systematic errors in LFD estimates (Scenario 3).
+Examples include the comparison of foliar fungal microbiomes pre- and post-infection, for which the mean efficiency substantially increased post-infection, and the comparison of vaginal microbiomes with low versus high diversity in the MOMS-PI study, for which the mean efficiency was typically lower in high-diversity samples.
 Our analysis of marine sediment communities is consistent with a systematic decline of the mean efficiency with burial time that is sufficient to substantially inflate the estimated growth rates of slowly changing species.
 The mean efficiency cannot differ by more than the species proportions constituting it.
 Therefore, the error in the estimated LFDs tend to be practically significant only for species whose LFDs are substantially smaller in magnitude than the largest LFD.

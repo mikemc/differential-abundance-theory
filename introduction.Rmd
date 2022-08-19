@@ -26,14 +26,14 @@ If bias caused a species' abundance to be consistently measured as 10-fold great
 However, @mclaren2019cons showed mathematically and with MGS measurements of artificially constructed ('mock') communities that consistent taxonomic bias can create fold errors (FEs) that vary across samples and, as a result, majorly distort cross-sample comparisons.
 In particular, they showed that the FE in a species' proportion---the most common measure of relative abundance---varies among samples, distorting the observed FDs between samples.
 In some cases, bias can even lead to incorrect inferences about the direction of change (for example, by causing a taxon that decreased to appear to increase).
-Yet @mclaren2019cons also found that other abundance measures---those based on the ratios among species---have proportional errors and may lead to more robust DA analyses.
+Yet @mclaren2019cons also found that other abundance measures---those based on the ratios among species---have constant FEs and may lead to more robust DA analyses.
 The implications of these findings for DA analysis of absolute abundances and for the joint analysis of variation of many species across many samples, as is typical in microbiome association testing, have yet to be investigated.
 
 <!-- P: Objective and summary of the present article -->
 
 Here we use a combination of theoretical analysis, simulation, and re-analysis of published experiments to consider when and why taxonomic bias in MGS measurements leads to spurious results in DA analysis of relative and absolute abundances.
-We show that, in contrast to received wisdom, taxonomic bias can affect the results of DA methods (for relative and absolute abundance) that are based on species proportions.
+We show that, in contrast to received wisdom, taxonomic bias can affect the results of DA methods that are based on species proportions, even if bias is the same across samples.
 We describe the theoretical conditions when this effect is negligible and when it may cause serious scientific errors, and explore this effect in case studies based on real microbiome experiments.
-We further demonstrate that another set of DA methods, based on the ratios among species, are robust to bias.
+We further demonstrate that another set of DA methods, based on the ratios among species, are robust to consistent bias.
 Finally, we present several methods for quantifying, correcting, or otherwise accounting for taxonomic bias in DA analyses which, in many cases, can be deployed with only modest changes to existing experimental and analytical workflows.
-Application of these insights and methods can build the confidence needed to turn the findings of microbiome studies into readily-translatable scientific knowledge.
+These insights and methods will aid microbiome data analysts in turning the findings of microbiome studies into readily-translatable scientific knowledge.
