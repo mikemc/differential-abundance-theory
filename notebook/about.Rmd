@@ -7,4 +7,4 @@ description: |
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-This site contains analyses for a manuscript on the impact of taxonomic bias on microbimoe differential-abundance methods.
+This site contains analyses for a manuscript on the impact of taxonomic bias on microbiome differential-abundance methods.
