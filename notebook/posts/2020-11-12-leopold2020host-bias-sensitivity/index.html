@@ -85,6 +85,28 @@ code span.vs { color: #20794d; } /* VerbatimString */
 code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 </style>
 
+<style>
+  div.csl-bib-body { }
+  div.csl-entry {
+    clear: both;
+    }
+  .hanging div.csl-entry {
+    margin-left:2em;
+    text-indent:-2em;
+  }
+  div.csl-left-margin {
+    min-width:2em;
+    float:left;
+  }
+  div.csl-right-inline {
+    margin-left:2em;
+    padding-left:1em;
+  }
+  div.csl-indent {
+    margin-left: 2em;
+  }
+</style>
+
   <!--radix_placeholder_meta_tags-->
 <title>Research notebook for manuscript on taxonomic bias and differential-abundance methods: Exploring the effect of bias in Leopold and Busby (2020)
 </title>
@@ -92,8 +114,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 
 
 <!--  https://schema.org/Article -->
-<meta property="article:published" itemprop="datePublished" content="2019-10-21"/>
-<meta property="article:created" itemprop="dateCreated" content="2019-10-21"/>
+<meta property="article:published" itemprop="datePublished" content="2020-11-10"/>
+<meta property="article:created" itemprop="dateCreated" content="2020-11-10"/>
 <meta name="article:author" content="Michael McLaren"/>
 
 <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
@@ -112,7 +134,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   <!--radix_placeholder_rmarkdown_metadata-->
 
 <script type="text/json" id="radix-rmarkdown-metadata">
-{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","author","date","categories","description","bibliography","draft","output"]}},"value":[{"type":"character","attributes":{},"value":["Exploring the effect of bias in Leopold and Busby (2020)\n"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name"]}},"value":[{"type":"character","attributes":{},"value":["Michael McLaren"]}]}]},{"type":"character","attributes":{},"value":["2019-10-21"]},{"type":"character","attributes":{},"value":["bias sensitivity","R","ref:leopold2020host"]},{"type":"NULL"},{"type":"character","attributes":{},"value":["_references.bib"]},{"type":"logical","attributes":{},"value":[false]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["self_contained","toc","toc_float","dev"]}},"value":[{"type":"logical","attributes":{},"value":[false]},{"type":"logical","attributes":{},"value":[true]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["svg"]}]}]}]}
+{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","author","date","categories","description","bibliography","draft","output"]}},"value":[{"type":"character","attributes":{},"value":["Exploring the effect of bias in Leopold and Busby (2020)\n"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name"]}},"value":[{"type":"character","attributes":{},"value":["Michael McLaren"]}]}]},{"type":"character","attributes":{},"value":["2020-11-10"]},{"type":"character","attributes":{},"value":["bias sensitivity","ref:leopold2020host"]},{"type":"NULL"},{"type":"character","attributes":{},"value":["_references.bib"]},{"type":"logical","attributes":{},"value":[false]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["self_contained","toc","toc_float","dev"]}},"value":[{"type":"logical","attributes":{},"value":[false]},{"type":"logical","attributes":{},"value":[true]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["svg"]}]}]}]}
 </script>
 <!--/radix_placeholder_rmarkdown_metadata-->
   
@@ -1037,10 +1059,6 @@ figure img.external {
   margin-top: 1.5em;
 }
 
-.figure img {
-  width: 100%;
-}
-
 .figure .caption {
   color: rgba(0, 0, 0, 0.6);
   font-size: 12px;
@@ -1870,6 +1888,12 @@ function init_distill() {
 
     // hoverable references
     $('span.citation[data-cites]').each(function() {
+      if ($(this).children()[0].nodeName == "D-FOOTNOTE") {
+        var fn = $(this).children()[0]
+        $(this).html(fn.shadowRoot.querySelector("sup"))
+        $(this).id = fn.id
+        fn.remove()
+      }
       var refs = $(this).attr('data-cites').split(" ");
       var refHtml = refs.map(function(ref) {
         return "<p>" + $('#ref-' + ref).html() + "</p>";
@@ -1884,6 +1908,31 @@ function init_distill() {
         placement: 'bottom-start'
       });
     });
+
+    // fix footnotes in tables (#411)
+    // replacing broken distill.pub feature
+    $('table d-footnote').each(function() {
+      // we replace internal showAtNode methode which is triggered when hovering a footnote
+      this.hoverBox.showAtNode = function(node) {
+        // ported from https://github.com/distillpub/template/pull/105/files
+        calcOffset = function(elem) {
+            let x = elem.offsetLeft;
+            let y = elem.offsetTop;
+            // Traverse upwards until an `absolute` element is found or `elem`
+            // becomes null.
+            while (elem = elem.offsetParent && elem.style.position != 'absolute') {
+                x += elem.offsetLeft;
+                y += elem.offsetTop;
+            }
+
+            return { left: x, top: y };
+        }
+        // https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/offsetTop
+        const bbox = node.getBoundingClientRect();
+        const offset = calcOffset(node);
+        this.show([offset.left + bbox.width, offset.top + bbox.height]);
+      }
+    })
 
     // clear polling timer
     clearInterval(tid);
@@ -1983,6 +2032,8 @@ function init_common() {
   // mark non-body figures created by knitr chunks as 100% width
   $('.layout-chunk').each(function(i, val) {
     var figures = $(this).find('img, .html-widget');
+    // ignore leaflet img layers (#106)
+    figures = figures.filter(':not(img[class*="leaflet"])')
     if ($(this).attr('data-layout') !== "l-body") {
       figures.css('width', '100%');
     } else {
@@ -2005,7 +2056,7 @@ function init_common() {
   // get rid of index.html references in header
   if (window.location.protocol !== "file:") {
     $('.distill-site-header a[href]').each(function(i,val) {
-      $(this).attr('href', $(this).attr('href').replace("index.html", "./"));
+      $(this).attr('href', $(this).attr('href').replace(/^index[.]html/, "./"));
     });
   }
 
@@ -2044,8 +2095,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!--/radix_placeholder_distill-->
-  <script src="../../site_libs/header-attrs-2.7/header-attrs.js"></script>
-  <script src="../../site_libs/jquery-1.11.3/jquery.min.js"></script>
+  <script src="../../site_libs/header-attrs-2.11/header-attrs.js"></script>
+  <script src="../../site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
   <script src="../../site_libs/popper-2.6.0/popper.min.js"></script>
   <link href="../../site_libs/tippy-6.2.7/tippy.css" rel="stylesheet" />
   <link href="../../site_libs/tippy-6.2.7/tippy-light-border.css" rel="stylesheet" />
@@ -2065,7 +2116,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"Exploring the effect of bias in Leopold and Busby (2020)\n","authors":[{"author":"Michael McLaren","authorURL":"#","affiliation":"&nbsp;","affiliationURL":"#","orcidID":""}],"publishedDate":"2019-10-21T00:00:00.000-07:00","citationText":"McLaren, 2019"}
+{"title":"Exploring the effect of bias in Leopold and Busby (2020)\n","authors":[{"author":"Michael McLaren","authorURL":"#","affiliation":"&nbsp;","affiliationURL":"#","orcidID":""}],"publishedDate":"2020-11-10T00:00:00.000-05:00","citationText":"McLaren, 2020"}
 </script>
 
 <!--/radix_placeholder_front_matter-->
@@ -2079,6 +2130,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="nav-right">
 <a href="../../index.html">Home</a>
 <a href="../../about.html">About</a>
+<a href="../../case-studies.html">Case studies</a>
 <a href="javascript:void(0);" class="nav-toggle">&#9776;</a>
 </div>
 </nav>
@@ -2092,7 +2144,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <!--radix_placeholder_categories-->
 <div class="dt-tags">
   <a href="../../index.html#category:bias_sensitivity" class="dt-tag">bias sensitivity</a>
-  <a href="../../index.html#category:R" class="dt-tag">R</a>
   <a href="../../index.html#category:ref:leopold2020host" class="dt-tag">ref:leopold2020host</a>
 </div>
 <!--/radix_placeholder_categories-->
@@ -2103,7 +2154,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   Michael McLaren
   
-<br/>2019-10-21
+<br/>2020-11-10
 </div>
 
 <div class="d-article">
@@ -2125,19 +2176,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </ul>
 </nav>
 </div>
-<p>Analysis of bias in <span class="citation" data-cites="leopold2020host"><a href="#ref-leopold2020host" role="doc-biblioref">Leopold and Busby</a> (<a href="#ref-leopold2020host" role="doc-biblioref">2020</a>)</span>.</p>
+<p>Analysis of bias in <span class="citation" data-cites="leopold2020host">Leopold and Busby (<a href="#ref-leopold2020host" role="doc-biblioref">2020</a>)</span>.</p>
 <h1 id="setup">Setup</h1>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='co'># Tools for microbiome data</span>
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://mikemc.github.io/speedyseq'>speedyseq</a></span><span class='op'>)</span>
 <span class='co'># Tools for general purpose data manipulation and plotting</span>
-<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='http://tidyverse.tidyverse.org'>tidyverse</a></span><span class='op'>)</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://tidyverse.tidyverse.org'>tidyverse</a></span><span class='op'>)</span>
 <span class='co'># ggplot helpers</span>
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://github.com/eclarke/ggbeeswarm'>ggbeeswarm</a></span><span class='op'>)</span>
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://wilkelab.org/cowplot/'>cowplot</a></span><span class='op'>)</span>
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://patchwork.data-imaginist.com'>patchwork</a></span><span class='op'>)</span>
-<span class='fu'>theme_set</span><span class='op'>(</span><span class='fu'><a href='https://wilkelab.org/cowplot/reference/theme_cowplot.html'>theme_cowplot</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>
+<span class='fu'><a href='https://ggplot2.tidyverse.org/reference/theme_get.html'>theme_set</a></span><span class='op'>(</span><span class='fu'><a href='https://wilkelab.org/cowplot/reference/theme_cowplot.html'>theme_cowplot</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>
 
 <span class='co'># stats helpers</span>
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://broom.tidymodels.org/'>broom</a></span><span class='op'>)</span>
@@ -2145,13 +2196,13 @@ document.addEventListener('DOMContentLoaded', function() {
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://mikemc.github.io/metacal'>metacal</a></span><span class='op'>)</span>; <span class='fu'><a href='https://rdrr.io/r/utils/packageDescription.html'>packageVersion</a></span><span class='op'>(</span><span class='st'>"metacal"</span><span class='op'>)</span>
 </code></pre>
 </div>
-<pre><code>[1] &#39;0.2.0&#39;</code></pre>
+<pre><code>[1] &#39;0.2.0.9009&#39;</code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>ps.mock.pseudo</span> <span class='op'>&lt;-</span> <span class='va'>ps.mock</span> <span class='op'>%&gt;%</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>ps.mock.pseudo</span> <span class='op'>&lt;-</span> <span class='va'>ps.mock</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
   <span class='fu'><a href='https://mikemc.github.io/speedyseq/reference/transform_sample_counts.html'>transform_sample_counts</a></span><span class='op'>(</span><span class='kw'>function</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='va'>x</span> <span class='op'>+</span> <span class='fl'>1</span><span class='op'>)</span>
-<span class='va'>mc_fit</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://mikemc.github.io/metacal/reference/estimate_bias.html'>estimate_bias</a></span><span class='op'>(</span><span class='va'>ps.mock.pseudo</span>, <span class='va'>mock_actual</span>, boot <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span> <span class='op'>%&gt;%</span> <span class='va'>print</span>
+<span class='va'>mc_fit</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://mikemc.github.io/metacal/reference/estimate_bias.html'>estimate_bias</a></span><span class='op'>(</span><span class='va'>ps.mock.pseudo</span>, <span class='va'>mock_actual</span>, boot <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='va'>print</span>
 </code></pre>
 </div>
 <pre><code>A metacal bias fit.
@@ -2164,7 +2215,7 @@ Estimated relative efficiencies:
 
 Contains 1000 bootstrap replicates.</code></pre>
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>bias</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/coef.html'>coef</a></span><span class='op'>(</span><span class='va'>mc_fit</span><span class='op'>)</span> <span class='op'>%&gt;%</span> <span class='va'>print</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>bias</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/coef.html'>coef</a></span><span class='op'>(</span><span class='va'>mc_fit</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='va'>print</span>
 </code></pre>
 </div>
 <pre><code>   Melampsora     Dioszegia     Epicoccum      Fusarium   Penicillium 
@@ -2181,32 +2232,32 @@ Contains 1000 bootstrap replicates.</code></pre>
 <pre><code>Summary of a metacal bias fit.
 
 Estimated relative efficiencies:
-# A tibble: 9 x 4
+# A tibble: 9 × 4
   taxon         estimate gm_mean gm_se
   &lt;chr&gt;            &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
-1 Melampsora       8.75    8.76   1.06
-2 Dioszegia        0.295   0.295  1.10
-3 Epicoccum        1.01    0.995  1.50
-4 Fusarium         3.07    3.08   1.14
+1 Melampsora       8.75    8.74   1.06
+2 Dioszegia        0.295   0.294  1.10
+3 Epicoccum        1.01    1.01   1.49
+4 Fusarium         3.07    3.08   1.13
 5 Penicillium      0.223   0.224  1.09
-6 Cladosporium     0.899   0.903  1.13
-7 Trichoderma      0.578   0.579  1.09
-8 Alternaria       1.47    1.46   1.08
-9 Aureobasidium    0.738   0.736  1.12
+6 Cladosporium     0.899   0.901  1.13
+7 Trichoderma      0.578   0.577  1.09
+8 Alternaria       1.47    1.47   1.08
+9 Aureobasidium    0.738   0.732  1.13
 
 Geometric standard error estimated from 1000 bootstrap replicates.</code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>coef_tb</span> <span class='op'>&lt;-</span> <span class='va'>mc_fit.summary</span><span class='op'>$</span><span class='va'>coefficients</span>
-<span class='va'>coef_tb</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>mutate</span><span class='op'>(</span>taxon <span class='op'>=</span> <span class='fu'>fct_reorder</span><span class='op'>(</span><span class='va'>taxon</span>, <span class='va'>estimate</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>ggplot</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span><span class='va'>taxon</span>, <span class='va'>estimate</span>, 
+<span class='va'>coef_tb</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>taxon <span class='op'>=</span> <span class='fu'><a href='https://forcats.tidyverse.org/reference/fct_reorder.html'>fct_reorder</a></span><span class='op'>(</span><span class='va'>taxon</span>, <span class='va'>estimate</span><span class='op'>)</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span><span class='va'>taxon</span>, <span class='va'>estimate</span>, 
       ymin <span class='op'>=</span> <span class='va'>estimate</span> <span class='op'>/</span> <span class='va'>gm_se</span><span class='op'>^</span><span class='fl'>2</span>, ymax <span class='op'>=</span> <span class='va'>estimate</span> <span class='op'>*</span> <span class='va'>gm_se</span><span class='op'>^</span><span class='fl'>2</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_hline</span><span class='op'>(</span>yintercept <span class='op'>=</span> <span class='fl'>1</span>, color <span class='op'>=</span> <span class='st'>"grey"</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_pointrange</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_y_log10</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>coord_flip</span><span class='op'>(</span><span class='op'>)</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_abline.html'>geom_hline</a></span><span class='op'>(</span>yintercept <span class='op'>=</span> <span class='fl'>1</span>, color <span class='op'>=</span> <span class='st'>"grey"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_linerange.html'>geom_pointrange</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_y_log10</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/coord_flip.html'>coord_flip</a></span><span class='op'>(</span><span class='op'>)</span>
 </code></pre>
 </div>
 <p><img src="index_files/figure-html5/unnamed-chunk-3-1.svg" width="480" /></p>
@@ -2214,12 +2265,12 @@ Geometric standard error estimated from 1000 bootstrap replicates.</code></pre>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>ps.pseudo</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://mikemc.github.io/speedyseq/reference/transform_sample_counts.html'>transform_sample_counts</a></span><span class='op'>(</span><span class='va'>ps</span>, <span class='kw'>function</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='va'>x</span> <span class='op'>+</span> <span class='fl'>1</span><span class='op'>)</span>
-<span class='va'>ps.pseudo.cal</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://mikemc.github.io/metacal/reference/calibrate.html'>calibrate</a></span><span class='op'>(</span><span class='va'>ps.pseudo</span>, <span class='va'>bias</span><span class='op'>)</span> <span class='op'>%&gt;%</span> <span class='va'>print</span>
+<span class='va'>ps.pseudo.cal</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://mikemc.github.io/metacal/reference/calibrate.html'>calibrate</a></span><span class='op'>(</span><span class='va'>ps.pseudo</span>, <span class='va'>bias</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='va'>print</span>
 </code></pre>
 </div>
 <pre><code>phyloseq-class experiment-level object
 otu_table()   OTU Table:          [ 9 taxa and 567 samples ]:
-sample_data() Sample Data:        [ 567 samples by 16 sample variables ]:
+sample_data() Sample Data:        [ 567 samples by 17 sample variables ]:
 tax_table()   Taxonomy Table:     [ 9 taxa by 7 taxonomic ranks ]:
 refseq()      DNAStringSet:       [ 9 reference sequences ]
 taxa are columns</code></pre>
@@ -2228,31 +2279,31 @@ taxa are columns</code></pre>
 <p>To estimate the SMRE with formula <code>sum_i A_i E_i</code>, use the calibrated abundances.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>ps0</span> <span class='op'>&lt;-</span> <span class='va'>ps.pseudo.cal</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>prune_taxa</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/names.html'>names</a></span><span class='op'>(</span><span class='va'>bias</span><span class='op'>)</span>, <span class='va'>.</span><span class='op'>)</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>ps0</span> <span class='op'>&lt;-</span> <span class='va'>ps.pseudo.cal</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://rdrr.io/pkg/phyloseq/man/prune_taxa-methods.html'>prune_taxa</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/names.html'>names</a></span><span class='op'>(</span><span class='va'>bias</span><span class='op'>)</span>, <span class='va'>.</span><span class='op'>)</span>
 </code></pre>
 </div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>otu</span> <span class='op'>&lt;-</span> <span class='va'>ps0</span> <span class='op'>%&gt;%</span> <span class='va'>otu_table</span> <span class='op'>%&gt;%</span> <span class='fu'><a href='https://mikemc.github.io/speedyseq/reference/orient_taxa.html'>orient_taxa</a></span><span class='op'>(</span>as <span class='op'>=</span> <span class='st'>"cols"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>otu</span> <span class='op'>&lt;-</span> <span class='va'>ps0</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='va'>otu_table</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://mikemc.github.io/speedyseq/reference/orient_taxa.html'>orient_taxa</a></span><span class='op'>(</span>as <span class='op'>=</span> <span class='st'>"cols"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
   <span class='fu'><a href='https://mikemc.github.io/speedyseq/reference/transform_sample_counts.html'>transform_sample_counts</a></span><span class='op'>(</span><span class='va'>close_elts</span><span class='op'>)</span>
-<span class='va'>sam0</span> <span class='op'>&lt;-</span> <span class='fu'>sample_data</span><span class='op'>(</span><span class='va'>ps0</span><span class='op'>)</span> <span class='op'>%&gt;%</span> 
-  <span class='fu'>as</span><span class='op'>(</span><span class='st'>"data.frame"</span><span class='op'>)</span> <span class='op'>%&gt;%</span> 
+<span class='va'>sam0</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/phyloseq/man/sample_data-methods.html'>sample_data</a></span><span class='op'>(</span><span class='va'>ps0</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> 
+  <span class='fu'>as</span><span class='op'>(</span><span class='st'>"data.frame"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> 
   <span class='fu'>as_tibble</span><span class='op'>(</span>rownames <span class='op'>=</span> <span class='st'>"Sample"</span><span class='op'>)</span>
 </code></pre>
 </div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme</span> <span class='op'>&lt;-</span> <span class='va'>otu</span> <span class='op'>%&gt;%</span> <span class='va'>psmelt</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>left_join</span><span class='op'>(</span><span class='va'>bias</span> <span class='op'>%&gt;%</span> <span class='fu'>enframe</span><span class='op'>(</span><span class='st'>"OTU"</span>, <span class='st'>"Efficiency"</span><span class='op'>)</span>, by <span class='op'>=</span> <span class='st'>"OTU"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>group_by</span><span class='op'>(</span><span class='va'>Sample</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>summarize</span><span class='op'>(</span>SMRE <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span><span class='op'>(</span><span class='va'>Efficiency</span> <span class='op'>*</span> <span class='va'>Abundance</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>left_join</span><span class='op'>(</span><span class='va'>sam0</span>, by <span class='op'>=</span> <span class='st'>"Sample"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>mutate</span><span class='op'>(</span>
-    <span class='fu'>across</span><span class='op'>(</span><span class='va'>Timepoint</span>, <span class='va'>as.factor</span><span class='op'>)</span>,
-    <span class='fu'>across</span><span class='op'>(</span><span class='va'>Timepoint</span>, <span class='va'>fct_explicit_na</span>, <span class='st'>"Other"</span><span class='op'>)</span>,
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme</span> <span class='op'>&lt;-</span> <span class='va'>otu</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='va'>psmelt</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>left_join</a></span><span class='op'>(</span><span class='va'>bias</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://tibble.tidyverse.org/reference/enframe.html'>enframe</a></span><span class='op'>(</span><span class='st'>"OTU"</span>, <span class='st'>"Efficiency"</span><span class='op'>)</span>, by <span class='op'>=</span> <span class='st'>"OTU"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>Sample</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/summarise.html'>summarize</a></span><span class='op'>(</span>SMRE <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span><span class='op'>(</span><span class='va'>Efficiency</span> <span class='op'>*</span> <span class='va'>Abundance</span><span class='op'>)</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>left_join</a></span><span class='op'>(</span><span class='va'>sam0</span>, by <span class='op'>=</span> <span class='st'>"Sample"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>
+    <span class='fu'><a href='https://dplyr.tidyverse.org/reference/across.html'>across</a></span><span class='op'>(</span><span class='va'>Timepoint</span>, <span class='va'>as.factor</span><span class='op'>)</span>,
+    <span class='fu'><a href='https://dplyr.tidyverse.org/reference/across.html'>across</a></span><span class='op'>(</span><span class='va'>Timepoint</span>, <span class='va'>fct_explicit_na</span>, <span class='st'>"Other"</span><span class='op'>)</span>,
   <span class='op'>)</span>
 </code></pre>
 </div>
@@ -2271,14 +2322,14 @@ taxa are columns</code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>p1</span> <span class='op'>&lt;-</span> <span class='fu'>ggplot</span><span class='op'>(</span><span class='va'>sme</span>, <span class='fu'>aes</span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Samp_type</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_histogram</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>annotate</span><span class='op'>(</span><span class='st'>"point"</span>, y <span class='op'>=</span> <span class='fl'>200</span>, x <span class='op'>=</span> <span class='va'>bias</span>, color <span class='op'>=</span> <span class='st'>"black"</span>, shape <span class='op'>=</span> <span class='st'>"|"</span>, size <span class='op'>=</span> <span class='fl'>7</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_x_log10</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_y_sqrt</span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>expand_limits</span><span class='op'>(</span>x <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>bias</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_fill_brewer</span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>labs</span><span class='op'>(</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>p1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='va'>sme</span>, <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Samp_type</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_histogram.html'>geom_histogram</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/annotate.html'>annotate</a></span><span class='op'>(</span><span class='st'>"point"</span>, y <span class='op'>=</span> <span class='fl'>200</span>, x <span class='op'>=</span> <span class='va'>bias</span>, color <span class='op'>=</span> <span class='st'>"black"</span>, shape <span class='op'>=</span> <span class='st'>"|"</span>, size <span class='op'>=</span> <span class='fl'>7</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_x_log10</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_y_sqrt</a></span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/expand_limits.html'>expand_limits</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>bias</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_brewer.html'>scale_fill_brewer</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>
     <span class='co'># x = "Sample mean relative efficiency (SMRE)",</span>
     x <span class='op'>=</span> <span class='st'>"Mean efficiency"</span>, 
     y <span class='op'>=</span> <span class='st'>"Number of samples"</span>,
@@ -2294,9 +2345,9 @@ taxa are columns</code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='fu'>ggsave</span><span class='op'>(</span><span class='st'>"/tmp/leopold2020host-smre-distribution.svg"</span>, units <span class='op'>=</span> <span class='st'>"in"</span>,
+<pre class="sourceCode r"><code class="sourceCode r"><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsave.html'>ggsave</a></span><span class='op'>(</span><span class='st'>"/tmp/leopold2020host-smre-distribution.svg"</span>, units <span class='op'>=</span> <span class='st'>"in"</span>,
   width <span class='op'>=</span> <span class='fl'>6</span>, height <span class='op'>=</span> <span class='fl'>3</span>, scale <span class='op'>=</span> <span class='fl'>1.5</span><span class='op'>)</span>
-<span class='fu'>ggsave</span><span class='op'>(</span><span class='st'>"/tmp/leopold2020host-smre-distribution.png"</span>, units <span class='op'>=</span> <span class='st'>"in"</span>,
+<span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsave.html'>ggsave</a></span><span class='op'>(</span><span class='st'>"/tmp/leopold2020host-smre-distribution.png"</span>, units <span class='op'>=</span> <span class='st'>"in"</span>,
   width <span class='op'>=</span> <span class='fl'>6</span>, height <span class='op'>=</span> <span class='fl'>3</span>, scale <span class='op'>=</span> <span class='fl'>1.5</span><span class='op'>)</span>
 </code></pre>
 </div>
@@ -2305,29 +2356,29 @@ taxa are columns</code></pre>
 <p>TODO: check this hypothesis. by making a histogram of melampspora %, and a scatterplot of the melamspora vs. SMRE. Can do with facet matrix from ggforce</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>mel</span> <span class='op'>&lt;-</span> <span class='va'>otu</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>prune_taxa</span><span class='op'>(</span><span class='st'>"Melampsora"</span>, <span class='va'>.</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='va'>psmelt</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>select</span><span class='op'>(</span><span class='op'>-</span><span class='va'>OTU</span>, Melampsora <span class='op'>=</span> <span class='va'>Abundance</span><span class='op'>)</span>
-<span class='va'>sme0</span> <span class='op'>&lt;-</span> <span class='fu'>left_join</span><span class='op'>(</span><span class='va'>sme</span>, <span class='va'>mel</span>, by <span class='op'>=</span> <span class='st'>"Sample"</span><span class='op'>)</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>mel</span> <span class='op'>&lt;-</span> <span class='va'>otu</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://rdrr.io/pkg/phyloseq/man/prune_taxa-methods.html'>prune_taxa</a></span><span class='op'>(</span><span class='st'>"Melampsora"</span>, <span class='va'>.</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='va'>psmelt</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span><span class='op'>-</span><span class='va'>OTU</span>, Melampsora <span class='op'>=</span> <span class='va'>Abundance</span><span class='op'>)</span>
+<span class='va'>sme0</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>left_join</a></span><span class='op'>(</span><span class='va'>sme</span>, <span class='va'>mel</span>, by <span class='op'>=</span> <span class='st'>"Sample"</span><span class='op'>)</span>
 </code></pre>
 </div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='co'># p2 &lt;- ggplot(sme0, aes(SMRE, fill = Melampsora)) +</span>
-<span class='va'>p2</span> <span class='op'>&lt;-</span> <span class='fu'>ggplot</span><span class='op'>(</span><span class='va'>sme0</span>, <span class='fu'>aes</span><span class='op'>(</span>y <span class='op'>=</span> <span class='va'>Melampsora</span>, x <span class='op'>=</span> <span class='va'>SMRE</span>, color <span class='op'>=</span> <span class='va'>Samp_type</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_point</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+<span class='va'>p2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='va'>sme0</span>, <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>y <span class='op'>=</span> <span class='va'>Melampsora</span>, x <span class='op'>=</span> <span class='va'>SMRE</span>, color <span class='op'>=</span> <span class='va'>Samp_type</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_point.html'>geom_point</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
   <span class='co'># annotate("point", y = 1, x = bias, color = "black", shape = "|", size = 7) +</span>
-  <span class='fu'>scale_x_log10</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_x_log10</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
   <span class='co'># scale_y_sqrt() +</span>
-  <span class='fu'>scale_y_continuous</span><span class='op'>(</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_y_continuous</a></span><span class='op'>(</span>
     trans <span class='op'>=</span> <span class='fu'>scales</span><span class='fu'>::</span><span class='fu'><a href='https://scales.r-lib.org/reference/log_trans.html'>pseudo_log_trans</a></span><span class='op'>(</span>sigma <span class='op'>=</span> <span class='fl'>1e-2</span><span class='op'>)</span>,
     breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0</span>, <span class='fl'>0.01</span>, <span class='fl'>0.1</span>, <span class='fl'>0.5</span>, <span class='fl'>1</span><span class='op'>)</span>
     <span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>expand_limits</span><span class='op'>(</span>x <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>bias</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_color_brewer</span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>labs</span><span class='op'>(</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/expand_limits.html'>expand_limits</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>bias</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_brewer.html'>scale_color_brewer</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>
     y <span class='op'>=</span> <span class='st'>"Melampsora proportion"</span>,
     <span class='co'># x = "Sample mean relative efficiency (SMRE)",</span>
     x <span class='op'>=</span> <span class='st'>"Mean efficiency"</span>,
@@ -2340,8 +2391,8 @@ taxa are columns</code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='op'>(</span><span class='va'>p1</span> <span class='op'>+</span> <span class='fu'>ggtitle</span><span class='op'>(</span><span class='st'>"Distribution of the mean efficiency across samples"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>/</span> 
-  <span class='op'>(</span><span class='va'>p2</span> <span class='op'>+</span> <span class='fu'>ggtitle</span><span class='op'>(</span><span class='st'>"Melampsora proportion vs. mean efficiency"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='op'>(</span><span class='va'>p1</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>ggtitle</a></span><span class='op'>(</span><span class='st'>"Distribution of the mean efficiency across samples"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>/</span> 
+  <span class='op'>(</span><span class='va'>p2</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>ggtitle</a></span><span class='op'>(</span><span class='st'>"Melampsora proportion vs. mean efficiency"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
   <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_annotation.html'>plot_annotation</a></span><span class='op'>(</span>tag_levels <span class='op'>=</span> <span class='st'>"A"</span><span class='op'>)</span>
 </code></pre>
 </div>
@@ -2349,11 +2400,11 @@ taxa are columns</code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='fu'>ggsave</span><span class='op'>(</span><span class='st'>"/tmp/leopold2020host-smre-distribution.svg"</span>, units <span class='op'>=</span> <span class='st'>"in"</span>,
+<pre class="sourceCode r"><code class="sourceCode r"><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsave.html'>ggsave</a></span><span class='op'>(</span><span class='st'>"/tmp/leopold2020host-smre-distribution.svg"</span>, units <span class='op'>=</span> <span class='st'>"in"</span>,
   width <span class='op'>=</span> <span class='fl'>6</span>, height <span class='op'>=</span> <span class='fl'>6</span>, scale <span class='op'>=</span> <span class='fl'>1.5</span><span class='op'>)</span>
-<span class='fu'>ggsave</span><span class='op'>(</span><span class='st'>"/tmp/leopold2020host-smre-distribution.pdf"</span>, units <span class='op'>=</span> <span class='st'>"in"</span>,
+<span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsave.html'>ggsave</a></span><span class='op'>(</span><span class='st'>"/tmp/leopold2020host-smre-distribution.pdf"</span>, units <span class='op'>=</span> <span class='st'>"in"</span>,
   width <span class='op'>=</span> <span class='fl'>6</span>, height <span class='op'>=</span> <span class='fl'>6</span>, scale <span class='op'>=</span> <span class='fl'>1.5</span><span class='op'>)</span>
-<span class='fu'>ggsave</span><span class='op'>(</span><span class='st'>"/tmp/leopold2020host-smre-distribution.png"</span>, units <span class='op'>=</span> <span class='st'>"in"</span>,
+<span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsave.html'>ggsave</a></span><span class='op'>(</span><span class='st'>"/tmp/leopold2020host-smre-distribution.png"</span>, units <span class='op'>=</span> <span class='st'>"in"</span>,
   width <span class='op'>=</span> <span class='fl'>6</span>, height <span class='op'>=</span> <span class='fl'>6</span>, scale <span class='op'>=</span> <span class='fl'>1.5</span><span class='op'>)</span>
 </code></pre>
 </div>
@@ -2361,20 +2412,20 @@ taxa are columns</code></pre>
 <p>Note, the high-Mel samples are the timepoint 2 samples, and were not used for some (all?) of his analysis due to the dominance of Mel. Let’s check this out,</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>mutate</span><span class='op'>(</span>
-    <span class='fu'>across</span><span class='op'>(</span><span class='va'>Timepoint</span>, <span class='va'>as.factor</span><span class='op'>)</span>,
-    <span class='fu'>across</span><span class='op'>(</span><span class='va'>Timepoint</span>, <span class='va'>fct_explicit_na</span>, <span class='st'>"Other"</span><span class='op'>)</span>,
-  <span class='op'>)</span> <span class='op'>%&gt;%</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>
+    <span class='fu'><a href='https://dplyr.tidyverse.org/reference/across.html'>across</a></span><span class='op'>(</span><span class='va'>Timepoint</span>, <span class='va'>as.factor</span><span class='op'>)</span>,
+    <span class='fu'><a href='https://dplyr.tidyverse.org/reference/across.html'>across</a></span><span class='op'>(</span><span class='va'>Timepoint</span>, <span class='va'>fct_explicit_na</span>, <span class='st'>"Other"</span><span class='op'>)</span>,
+  <span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
   <span class='co'># filter(Samp_type == "Experiment") %&gt;%</span>
-  <span class='fu'>ggplot</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Timepoint</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_histogram</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>annotate</span><span class='op'>(</span><span class='st'>"point"</span>, y <span class='op'>=</span> <span class='fl'>200</span>, x <span class='op'>=</span> <span class='va'>bias</span>, color <span class='op'>=</span> <span class='st'>"black"</span>, shape <span class='op'>=</span> <span class='st'>"|"</span>, size <span class='op'>=</span> <span class='fl'>7</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_x_log10</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_y_sqrt</span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>expand_limits</span><span class='op'>(</span>x <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>bias</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_fill_brewer</span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>labs</span><span class='op'>(</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Timepoint</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_histogram.html'>geom_histogram</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/annotate.html'>annotate</a></span><span class='op'>(</span><span class='st'>"point"</span>, y <span class='op'>=</span> <span class='fl'>200</span>, x <span class='op'>=</span> <span class='va'>bias</span>, color <span class='op'>=</span> <span class='st'>"black"</span>, shape <span class='op'>=</span> <span class='st'>"|"</span>, size <span class='op'>=</span> <span class='fl'>7</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_x_log10</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_y_sqrt</a></span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/expand_limits.html'>expand_limits</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>bias</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_brewer.html'>scale_fill_brewer</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>
     x <span class='op'>=</span> <span class='st'>"Mean efficiency"</span>, 
     y <span class='op'>=</span> <span class='st'>"Number of samples"</span>
   <span class='op'>)</span>
@@ -2384,36 +2435,36 @@ taxa are columns</code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>ggplot</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Treatment</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_histogram</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_x_log10</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_y_sqrt</span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_fill_brewer</span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>labs</span><span class='op'>(</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Treatment</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_histogram.html'>geom_histogram</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_x_log10</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_y_sqrt</a></span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_brewer.html'>scale_fill_brewer</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>
     x <span class='op'>=</span> <span class='st'>"Mean efficiency"</span>, 
     y <span class='op'>=</span> <span class='st'>"Number of samples"</span>
   <span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>facet_wrap</span><span class='op'>(</span><span class='op'>~</span><span class='va'>Timepoint</span>, ncol <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/facet_wrap.html'>facet_wrap</a></span><span class='op'>(</span><span class='op'>~</span><span class='va'>Timepoint</span>, ncol <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
 </code></pre>
 </div>
 <p><img src="index_files/figure-html5/unnamed-chunk-15-1.svg" width="624" /></p>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span>, <span class='va'>Treatment</span> <span class='op'>!=</span> <span class='st'>"Negative"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>ggplot</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Region</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_histogram</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_x_log10</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_y_sqrt</span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_fill_brewer</span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>labs</span><span class='op'>(</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span>, <span class='va'>Treatment</span> <span class='op'>!=</span> <span class='st'>"Negative"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Region</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_histogram.html'>geom_histogram</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_x_log10</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_y_sqrt</a></span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_brewer.html'>scale_fill_brewer</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>
     x <span class='op'>=</span> <span class='st'>"Mean efficiency"</span>, 
     y <span class='op'>=</span> <span class='st'>"Number of samples"</span>
   <span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>facet_wrap</span><span class='op'>(</span><span class='op'>~</span><span class='va'>Timepoint</span>, ncol <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/facet_wrap.html'>facet_wrap</a></span><span class='op'>(</span><span class='op'>~</span><span class='va'>Timepoint</span>, ncol <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
 </code></pre>
 </div>
 <p><img src="index_files/figure-html5/unnamed-chunk-16-1.svg" width="624" /></p>
@@ -2422,19 +2473,19 @@ taxa are columns</code></pre>
 <p>Are some western genotypes less susceptible?</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span>, <span class='va'>Region</span> <span class='op'>==</span> <span class='st'>"West"</span>,
-    <span class='va'>Treatment</span> <span class='op'>!=</span> <span class='st'>"Negative"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>ggplot</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Genotype</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_histogram</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_x_log10</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_y_sqrt</span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_fill_brewer</span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>labs</span><span class='op'>(</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span>, <span class='va'>Region</span> <span class='op'>==</span> <span class='st'>"West"</span>,
+    <span class='va'>Treatment</span> <span class='op'>!=</span> <span class='st'>"Negative"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Genotype</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_histogram.html'>geom_histogram</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_x_log10</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_y_sqrt</a></span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_brewer.html'>scale_fill_brewer</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>
     x <span class='op'>=</span> <span class='st'>"Mean efficiency"</span>, 
     y <span class='op'>=</span> <span class='st'>"Number of samples"</span>
   <span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>facet_wrap</span><span class='op'>(</span><span class='op'>~</span><span class='va'>Timepoint</span>, ncol <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/facet_wrap.html'>facet_wrap</a></span><span class='op'>(</span><span class='op'>~</span><span class='va'>Timepoint</span>, ncol <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
 </code></pre>
 </div>
 <p><img src="index_files/figure-html5/unnamed-chunk-17-1.svg" width="624" /></p>
@@ -2442,19 +2493,19 @@ taxa are columns</code></pre>
 <p>Eastern?</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span>, <span class='va'>Region</span> <span class='op'>==</span> <span class='st'>"East"</span>,
-    <span class='va'>Treatment</span> <span class='op'>!=</span> <span class='st'>"Negative"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>ggplot</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Genotype</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_histogram</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_x_log10</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_y_sqrt</span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_fill_brewer</span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>labs</span><span class='op'>(</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span>, <span class='va'>Region</span> <span class='op'>==</span> <span class='st'>"East"</span>,
+    <span class='va'>Treatment</span> <span class='op'>!=</span> <span class='st'>"Negative"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Genotype</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_histogram.html'>geom_histogram</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_x_log10</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_y_sqrt</a></span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_brewer.html'>scale_fill_brewer</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>
     x <span class='op'>=</span> <span class='st'>"Mean efficiency"</span>, 
     y <span class='op'>=</span> <span class='st'>"Number of samples"</span>
   <span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>facet_wrap</span><span class='op'>(</span><span class='op'>~</span><span class='va'>Timepoint</span>, ncol <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/facet_wrap.html'>facet_wrap</a></span><span class='op'>(</span><span class='op'>~</span><span class='va'>Timepoint</span>, ncol <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
 </code></pre>
 </div>
 <p><img src="index_files/figure-html5/unnamed-chunk-18-1.svg" width="624" /></p>
@@ -2474,33 +2525,33 @@ taxa are columns</code></pre>
 </ul>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>p1.1</span> <span class='op'>&lt;-</span> <span class='va'>sme</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span>, <span class='va'>Treatment</span> <span class='op'>!=</span> <span class='st'>"Negative"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>ggplot</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Timepoint</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_histogram</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>annotate</span><span class='op'>(</span><span class='st'>"point"</span>, y <span class='op'>=</span> <span class='fl'>200</span>, x <span class='op'>=</span> <span class='va'>bias</span>, color <span class='op'>=</span> <span class='st'>"black"</span>, shape <span class='op'>=</span> <span class='st'>"|"</span>, size <span class='op'>=</span> <span class='fl'>7</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>expand_limits</span><span class='op'>(</span>x <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>bias</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_x_log10</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_y_sqrt</span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_fill_brewer</span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>labs</span><span class='op'>(</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>p1.1</span> <span class='op'>&lt;-</span> <span class='va'>sme</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span>, <span class='va'>Treatment</span> <span class='op'>!=</span> <span class='st'>"Negative"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span><span class='va'>SMRE</span>, fill <span class='op'>=</span> <span class='va'>Timepoint</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_histogram.html'>geom_histogram</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/annotate.html'>annotate</a></span><span class='op'>(</span><span class='st'>"point"</span>, y <span class='op'>=</span> <span class='fl'>200</span>, x <span class='op'>=</span> <span class='va'>bias</span>, color <span class='op'>=</span> <span class='st'>"black"</span>, shape <span class='op'>=</span> <span class='st'>"|"</span>, size <span class='op'>=</span> <span class='fl'>7</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/expand_limits.html'>expand_limits</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>bias</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_x_log10</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_y_sqrt</a></span><span class='op'>(</span>breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>10</span>, <span class='fl'>50</span>, <span class='fl'>100</span>, <span class='fl'>200</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_brewer.html'>scale_fill_brewer</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>
     <span class='co'># x = "Sample mean relative efficiency (SMRE)",</span>
     x <span class='op'>=</span> <span class='st'>"Mean efficiency"</span>, 
     y <span class='op'>=</span> <span class='st'>"Number of samples"</span>
   <span class='op'>)</span>
-<span class='va'>p2.1</span> <span class='op'>&lt;-</span> <span class='va'>sme0</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span>, <span class='va'>Treatment</span> <span class='op'>!=</span> <span class='st'>"Negative"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>ggplot</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span>y <span class='op'>=</span> <span class='va'>Melampsora</span>, x <span class='op'>=</span> <span class='va'>SMRE</span>, color <span class='op'>=</span> <span class='va'>Timepoint</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_point</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>expand_limits</span><span class='op'>(</span>x <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>bias</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_x_log10</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+<span class='va'>p2.1</span> <span class='op'>&lt;-</span> <span class='va'>sme0</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span>, <span class='va'>Treatment</span> <span class='op'>!=</span> <span class='st'>"Negative"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>y <span class='op'>=</span> <span class='va'>Melampsora</span>, x <span class='op'>=</span> <span class='va'>SMRE</span>, color <span class='op'>=</span> <span class='va'>Timepoint</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_point.html'>geom_point</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/expand_limits.html'>expand_limits</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/range.html'>range</a></span><span class='op'>(</span><span class='va'>bias</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_x_log10</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
   <span class='co'># scale_y_sqrt() +</span>
-  <span class='fu'>scale_y_continuous</span><span class='op'>(</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_y_continuous</a></span><span class='op'>(</span>
     trans <span class='op'>=</span> <span class='fu'>scales</span><span class='fu'>::</span><span class='fu'><a href='https://scales.r-lib.org/reference/log_trans.html'>pseudo_log_trans</a></span><span class='op'>(</span>sigma <span class='op'>=</span> <span class='fl'>1e-2</span><span class='op'>)</span>,
     breaks <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0</span>, <span class='fl'>0.01</span>, <span class='fl'>0.1</span>, <span class='fl'>0.5</span>, <span class='fl'>1</span><span class='op'>)</span>
     <span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_color_brewer</span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>labs</span><span class='op'>(</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_brewer.html'>scale_color_brewer</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>
     y <span class='op'>=</span> <span class='st'>"Melampsora proportion"</span>,
     x <span class='op'>=</span> <span class='st'>"Mean efficiency"</span>
   <span class='op'>)</span>
@@ -2509,8 +2560,8 @@ taxa are columns</code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='op'>(</span><span class='va'>p1.1</span> <span class='op'>+</span> <span class='fu'>ggtitle</span><span class='op'>(</span><span class='st'>"Distribution of the mean efficiency across samples"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>/</span> 
-  <span class='op'>(</span><span class='va'>p2.1</span> <span class='op'>+</span> <span class='fu'>ggtitle</span><span class='op'>(</span><span class='st'>"Melampsora proportion vs. mean efficiency"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='op'>(</span><span class='va'>p1.1</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>ggtitle</a></span><span class='op'>(</span><span class='st'>"Distribution of the mean efficiency across samples"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>/</span> 
+  <span class='op'>(</span><span class='va'>p2.1</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>ggtitle</a></span><span class='op'>(</span><span class='st'>"Melampsora proportion vs. mean efficiency"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
   <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_annotation.html'>plot_annotation</a></span><span class='op'>(</span>tag_levels <span class='op'>=</span> <span class='st'>"A"</span><span class='op'>)</span>
 </code></pre>
 </div>
@@ -2524,17 +2575,17 @@ taxa are columns</code></pre>
 <p>To pick from the mock samples:</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme0</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Mock"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>select</span><span class='op'>(</span><span class='va'>Sample</span>, <span class='va'>SMRE</span>, <span class='va'>Melampsora</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>arrange</span><span class='op'>(</span><span class='va'>SMRE</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>mutate</span><span class='op'>(</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme0</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Mock"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span><span class='va'>Sample</span>, <span class='va'>SMRE</span>, <span class='va'>Melampsora</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/arrange.html'>arrange</a></span><span class='op'>(</span><span class='va'>SMRE</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>
     log10_SMRE <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Log.html'>log10</a></span><span class='op'>(</span><span class='va'>SMRE</span><span class='op'>)</span>,
     diff <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='cn'>NA</span>, <span class='fu'><a href='https://rdrr.io/r/base/diff.html'>diff</a></span><span class='op'>(</span><span class='va'>log10_SMRE</span><span class='op'>)</span><span class='op'>)</span>
   <span class='op'>)</span>
 </code></pre>
 </div>
-<pre><code># A tibble: 10 x 5
+<pre><code># A tibble: 10 × 5
    Sample   SMRE Melampsora log10_SMRE     diff
    &lt;chr&gt;   &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;
  1 Mock.3  0.541    0.00782   -0.267   NA      
@@ -2561,17 +2612,17 @@ taxa are columns</code></pre>
 </div>
 <pre><code>OTU Table:          [ 9 taxa and 10 samples ]:
 Taxa are columns
-        Melampsora Dioszegia Epicoccum Fusarium Penicillium
-Mock.1      0.0538    0.0108    0.0108   0.269       0.0108
-Mock.2      0.0538    0.269     0.269    0.0108      0.0108
-Mock.3      0.0108    0.269     0.0538   0.0108      0.269 
-Mock.4      0.269     0.0538    0.0108   0.0538      0.269 
-Mock.5      0.269     0.0108    0.0108   0.269       0.0538
-Mock.6      0.0538    0.0538    0.0538   0.0108      0.0108
-Mock.7      0.0108    0.269     0.0538   0.269       0.269 
-Mock.8      0.269     0.0108    0.269    0.0538      0.0538
-Mock.9      0.0108    0.0538    0.269    0.0538      0.0538
-Mock.10     0.111     0.111     0.111    0.111       0.111 
+           Melampsora Dioszegia Epicoccum Fusarium Penicillium
+ 1 Mock.1      0.0538    0.0108    0.0108   0.269       0.0108
+ 2 Mock.2      0.0538    0.269     0.269    0.0108      0.0108
+ 3 Mock.3      0.0108    0.269     0.0538   0.0108      0.269 
+ 4 Mock.4      0.269     0.0538    0.0108   0.0538      0.269 
+ 5 Mock.5      0.269     0.0108    0.0108   0.269       0.0538
+ 6 Mock.6      0.0538    0.0538    0.0538   0.0108      0.0108
+ 7 Mock.7      0.0108    0.269     0.0538   0.269       0.269 
+ 8 Mock.8      0.269     0.0108    0.269    0.0538      0.0538
+ 9 Mock.9      0.0108    0.0538    0.269    0.0538      0.0538
+10 Mock.10     0.111     0.111     0.111    0.111       0.111 
 # … with 4 more taxa (columns)</code></pre>
 <div class="sourceCode">
 <pre class="sourceCode r"><code class="sourceCode r"><span class='va'>ps.mock.pseudo</span>
@@ -2587,35 +2638,35 @@ taxa are columns</code></pre>
 <p>We can use <code>metacal::pairwise_ratios()</code> to compute the FCs in abundances between all samples + for all taxa, given a phyloseq object.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>fcs</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>Actual <span class='op'>=</span> <span class='va'>mock_actual</span>, Observed <span class='op'>=</span> <span class='va'>ps.mock.pseudo</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>map</span><span class='op'>(</span><span class='va'>transform_sample_counts</span>, <span class='va'>close_elts</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>map</span><span class='op'>(</span><span class='va'>pairwise_ratios</span>, margin <span class='op'>=</span> <span class='st'>"samples"</span>, filter <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>map_dfr</span><span class='op'>(</span><span class='va'>psmelt</span>, .id <span class='op'>=</span> <span class='st'>"Type"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>fcs</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>Actual <span class='op'>=</span> <span class='va'>mock_actual</span>, Observed <span class='op'>=</span> <span class='va'>ps.mock.pseudo</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://purrr.tidyverse.org/reference/map.html'>map</a></span><span class='op'>(</span><span class='va'>transform_sample_counts</span>, <span class='va'>close_elts</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://purrr.tidyverse.org/reference/map.html'>map</a></span><span class='op'>(</span><span class='va'>pairwise_ratios</span>, margin <span class='op'>=</span> <span class='st'>"samples"</span>, filter <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://purrr.tidyverse.org/reference/map.html'>map_dfr</a></span><span class='op'>(</span><span class='va'>psmelt</span>, .id <span class='op'>=</span> <span class='st'>"Type"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
   <span class='co'># redo sample.1 and sample.2 since missing for the mock</span>
-  <span class='fu'>select</span><span class='op'>(</span><span class='op'>-</span><span class='va'>sample.1</span>, <span class='op'>-</span><span class='va'>sample.2</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>rename</span><span class='op'>(</span>Pair <span class='op'>=</span> <span class='va'>Sample</span>, Fold_change <span class='op'>=</span> <span class='va'>Abundance</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>separate</span><span class='op'>(</span><span class='va'>Pair</span>, <span class='fu'>str_c</span><span class='op'>(</span><span class='st'>"Sample."</span>, <span class='fl'>1</span><span class='op'>:</span><span class='fl'>2</span><span class='op'>)</span>, sep <span class='op'>=</span> <span class='st'>":"</span>, remove <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>mutate</span><span class='op'>(</span><span class='fu'>across</span><span class='op'>(</span><span class='va'>OTU</span>, <span class='va'>factor</span>, levels <span class='op'>=</span> <span class='va'>bias</span> <span class='op'>%&gt;%</span> <span class='va'>sort</span> <span class='op'>%&gt;%</span> <span class='va'>names</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>left_join</span><span class='op'>(</span><span class='va'>sme0</span> <span class='op'>%&gt;%</span> <span class='fu'>select</span><span class='op'>(</span>Sample.1 <span class='op'>=</span> <span class='va'>Sample</span>, <span class='va'>SMRE</span>, <span class='va'>Melampsora</span><span class='op'>)</span>, 
-    by <span class='op'>=</span> <span class='st'>"Sample.1"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>left_join</span><span class='op'>(</span><span class='va'>sme0</span> <span class='op'>%&gt;%</span> <span class='fu'>select</span><span class='op'>(</span>Sample.2 <span class='op'>=</span> <span class='va'>Sample</span>, <span class='va'>SMRE</span>, <span class='va'>Melampsora</span><span class='op'>)</span>, 
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span><span class='op'>-</span><span class='va'>sample.1</span>, <span class='op'>-</span><span class='va'>sample.2</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/rename.html'>rename</a></span><span class='op'>(</span>Pair <span class='op'>=</span> <span class='va'>Sample</span>, Fold_change <span class='op'>=</span> <span class='va'>Abundance</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://tidyr.tidyverse.org/reference/separate.html'>separate</a></span><span class='op'>(</span><span class='va'>Pair</span>, <span class='fu'><a href='https://stringr.tidyverse.org/reference/str_c.html'>str_c</a></span><span class='op'>(</span><span class='st'>"Sample."</span>, <span class='fl'>1</span><span class='op'>:</span><span class='fl'>2</span><span class='op'>)</span>, sep <span class='op'>=</span> <span class='st'>":"</span>, remove <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/across.html'>across</a></span><span class='op'>(</span><span class='va'>OTU</span>, <span class='va'>factor</span>, levels <span class='op'>=</span> <span class='va'>bias</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='va'>sort</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='va'>names</span><span class='op'>)</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>left_join</a></span><span class='op'>(</span><span class='va'>sme0</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span>Sample.1 <span class='op'>=</span> <span class='va'>Sample</span>, <span class='va'>SMRE</span>, <span class='va'>Melampsora</span><span class='op'>)</span>, 
+    by <span class='op'>=</span> <span class='st'>"Sample.1"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>left_join</a></span><span class='op'>(</span><span class='va'>sme0</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span>Sample.2 <span class='op'>=</span> <span class='va'>Sample</span>, <span class='va'>SMRE</span>, <span class='va'>Melampsora</span><span class='op'>)</span>, 
     by <span class='op'>=</span> <span class='st'>"Sample.2"</span>, suffix <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>".1"</span>, <span class='st'>".2"</span><span class='op'>)</span><span class='op'>)</span>
 </code></pre>
 </div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>fcs</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Pair</span> <span class='op'>%in%</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Mock.5:Mock.3"</span>, <span class='st'>"Mock.9:Mock.7"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>ggplot</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span>y <span class='op'>=</span> <span class='va'>OTU</span>, x <span class='op'>=</span> <span class='va'>Fold_change</span>, shape <span class='op'>=</span> <span class='va'>Type</span>, color <span class='op'>=</span> <span class='va'>Type</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>facet_grid</span><span class='op'>(</span><span class='va'>.</span> <span class='op'>~</span> <span class='va'>Pair</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_shape_manual</span><span class='op'>(</span>values <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>Actual <span class='op'>=</span> <span class='fl'>3</span>, Observed <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_color_brewer</span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span>, palette <span class='op'>=</span> <span class='fl'>6</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_vline</span><span class='op'>(</span>xintercept <span class='op'>=</span> <span class='fl'>1</span>, color <span class='op'>=</span> <span class='st'>"black"</span>, size <span class='op'>=</span> <span class='fl'>0.2</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_point</span><span class='op'>(</span>size <span class='op'>=</span> <span class='fl'>2</span><span class='op'>)</span> <span class='op'>+</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>fcs</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Pair</span> <span class='op'><a href='https://rdrr.io/r/base/match.html'>%in%</a></span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"Mock.5:Mock.3"</span>, <span class='st'>"Mock.9:Mock.7"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>y <span class='op'>=</span> <span class='va'>OTU</span>, x <span class='op'>=</span> <span class='va'>Fold_change</span>, shape <span class='op'>=</span> <span class='va'>Type</span>, color <span class='op'>=</span> <span class='va'>Type</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/facet_grid.html'>facet_grid</a></span><span class='op'>(</span><span class='va'>.</span> <span class='op'>~</span> <span class='va'>Pair</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_manual.html'>scale_shape_manual</a></span><span class='op'>(</span>values <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span>Actual <span class='op'>=</span> <span class='fl'>3</span>, Observed <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_brewer.html'>scale_color_brewer</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span>, palette <span class='op'>=</span> <span class='fl'>6</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_abline.html'>geom_vline</a></span><span class='op'>(</span>xintercept <span class='op'>=</span> <span class='fl'>1</span>, color <span class='op'>=</span> <span class='st'>"black"</span>, size <span class='op'>=</span> <span class='fl'>0.2</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_point.html'>geom_point</a></span><span class='op'>(</span>size <span class='op'>=</span> <span class='fl'>2</span><span class='op'>)</span> <span class='op'>+</span>
   <span class='fu'><a href='https://wilkelab.org/cowplot/reference/theme_minimal_grid.html'>theme_minimal_hgrid</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_x_log10</span><span class='op'>(</span>limits <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>3e-3</span>, <span class='fl'>1e2</span><span class='op'>)</span>, oob <span class='op'>=</span> <span class='fu'>scales</span><span class='fu'>::</span><span class='va'><a href='https://scales.r-lib.org/reference/oob.html'>squish</a></span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>labs</span><span class='op'>(</span>x <span class='op'>=</span> <span class='st'>"Fold change in proportion"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_x_log10</a></span><span class='op'>(</span>limits <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>3e-3</span>, <span class='fl'>1e2</span><span class='op'>)</span>, oob <span class='op'>=</span> <span class='fu'>scales</span><span class='fu'>::</span><span class='va'><a href='https://scales.r-lib.org/reference/oob.html'>squish</a></span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='st'>"Fold change in proportion"</span><span class='op'>)</span> <span class='op'>+</span>
   <span class='fu'><a href='https://patchwork.data-imaginist.com/reference/plot_annotation.html'>plot_annotation</a></span><span class='op'>(</span>
     title <span class='op'>=</span> <span class='st'>"Actual and observed fold changes between pairs of mocks"</span>
   <span class='op'>)</span>
@@ -2625,7 +2676,7 @@ taxa are columns</code></pre>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='fu'>ggsave</span><span class='op'>(</span><span class='st'>"/tmp/leopold2020-fc-mock-examples.png"</span>, units <span class='op'>=</span> <span class='st'>"in"</span>,
+<pre class="sourceCode r"><code class="sourceCode r"><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsave.html'>ggsave</a></span><span class='op'>(</span><span class='st'>"/tmp/leopold2020-fc-mock-examples.png"</span>, units <span class='op'>=</span> <span class='st'>"in"</span>,
   width <span class='op'>=</span> <span class='fl'>6</span>, height <span class='op'>=</span> <span class='fl'>3</span>, scale <span class='op'>=</span> <span class='fl'>1.5</span><span class='op'>)</span>
 </code></pre>
 </div>
@@ -2639,26 +2690,26 @@ taxa are columns</code></pre>
 </ul>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>lvls</span> <span class='op'>&lt;-</span> <span class='va'>sme0</span> <span class='op'>%&gt;%</span> <span class='fu'>arrange</span><span class='op'>(</span><span class='va'>SMRE</span><span class='op'>)</span> <span class='op'>%&gt;%</span> <span class='fu'>pull</span><span class='op'>(</span><span class='va'>Sample</span><span class='op'>)</span>
-<span class='va'>fcs0</span> <span class='op'>&lt;-</span> <span class='va'>fcs</span> <span class='op'>%&gt;%</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>lvls</span> <span class='op'>&lt;-</span> <span class='va'>sme0</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/arrange.html'>arrange</a></span><span class='op'>(</span><span class='va'>SMRE</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/pull.html'>pull</a></span><span class='op'>(</span><span class='va'>Sample</span><span class='op'>)</span>
+<span class='va'>fcs0</span> <span class='op'>&lt;-</span> <span class='va'>fcs</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
   <span class='co'># filter(Sample.1 &lt; Sample.2) %&gt;%</span>
-  <span class='fu'>select</span><span class='op'>(</span><span class='va'>Type</span><span class='op'>:</span><span class='va'>Fold_change</span>, <span class='va'>SMRE.1</span><span class='op'>:</span><span class='va'>Melampsora.2</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>pivot_wider</span><span class='op'>(</span>names_from <span class='op'>=</span> <span class='va'>Type</span>, values_from <span class='op'>=</span> <span class='va'>Fold_change</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>mutate</span><span class='op'>(</span><span class='fu'>across</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='va'>Sample.1</span>, <span class='va'>Sample.2</span><span class='op'>)</span>, <span class='va'>factor</span>, levels <span class='op'>=</span> <span class='va'>lvls</span><span class='op'>)</span><span class='op'>)</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span><span class='va'>Type</span><span class='op'>:</span><span class='va'>Fold_change</span>, <span class='va'>SMRE.1</span><span class='op'>:</span><span class='va'>Melampsora.2</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://tidyr.tidyverse.org/reference/pivot_wider.html'>pivot_wider</a></span><span class='op'>(</span>names_from <span class='op'>=</span> <span class='va'>Type</span>, values_from <span class='op'>=</span> <span class='va'>Fold_change</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/across.html'>across</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='va'>Sample.1</span>, <span class='va'>Sample.2</span><span class='op'>)</span>, <span class='va'>factor</span>, levels <span class='op'>=</span> <span class='va'>lvls</span><span class='op'>)</span><span class='op'>)</span>
 </code></pre>
 </div>
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>fcs0</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/integer.html'>as.integer</a></span><span class='op'>(</span><span class='va'>Sample.1</span><span class='op'>)</span> <span class='op'>&lt;</span> <span class='fu'><a href='https://rdrr.io/r/base/integer.html'>as.integer</a></span><span class='op'>(</span><span class='va'>Sample.2</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>ggplot</span><span class='op'>(</span><span class='fu'>aes</span><span class='op'>(</span><span class='va'>Actual</span>, <span class='va'>Observed</span>, color <span class='op'>=</span> <span class='va'>OTU</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_abline</span><span class='op'>(</span>color <span class='op'>=</span> <span class='st'>"grey"</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>geom_point</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_x_log10</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_y_log10</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>facet_grid</span><span class='op'>(</span><span class='va'>Sample.1</span> <span class='op'>~</span> <span class='va'>Sample.2</span><span class='op'>)</span> <span class='op'>+</span>
-  <span class='fu'>scale_color_brewer</span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span>, palette <span class='op'>=</span> <span class='fl'>3</span><span class='op'>)</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>fcs0</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/integer.html'>as.integer</a></span><span class='op'>(</span><span class='va'>Sample.1</span><span class='op'>)</span> <span class='op'>&lt;</span> <span class='fu'><a href='https://rdrr.io/r/base/integer.html'>as.integer</a></span><span class='op'>(</span><span class='va'>Sample.2</span><span class='op'>)</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span><span class='va'>Actual</span>, <span class='va'>Observed</span>, color <span class='op'>=</span> <span class='va'>OTU</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_abline.html'>geom_abline</a></span><span class='op'>(</span>color <span class='op'>=</span> <span class='st'>"grey"</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_point.html'>geom_point</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_x_log10</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_continuous.html'>scale_y_log10</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/facet_grid.html'>facet_grid</a></span><span class='op'>(</span><span class='va'>Sample.1</span> <span class='op'>~</span> <span class='va'>Sample.2</span><span class='op'>)</span> <span class='op'>+</span>
+  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_brewer.html'>scale_color_brewer</a></span><span class='op'>(</span>type <span class='op'>=</span> <span class='st'>"qual"</span>, palette <span class='op'>=</span> <span class='fl'>3</span><span class='op'>)</span>
 </code></pre>
 </div>
 <p><img src="index_files/figure-html5/unnamed-chunk-27-1.svg" width="624" /></p>
@@ -2667,15 +2718,15 @@ taxa are columns</code></pre>
 <p>Check that there is indeed very high correlations; remove the Epicoccum Mock-5 dropout first to avoid major distortions just from that.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>corrs</span> <span class='op'>&lt;-</span> <span class='va'>fcs0</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>corrs</span> <span class='op'>&lt;-</span> <span class='va'>fcs0</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span>
     <span class='va'>Sample.1</span> <span class='op'>!=</span> <span class='va'>Sample.2</span>,
     <span class='op'>!</span><span class='op'>(</span><span class='op'>(</span><span class='va'>Sample.1</span> <span class='op'>==</span> <span class='st'>"Mock.5"</span> <span class='op'>|</span> <span class='va'>Sample.2</span> <span class='op'>==</span> <span class='st'>"Mock.5"</span><span class='op'>)</span> <span class='op'>&amp;</span> <span class='va'>OTU</span> <span class='op'>==</span> <span class='st'>"Epicoccum"</span><span class='op'>)</span>
-  <span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>mutate</span><span class='op'>(</span><span class='fu'>across</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='va'>Actual</span>, <span class='va'>Observed</span><span class='op'>)</span>, <span class='va'>log10</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>group_by</span><span class='op'>(</span><span class='va'>Pair</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>summarize</span><span class='op'>(</span>correlation <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/cor.html'>cor</a></span><span class='op'>(</span><span class='va'>Actual</span>, <span class='va'>Observed</span>, method <span class='op'>=</span> <span class='st'>"pearson"</span><span class='op'>)</span><span class='op'>)</span>
-<span class='va'>corrs</span> <span class='op'>%&gt;%</span> <span class='fu'>pull</span><span class='op'>(</span><span class='va'>correlation</span><span class='op'>)</span> <span class='op'>%&gt;%</span> <span class='va'>summary</span>
+  <span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/across.html'>across</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='va'>Actual</span>, <span class='va'>Observed</span><span class='op'>)</span>, <span class='va'>log10</span><span class='op'>)</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>Pair</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/summarise.html'>summarize</a></span><span class='op'>(</span>correlation <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/cor.html'>cor</a></span><span class='op'>(</span><span class='va'>Actual</span>, <span class='va'>Observed</span>, method <span class='op'>=</span> <span class='st'>"pearson"</span><span class='op'>)</span><span class='op'>)</span>
+<span class='va'>corrs</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/pull.html'>pull</a></span><span class='op'>(</span><span class='va'>correlation</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span> <span class='va'>summary</span>
 </code></pre>
 </div>
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
@@ -2689,17 +2740,17 @@ taxa are columns</code></pre>
 <p>We could just try picking a high and low Melampsora sample - perhaps from the mode of the peaks, rather than the extreme.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme0</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='https://rdrr.io/r/stats/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>select</span><span class='op'>(</span><span class='va'>Sample</span>, <span class='va'>SMRE</span>, <span class='va'>Melampsora</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>arrange</span><span class='op'>(</span><span class='va'>SMRE</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
-  <span class='fu'>mutate</span><span class='op'>(</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='va'>sme0</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/filter.html'>filter</a></span><span class='op'>(</span><span class='va'>Samp_type</span> <span class='op'>==</span> <span class='st'>"Experiment"</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span><span class='va'>Sample</span>, <span class='va'>SMRE</span>, <span class='va'>Melampsora</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/arrange.html'>arrange</a></span><span class='op'>(</span><span class='va'>SMRE</span><span class='op'>)</span> <span class='op'><a href='https://mikemc.github.io/speedyseq/reference/pipe.html'>%&gt;%</a></span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>
     log10_SMRE <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Log.html'>log10</a></span><span class='op'>(</span><span class='va'>SMRE</span><span class='op'>)</span>,
     diff <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='cn'>NA</span>, <span class='fu'><a href='https://rdrr.io/r/base/diff.html'>diff</a></span><span class='op'>(</span><span class='va'>log10_SMRE</span><span class='op'>)</span><span class='op'>)</span>
   <span class='op'>)</span>
 </code></pre>
 </div>
-<pre><code># A tibble: 548 x 5
+<pre><code># A tibble: 548 × 5
    Sample         SMRE Melampsora log10_SMRE       diff
    &lt;chr&gt;         &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;
  1 G12.T6.R4.TP1 0.996  0.00182     -0.00185 NA        
@@ -2721,136 +2772,147 @@ Click for session info
 </summary>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span class='fu'>sessioninfo</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/sessioninfo/man/session_info.html'>session_info</a></span><span class='op'>(</span><span class='op'>)</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class='fu'>sessioninfo</span><span class='fu'>::</span><span class='fu'><a href='https://r-lib.github.io/sessioninfo/reference/session_info.html'>session_info</a></span><span class='op'>(</span><span class='op'>)</span>
 </code></pre>
 </div>
-<pre><code>─ Session info ──────────────────────────────────────────────────────────────────
- setting  value                       
- version  R version 4.0.5 (2021-03-31)
- os       Arch Linux                  
- system   x86_64, linux-gnu           
- ui       X11                         
- language (EN)                        
- collate  en_US.UTF-8                 
- ctype    en_US.UTF-8                 
- tz       America/New_York            
- date     2021-04-21                  
+<pre><code>─ Session info ───────────────────────────────────────────────────────────
+ setting  value
+ version  R version 4.1.2 (2021-11-01)
+ os       Arch Linux
+ system   x86_64, linux-gnu
+ ui       X11
+ language (EN)
+ collate  en_US.UTF-8
+ ctype    en_US.UTF-8
+ tz       America/New_York
+ date     2022-02-07
+ pandoc   2.14.1 @ /usr/bin/ (via rmarkdown)
 
-─ Packages ──────────────────────────────────────────────────────────────────────
- package      * version    date       lib source                           
- ade4           1.7-16     2020-10-28 [1] CRAN (R 4.0.3)                   
- ape            5.4-1      2020-08-13 [1] CRAN (R 4.0.2)                   
- assertthat     0.2.1      2019-03-21 [1] CRAN (R 4.0.0)                   
- backports      1.2.1      2020-12-09 [1] CRAN (R 4.0.3)                   
- beeswarm       0.3.1      2021-03-07 [1] CRAN (R 4.0.5)                   
- Biobase        2.50.0     2020-10-27 [1] Bioconductor                     
- BiocGenerics   0.36.0     2020-10-27 [1] Bioconductor                     
- biomformat     1.18.0     2020-10-27 [1] Bioconductor                     
- Biostrings     2.58.0     2020-10-27 [1] Bioconductor                     
- broom          0.7.6      2021-04-05 [1] CRAN (R 4.0.5)                   
- bslib          0.2.4      2021-01-25 [1] CRAN (R 4.0.4)                   
- cellranger     1.1.0      2016-07-27 [1] CRAN (R 4.0.0)                   
- cli            2.4.0      2021-04-05 [1] CRAN (R 4.0.5)                   
- cluster        2.1.1      2021-02-14 [2] CRAN (R 4.0.5)                   
- codetools      0.2-18     2020-11-04 [2] CRAN (R 4.0.5)                   
- colorspace     2.0-0      2020-11-11 [1] CRAN (R 4.0.3)                   
- cowplot      * 1.1.1      2020-12-30 [1] CRAN (R 4.0.4)                   
- crayon         1.4.1      2021-02-08 [1] CRAN (R 4.0.4)                   
- data.table     1.14.0     2021-02-21 [1] CRAN (R 4.0.4)                   
- DBI            1.1.1      2021-01-15 [1] CRAN (R 4.0.4)                   
- dbplyr         2.1.1      2021-04-06 [1] CRAN (R 4.0.5)                   
- digest         0.6.27     2020-10-24 [1] CRAN (R 4.0.3)                   
- distill        1.2.4      2021-04-05 [1] Github (rstudio/distill@3ec93f1) 
- downlit        0.2.1      2020-11-04 [1] CRAN (R 4.0.3)                   
- dplyr        * 1.0.5      2021-03-05 [1] CRAN (R 4.0.4)                   
- ellipsis       0.3.1      2020-05-15 [1] CRAN (R 4.0.0)                   
- evaluate       0.14       2019-05-28 [1] CRAN (R 4.0.0)                   
- fansi          0.4.2      2021-01-15 [1] CRAN (R 4.0.3)                   
- farver         2.1.0      2021-02-28 [1] CRAN (R 4.0.4)                   
- forcats      * 0.5.1      2021-01-27 [1] CRAN (R 4.0.4)                   
- foreach        1.5.1      2020-10-15 [1] CRAN (R 4.0.3)                   
- fs             1.5.0      2020-07-31 [1] CRAN (R 4.0.2)                   
- generics       0.1.0      2020-10-31 [1] CRAN (R 4.0.3)                   
- ggbeeswarm   * 0.6.0      2017-08-07 [1] CRAN (R 4.0.0)                   
- ggplot2      * 3.3.3      2020-12-30 [1] CRAN (R 4.0.4)                   
- glue           1.4.2      2020-08-27 [1] CRAN (R 4.0.2)                   
- gtable         0.3.0      2019-03-25 [1] CRAN (R 4.0.0)                   
- haven          2.3.1      2020-06-01 [1] CRAN (R 4.0.1)                   
- here           1.0.1      2020-12-13 [1] CRAN (R 4.0.3)                   
- highr          0.8        2019-03-20 [1] CRAN (R 4.0.0)                   
- hms            1.0.0      2021-01-13 [1] CRAN (R 4.0.4)                   
- htmltools      0.5.1.1    2021-01-22 [1] CRAN (R 4.0.3)                   
- httr           1.4.2      2020-07-20 [1] CRAN (R 4.0.2)                   
- igraph         1.2.6      2020-10-06 [1] CRAN (R 4.0.3)                   
- IRanges        2.24.1     2020-12-12 [1] Bioconductor                     
- iterators      1.0.13     2020-10-15 [1] CRAN (R 4.0.3)                   
- jquerylib      0.1.3      2020-12-17 [1] CRAN (R 4.0.4)                   
- jsonlite       1.7.2      2020-12-09 [1] CRAN (R 4.0.3)                   
- knitr          1.31       2021-01-27 [1] CRAN (R 4.0.3)                   
- lattice        0.20-41    2020-04-02 [2] CRAN (R 4.0.5)                   
- lifecycle      1.0.0      2021-02-15 [1] CRAN (R 4.0.4)                   
- lubridate      1.7.10     2021-02-26 [1] CRAN (R 4.0.4)                   
- magrittr       2.0.1      2020-11-17 [1] CRAN (R 4.0.3)                   
- MASS           7.3-53.1   2021-02-12 [2] CRAN (R 4.0.5)                   
- Matrix         1.3-2      2021-01-06 [2] CRAN (R 4.0.5)                   
- metacal      * 0.2.0      2021-04-21 [1] Github (mikemc/metacal@cf3a3c7)  
- mgcv           1.8-34     2021-02-16 [2] CRAN (R 4.0.5)                   
- modelr         0.1.8      2020-05-19 [1] CRAN (R 4.0.0)                   
- multtest       2.46.0     2020-10-27 [1] Bioconductor                     
- munsell        0.5.0      2018-06-12 [1] CRAN (R 4.0.0)                   
- nlme           3.1-152    2021-02-04 [2] CRAN (R 4.0.5)                   
- nvimcom      * 0.9-102    2021-04-05 [1] local                            
- patchwork    * 1.1.1      2020-12-17 [1] CRAN (R 4.0.3)                   
- permute        0.9-5      2019-03-12 [1] CRAN (R 4.0.0)                   
- phyloseq     * 1.34.0     2020-10-27 [1] Bioconductor                     
- pillar         1.6.0      2021-04-13 [1] CRAN (R 4.0.5)                   
- pkgconfig      2.0.3      2019-09-22 [1] CRAN (R 4.0.0)                   
- plyr           1.8.6      2020-03-03 [1] CRAN (R 4.0.0)                   
- prettyunits    1.1.1      2020-01-24 [1] CRAN (R 4.0.0)                   
- progress       1.2.2      2019-05-16 [1] CRAN (R 4.0.2)                   
- ps             1.6.0      2021-02-28 [1] CRAN (R 4.0.4)                   
- purrr        * 0.3.4      2020-04-17 [1] CRAN (R 4.0.0)                   
- R6             2.5.0      2020-10-28 [1] CRAN (R 4.0.3)                   
- RColorBrewer   1.1-2      2014-12-07 [1] CRAN (R 4.0.0)                   
- Rcpp           1.0.6      2021-01-15 [1] CRAN (R 4.0.3)                   
- readr        * 1.4.0      2020-10-05 [1] CRAN (R 4.0.3)                   
- readxl         1.3.1      2019-03-13 [1] CRAN (R 4.0.0)                   
- reprex         2.0.0      2021-04-02 [1] CRAN (R 4.0.5)                   
- reshape2       1.4.4      2020-04-09 [1] CRAN (R 4.0.0)                   
- rhdf5          2.34.0     2020-10-27 [1] Bioconductor                     
- rhdf5filters   1.2.0      2020-10-27 [1] Bioconductor                     
- Rhdf5lib       1.12.1     2021-01-26 [1] Bioconductor                     
- rlang          0.4.10     2020-12-30 [1] CRAN (R 4.0.3)                   
- rmarkdown    * 2.7        2021-02-19 [1] CRAN (R 4.0.4)                   
- rprojroot      2.0.2      2020-11-15 [1] CRAN (R 4.0.3)                   
- rstudioapi     0.13       2020-11-12 [1] CRAN (R 4.0.3)                   
- rvest          1.0.0      2021-03-09 [1] CRAN (R 4.0.5)                   
- S4Vectors      0.28.1     2020-12-09 [1] Bioconductor                     
- sass           0.3.1      2021-01-24 [1] CRAN (R 4.0.4)                   
- scales         1.1.1      2020-05-11 [1] CRAN (R 4.0.0)                   
- sessioninfo    1.1.1      2018-11-05 [1] CRAN (R 4.0.0)                   
- speedyseq    * 0.5.3.9001 2020-10-06 [1] Github (mikemc/speedyseq@8daed32)
- stringi        1.5.3      2020-09-09 [1] CRAN (R 4.0.3)                   
- stringr      * 1.4.0      2019-02-10 [1] CRAN (R 4.0.0)                   
- survival       3.2-10     2021-03-16 [2] CRAN (R 4.0.5)                   
- tibble       * 3.1.1      2021-04-18 [1] CRAN (R 4.0.5)                   
- tidyr        * 1.1.3      2021-03-03 [1] CRAN (R 4.0.4)                   
- tidyselect     1.1.0      2020-05-11 [1] CRAN (R 4.0.0)                   
- tidyverse    * 1.3.0      2019-11-21 [1] CRAN (R 4.0.0)                   
- useful         1.2.6      2018-10-08 [1] CRAN (R 4.0.0)                   
- utf8           1.2.1      2021-03-12 [1] CRAN (R 4.0.5)                   
- vctrs          0.3.7      2021-03-29 [1] CRAN (R 4.0.5)                   
- vegan          2.5-7      2020-11-28 [1] CRAN (R 4.0.3)                   
- vipor          0.4.5      2017-03-22 [1] CRAN (R 4.0.0)                   
- withr          2.4.2      2021-04-18 [1] CRAN (R 4.0.5)                   
- xfun           0.22       2021-03-11 [1] CRAN (R 4.0.5)                   
- xml2           1.3.2      2020-04-23 [1] CRAN (R 4.0.0)                   
- XVector        0.30.0     2020-10-27 [1] Bioconductor                     
- yaml           2.2.1      2020-02-01 [1] CRAN (R 4.0.0)                   
- zlibbioc       1.36.0     2020-10-27 [1] Bioconductor                     
+─ Packages ───────────────────────────────────────────────────────────────
+ package          * version    date (UTC) lib source
+ ade4               1.7-18     2021-09-16 [1] CRAN (R 4.1.1)
+ ape                5.6-1      2022-01-07 [1] CRAN (R 4.1.2)
+ assertthat         0.2.1      2019-03-21 [1] CRAN (R 4.0.0)
+ backports          1.4.1      2021-12-13 [1] CRAN (R 4.1.2)
+ beeswarm           0.4.0      2021-06-01 [1] CRAN (R 4.1.0)
+ Biobase            2.52.0     2021-05-19 [1] Bioconductor
+ BiocGenerics       0.38.0     2021-05-19 [1] Bioconductor
+ biomformat         1.20.0     2021-05-19 [1] Bioconductor
+ Biostrings         2.60.2     2021-08-05 [1] Bioconductor
+ bitops             1.0-7      2021-04-24 [1] CRAN (R 4.1.0)
+ broom            * 0.7.11     2022-01-03 [1] CRAN (R 4.1.2)
+ bslib              0.3.1      2021-10-06 [1] CRAN (R 4.1.1)
+ cachem             1.0.6      2021-08-19 [1] CRAN (R 4.1.1)
+ cellranger         1.1.0      2016-07-27 [1] CRAN (R 4.0.0)
+ cli                3.1.1      2022-01-20 [1] CRAN (R 4.1.2)
+ cluster            2.1.2      2021-04-17 [2] CRAN (R 4.1.2)
+ codetools          0.2-18     2020-11-04 [2] CRAN (R 4.1.2)
+ colorspace         2.0-2      2021-08-11 [1] R-Forge (R 4.1.1)
+ cowplot          * 1.1.1      2021-08-27 [1] Github (wilkelab/cowplot@555c9ae)
+ crayon             1.4.2      2021-10-29 [1] CRAN (R 4.1.1)
+ data.table         1.14.2     2021-09-27 [1] CRAN (R 4.1.1)
+ DBI                1.1.2      2021-12-20 [1] CRAN (R 4.1.2)
+ dbplyr             2.1.1      2021-04-06 [1] CRAN (R 4.0.5)
+ digest             0.6.29     2021-12-01 [1] CRAN (R 4.1.2)
+ distill            1.3        2021-10-13 [1] CRAN (R 4.1.1)
+ downlit            0.4.0      2021-10-29 [1] CRAN (R 4.1.2)
+ dplyr            * 1.0.7      2021-06-18 [1] CRAN (R 4.1.0)
+ ellipsis           0.3.2      2021-04-29 [1] CRAN (R 4.1.0)
+ evaluate           0.14       2019-05-28 [1] CRAN (R 4.0.0)
+ fansi              1.0.2      2022-01-14 [1] CRAN (R 4.1.2)
+ farver             2.1.0      2021-02-28 [1] CRAN (R 4.0.4)
+ fastmap            1.1.0      2021-01-25 [1] CRAN (R 4.0.4)
+ forcats          * 0.5.1      2021-01-27 [1] CRAN (R 4.0.4)
+ foreach            1.5.1      2020-10-15 [1] CRAN (R 4.0.3)
+ fs                 1.5.2      2021-12-08 [1] CRAN (R 4.1.2)
+ generics           0.1.2      2022-01-31 [1] CRAN (R 4.1.2)
+ GenomeInfoDb       1.28.4     2021-09-05 [1] Bioconductor
+ GenomeInfoDbData   1.2.6      2021-05-31 [1] Bioconductor
+ ggbeeswarm       * 0.6.0      2017-08-07 [1] CRAN (R 4.0.0)
+ ggplot2          * 3.3.5      2021-06-25 [1] CRAN (R 4.1.0)
+ glue               1.6.1      2022-01-22 [1] CRAN (R 4.1.2)
+ gtable             0.3.0      2019-03-25 [1] CRAN (R 4.0.0)
+ haven              2.4.3      2021-08-04 [1] CRAN (R 4.1.1)
+ here               1.0.1      2020-12-13 [1] CRAN (R 4.0.5)
+ highr              0.9        2021-04-16 [1] CRAN (R 4.1.0)
+ hms                1.1.1      2021-09-26 [1] CRAN (R 4.1.1)
+ htmltools          0.5.2      2021-08-25 [1] CRAN (R 4.1.1)
+ httr               1.4.2      2020-07-20 [1] CRAN (R 4.0.2)
+ igraph             1.2.11     2022-01-04 [1] CRAN (R 4.1.2)
+ IRanges            2.26.0     2021-05-19 [1] Bioconductor
+ iterators          1.0.13     2020-10-15 [1] CRAN (R 4.0.3)
+ jquerylib          0.1.4      2021-04-26 [1] CRAN (R 4.1.0)
+ jsonlite           1.7.3      2022-01-17 [1] CRAN (R 4.1.2)
+ knitr              1.37       2021-12-16 [1] CRAN (R 4.1.2)
+ lattice            0.20-45    2021-09-22 [2] CRAN (R 4.1.2)
+ lifecycle          1.0.1      2021-09-24 [1] CRAN (R 4.1.1)
+ lubridate          1.8.0      2021-10-07 [1] CRAN (R 4.1.1)
+ magrittr           2.0.2      2022-01-26 [1] CRAN (R 4.1.2)
+ MASS               7.3-54     2021-05-03 [2] CRAN (R 4.1.2)
+ Matrix             1.3-4      2021-06-01 [2] CRAN (R 4.1.2)
+ memoise            2.0.1      2021-11-26 [1] CRAN (R 4.1.2)
+ metacal          * 0.2.0.9009 2022-01-30 [1] Github (mikemc/metacal@5154eeb)
+ mgcv               1.8-38     2021-10-06 [2] CRAN (R 4.1.2)
+ modelr             0.1.8      2020-05-19 [1] CRAN (R 4.0.0)
+ multtest           2.48.0     2021-05-19 [1] Bioconductor
+ munsell            0.5.0      2018-06-12 [1] CRAN (R 4.0.0)
+ nlme               3.1-153    2021-09-07 [2] CRAN (R 4.1.2)
+ nvimcom          * 0.9-102    2021-11-12 [1] local
+ patchwork        * 1.1.1      2020-12-17 [1] CRAN (R 4.0.3)
+ permute            0.9-5      2019-03-12 [1] CRAN (R 4.0.0)
+ phyloseq         * 1.36.0     2021-05-19 [1] Bioconductor
+ pillar             1.6.5      2022-01-25 [1] CRAN (R 4.1.2)
+ pkgconfig          2.0.3      2019-09-22 [1] CRAN (R 4.0.0)
+ plyr               1.8.6      2020-03-03 [1] CRAN (R 4.0.0)
+ purrr            * 0.3.4      2020-04-17 [1] CRAN (R 4.0.0)
+ R6                 2.5.1      2021-08-19 [1] CRAN (R 4.1.1)
+ ragg               1.2.1      2021-12-06 [1] CRAN (R 4.1.2)
+ RColorBrewer       1.1-2      2014-12-07 [1] CRAN (R 4.0.0)
+ Rcpp               1.0.8      2022-01-13 [1] CRAN (R 4.1.2)
+ RCurl              1.98-1.5   2021-09-17 [1] CRAN (R 4.1.1)
+ readr            * 2.1.1      2021-11-30 [1] CRAN (R 4.1.2)
+ readxl             1.3.1      2019-03-13 [1] CRAN (R 4.0.0)
+ reprex             2.0.1      2021-08-05 [1] CRAN (R 4.1.1)
+ reshape2           1.4.4      2020-04-09 [1] CRAN (R 4.0.0)
+ rhdf5              2.36.0     2021-05-19 [1] Bioconductor
+ rhdf5filters       1.4.0      2021-05-19 [1] Bioconductor
+ Rhdf5lib           1.14.2     2021-07-06 [1] Bioconductor
+ rlang              1.0.1      2022-02-03 [1] CRAN (R 4.1.2)
+ rmarkdown        * 2.11       2021-09-14 [1] CRAN (R 4.1.1)
+ rprojroot          2.0.2      2020-11-15 [1] CRAN (R 4.0.3)
+ rstudioapi         0.13       2020-11-12 [1] CRAN (R 4.0.3)
+ rvest              1.0.2      2021-10-16 [1] CRAN (R 4.1.1)
+ S4Vectors          0.30.2     2021-10-03 [1] Bioconductor
+ sass               0.4.0      2021-05-12 [1] CRAN (R 4.1.0)
+ scales             1.1.1      2020-05-11 [1] CRAN (R 4.0.0)
+ sessioninfo        1.2.2      2021-12-06 [1] CRAN (R 4.1.2)
+ speedyseq        * 0.5.3.9018 2021-06-29 [1] Github (mikemc/speedyseq@ceb941f)
+ stringi            1.7.6      2021-11-29 [1] CRAN (R 4.1.2)
+ stringr          * 1.4.0      2019-02-10 [1] CRAN (R 4.0.0)
+ survival           3.2-13     2021-08-24 [2] CRAN (R 4.1.2)
+ systemfonts        1.0.3      2021-10-13 [1] CRAN (R 4.1.1)
+ textshaping        0.3.6      2021-10-13 [1] CRAN (R 4.1.1)
+ tibble           * 3.1.6      2021-11-07 [1] CRAN (R 4.1.2)
+ tidyr            * 1.1.4      2021-09-27 [1] CRAN (R 4.1.1)
+ tidyselect         1.1.1      2021-04-30 [1] CRAN (R 4.1.0)
+ tidyverse        * 1.3.1      2021-04-15 [1] CRAN (R 4.1.0)
+ tzdb               0.2.0      2021-10-27 [1] CRAN (R 4.1.2)
+ useful             1.2.6      2018-10-08 [1] CRAN (R 4.0.0)
+ utf8               1.2.2      2021-07-24 [1] CRAN (R 4.1.0)
+ vctrs              0.3.8      2021-04-29 [1] CRAN (R 4.1.0)
+ vegan              2.5-7      2020-11-28 [1] CRAN (R 4.0.3)
+ vipor              0.4.5      2017-03-22 [1] CRAN (R 4.0.0)
+ withr              2.4.3      2021-11-30 [1] CRAN (R 4.1.2)
+ xfun               0.29       2021-12-14 [1] CRAN (R 4.1.2)
+ xml2               1.3.3      2021-11-30 [1] CRAN (R 4.1.2)
+ XVector            0.32.0     2021-05-19 [1] Bioconductor
+ yaml               2.2.2      2022-01-25 [1] CRAN (R 4.1.2)
+ zlibbioc           1.38.0     2021-05-19 [1] Bioconductor
 
-[1] /home/michael/R/x86_64-pc-linux-gnu-library/4.0
-[2] /usr/lib/R/library</code></pre>
+ [1] /home/michael/.local/lib/R/library
+ [2] /usr/lib/R/library
+
+──────────────────────────────────────────────────────────────────────────</code></pre>
 </div>
 </details>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>

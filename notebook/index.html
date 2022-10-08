@@ -50,16 +50,17 @@ pre.numberSource code > span > a:first-child::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {   }
+  { color: #00769e; background-color: #f1f3f5; }
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
+code span { color: #00769e; } /* Normal */
 code span.al { color: #ad0000; } /* Alert */
 code span.an { color: #5e5e5e; } /* Annotation */
-code span.at { } /* Attribute */
+code span.at { color: #657422; } /* Attribute */
 code span.bn { color: #ad0000; } /* BaseN */
 code span.bu { } /* BuiltIn */
-code span.cf { color: #007ba5; } /* ControlFlow */
+code span.cf { color: #00769e; } /* ControlFlow */
 code span.ch { color: #20794d; } /* Char */
 code span.cn { color: #8f5902; } /* Constant */
 code span.co { color: #5e5e5e; } /* Comment */
@@ -73,9 +74,9 @@ code span.fl { color: #ad0000; } /* Float */
 code span.fu { color: #4758ab; } /* Function */
 code span.im { } /* Import */
 code span.in { color: #5e5e5e; } /* Information */
-code span.kw { color: #007ba5; } /* Keyword */
+code span.kw { color: #00769e; } /* Keyword */
 code span.op { color: #5e5e5e; } /* Operator */
-code span.ot { color: #007ba5; } /* Other */
+code span.ot { color: #00769e; } /* Other */
 code span.pp { color: #ad0000; } /* Preprocessor */
 code span.sc { color: #5e5e5e; } /* SpecialChar */
 code span.ss { color: #20794d; } /* SpecialString */
@@ -1027,10 +1028,6 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
     margin-top: 1.5em;
   }
 
-  .figure img {
-    width: 100%;
-  }
-
   .figure .caption {
     color: rgba(0, 0, 0, 0.6);
     font-size: 12px;
@@ -1860,6 +1857,12 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 
       // hoverable references
       $('span.citation[data-cites]').each(function() {
+        if ($(this).children()[0].nodeName == "D-FOOTNOTE") {
+          var fn = $(this).children()[0]
+          $(this).html(fn.shadowRoot.querySelector("sup"))
+          $(this).id = fn.id
+          fn.remove()
+        }
         var refs = $(this).attr('data-cites').split(" ");
         var refHtml = refs.map(function(ref) {
           return "<p>" + $('#ref-' + ref).html() + "</p>";
@@ -1874,6 +1877,31 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
           placement: 'bottom-start'
         });
       });
+
+      // fix footnotes in tables (#411)
+      // replacing broken distill.pub feature
+      $('table d-footnote').each(function() {
+        // we replace internal showAtNode methode which is triggered when hovering a footnote
+        this.hoverBox.showAtNode = function(node) {
+          // ported from https://github.com/distillpub/template/pull/105/files
+          calcOffset = function(elem) {
+              let x = elem.offsetLeft;
+              let y = elem.offsetTop;
+              // Traverse upwards until an `absolute` element is found or `elem`
+              // becomes null.
+              while (elem = elem.offsetParent && elem.style.position != 'absolute') {
+                  x += elem.offsetLeft;
+                  y += elem.offsetTop;
+              }
+
+              return { left: x, top: y };
+          }
+          // https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/offsetTop
+          const bbox = node.getBoundingClientRect();
+          const offset = calcOffset(node);
+          this.show([offset.left + bbox.width, offset.top + bbox.height]);
+        }
+      })
 
       // clear polling timer
       clearInterval(tid);
@@ -1973,6 +2001,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
     // mark non-body figures created by knitr chunks as 100% width
     $('.layout-chunk').each(function(i, val) {
       var figures = $(this).find('img, .html-widget');
+      // ignore leaflet img layers (#106)
+      figures = figures.filter(':not(img[class*="leaflet"])')
       if ($(this).attr('data-layout') !== "l-body") {
         figures.css('width', '100%');
       } else {
@@ -1995,7 +2025,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
     // get rid of index.html references in header
     if (window.location.protocol !== "file:") {
       $('.distill-site-header a[href]').each(function(i,val) {
-        $(this).attr('href', $(this).attr('href').replace("index.html", "./"));
+        $(this).attr('href', $(this).attr('href').replace(/^index[.]html/, "./"));
       });
     }
 
@@ -2034,7 +2064,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </script>
 
   <!--/radix_placeholder_distill-->
-  <script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+  <script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
   <script src="site_libs/popper-2.6.0/popper.min.js"></script>
   <link href="site_libs/tippy-6.2.7/tippy.css" rel="stylesheet" />
   <link href="site_libs/tippy-6.2.7/tippy-light-border.css" rel="stylesheet" />
@@ -2068,6 +2098,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <div class="nav-right">
 <a href="index.html">Home</a>
 <a href="about.html">About</a>
+<a href="case-studies.html">Case studies</a>
 <a href="javascript:void(0);" class="nav-toggle">&#9776;</a>
 </div>
 </nav>
@@ -2211,6 +2242,44 @@ function init_posts_list() {
 <div class="posts-container posts-with-sidebar posts-apply-limit l-screen-inset">
 <div class="posts-list">
 <h1 class="posts-list-caption" data-caption="Research notebook for manuscript on taxonomic bias and differential-abundance methods">Research notebook for manuscript on taxonomic bias and differential-abundance methods</h1>
+<a href="posts/2022-01-30-hmp-stool-vagina-comparison/" class="post-preview">
+<script class="post-metadata" type="text/json">{"categories":[]}</script>
+<div class="metadata">
+<div class="publishedDate">Jan. 30, 2022</div>
+<div class="dt-authors">
+<div class="dt-author">Michael R. McLaren</div>
+</div>
+</div>
+<div class="thumbnail">
+<img src="posts/2022-01-30-hmp-stool-vagina-comparison/hmp-stool-vagina-comparison_files/figure-html5/diversity-1.svg"/>
+</div>
+<div class="description">
+<h2>Compare impact of bias in HMP stool and vagina samples</h2>
+<div class="dt-tags"></div>
+<p>This report compares gut and vaginal microbiome profiles from the Human Microbiome Project to consider how the different ecological dynamics in each sample type might modulate the potential for bias to distort FCs in species proportions.</p>
+</div>
+</a>
+<a href="posts/2022-01-20-vieirasilva2019quan/" class="post-preview">
+<script class="post-metadata" type="text/json">{"categories":["ref:vieirasilva2019quan","bias sensitivity","absolute abundance"]}</script>
+<div class="metadata">
+<div class="publishedDate">Jan. 20, 2022</div>
+<div class="dt-authors">
+<div class="dt-author">Michael R. McLaren</div>
+</div>
+</div>
+<div class="thumbnail">
+<img src="posts/2022-01-20-vieirasilva2019quan/vieirasilva2019quan_files/figure-html5/unnamed-chunk-7-1.svg"/>
+</div>
+<div class="description">
+<h2>Explore bias sensitivity of Vieira-Silva et al (2019) QMP analysis</h2>
+<div class="dt-tags">
+<div class="dt-tag">ref:vieirasilva2019quan</div>
+<div class="dt-tag">bias sensitivity</div>
+<div class="dt-tag">absolute abundance</div>
+</div>
+<p></p>
+</div>
+</a>
 <a href="posts/2022-01-08-leopold2020host-case-study/" class="post-preview">
 <script class="post-metadata" type="text/json">{"categories":["R","ref:leopold2020host","differential abundance"]}</script>
 <div class="metadata">
@@ -2282,7 +2351,7 @@ function init_posts_list() {
 </div>
 </div>
 <div class="thumbnail">
-<img src="posts/2022-01-05-leopold2020host-priority-effects/leopold2020host-priority-effects_files/figure-html5/unnamed-chunk-7-1.svg"/>
+<img data-src="posts/2022-01-05-leopold2020host-priority-effects/leopold2020host-priority-effects_files/figure-html5/unnamed-chunk-7-1.svg"/>
 </div>
 <div class="description">
 <h2>Perform Leopold and Busby (2020) priority-effects analysis with and without bias correction</h2>
@@ -2303,7 +2372,7 @@ function init_posts_list() {
 </div>
 </div>
 <div class="thumbnail">
-<img src="posts/2021-12-15-momspi-regression-diversity/momspi-regression-diversity_files/figure-html5/unnamed-chunk-7-1.svg"/>
+<img data-src="posts/2021-12-15-momspi-regression-diversity/momspi-regression-diversity_files/figure-html5/unnamed-chunk-7-1.svg"/>
 </div>
 <div class="description">
 <h2>MOMS-PI: Regression on diversity</h2>
@@ -2402,7 +2471,9 @@ function init_posts_list() {
 <div class="dt-author">Michael R. McLaren</div>
 </div>
 </div>
-<div class="thumbnail"></div>
+<div class="thumbnail">
+<img/>
+</div>
 <div class="description">
 <h2>MOMS-PI patient exploration and analysis of fold changes</h2>
 <div class="dt-tags">
@@ -2469,9 +2540,9 @@ function init_posts_list() {
 </div>
 </a>
 <a href="posts/2020-11-12-leopold2020host-bias-sensitivity/" class="post-preview">
-<script class="post-metadata" type="text/json">{"categories":["bias sensitivity","R","ref:leopold2020host"]}</script>
+<script class="post-metadata" type="text/json">{"categories":["bias sensitivity","ref:leopold2020host"]}</script>
 <div class="metadata">
-<div class="publishedDate">Oct. 21, 2019</div>
+<div class="publishedDate">Nov. 10, 2020</div>
 <div class="dt-authors">
 <div class="dt-author">Michael McLaren</div>
 </div>
@@ -2484,7 +2555,6 @@ function init_posts_list() {
 </h2>
 <div class="dt-tags">
 <div class="dt-tag">bias sensitivity</div>
-<div class="dt-tag">R</div>
 <div class="dt-tag">ref:leopold2020host</div>
 </div>
 <p></p>
@@ -2497,11 +2567,15 @@ function init_posts_list() {
 <ul>
 <li>
 <a href="#category:Articles">Articles</a>
-<span class="category-count">(14)</span>
+<span class="category-count">(16)</span>
+</li>
+<li>
+<a href="#category:absolute_abundance">absolute abundance</a>
+<span class="category-count">(1)</span>
 </li>
 <li>
 <a href="#category:bias_sensitivity">bias sensitivity</a>
-<span class="category-count">(5)</span>
+<span class="category-count">(6)</span>
 </li>
 <li>
 <a href="#category:differential_abundance">differential abundance</a>
@@ -2509,7 +2583,7 @@ function init_posts_list() {
 </li>
 <li>
 <a href="#category:R">R</a>
-<span class="category-count">(3)</span>
+<span class="category-count">(2)</span>
 </li>
 <li>
 <a href="#category:ref:brooks2015thet">ref:brooks2015thet</a>
@@ -2531,6 +2605,10 @@ function init_posts_list() {
 <a href="#category:ref:lloyd2020evid">ref:lloyd2020evid</a>
 <span class="category-count">(1)</span>
 </li>
+<li>
+<a href="#category:ref:vieirasilva2019quan">ref:vieirasilva2019quan</a>
+<span class="category-count">(1)</span>
+</li>
 </ul>
 </div>
 </div>
@@ -2549,7 +2627,8 @@ function init_posts_list() {
 
 
 <div class="d-article">
-<div class="sourceCode" id="cb1"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>

@@ -4,15 +4,57 @@
       "path": "about.html",
       "title": "About this site",
       "author": [],
-      "contents": "\nThis site contains analyses for a manuscript on the impact of taxonomic bias on microbimoe differential-abundance methods.\n\n\n\n",
-      "last_modified": "2021-11-29T10:11:17-08:00"
+      "contents": "\nThis site contains analyses for a manuscript on the impact of\ntaxonomic bias on microbimoe differential-abundance methods.\n\n\n\n",
+      "last_modified": "2022-10-08T16:15:50-04:00"
+    },
+    {
+      "path": "case-studies.html",
+      "title": "Case studies",
+      "description": "Overview of case-study analyses.\n",
+      "author": [
+        {
+          "name": "Michael R. McLaren",
+          "url": {}
+        }
+      ],
+      "date": "`r Sys.Date()`",
+      "contents": "\nFoliar fungi experiment\nAll posts\nVaginal microbiomes of\npregnant women\nAll posts\nHuman gut microbiomes\nAll posts\nMicrobial growth in marine\nsediments\nCase\nstudy analysis\n\n\n\n",
+      "last_modified": "2022-10-08T16:15:50-04:00"
+    },
+    {
+      "path": "case-study-fungi.html",
+      "title": "Case study: Foliar fungi experiment",
+      "author": [],
+      "contents": "\n\n\n\n",
+      "last_modified": "2022-10-08T16:15:51-04:00"
+    },
+    {
+      "path": "case-study-gut.html",
+      "title": "Case study: Human gut microbiome",
+      "author": [],
+      "contents": "\n\n\n\n",
+      "last_modified": "2022-10-08T16:15:51-04:00"
+    },
+    {
+      "path": "case-study-marine.html",
+      "title": "Case study: Marine sediments",
+      "author": [],
+      "contents": "\n\n\n\n",
+      "last_modified": "2022-10-08T16:15:52-04:00"
+    },
+    {
+      "path": "case-study-momspi.html",
+      "title": "Case study: MOMS-PI study",
+      "author": [],
+      "contents": "\n\n\n\n",
+      "last_modified": "2022-10-08T16:15:52-04:00"
     },
     {
       "path": "index.html",
       "title": "Research notebook for manuscript on taxonomic bias and differential-abundance methods",
       "author": [],
       "contents": "\n\n\n\n",
-      "last_modified": "2021-11-29T10:11:18-08:00"
+      "last_modified": "2022-10-08T16:15:53-04:00"
     }
   ],
   "collections": ["posts/posts.json"]
