@@ -4,7 +4,7 @@ To better understand the potential impact of taxonomic bias on DA analysis in pr
 
 ## Foliar fungi experiment
 
-The taxonomic bias species present in 'mock communities' of known composition can be directly measured, and the measured bias can then be used to correct downstream DA analysis (@mclaren2019cons).
+The taxonomic bias of species in 'mock communities' of known composition can be directly measured, and the measured bias can then be used to correct downstream DA analysis (@mclaren2019cons).
 In practice it is difficult to construct control communities that span the many species present in complex natural communities.
 However, gnotobiotic community experiments are well suited to this form of _calibration via community controls_ since it is possible to assemble mock communities containing all species in known relative abundances.
 
@@ -38,9 +38,9 @@ However, failure to account for bias caused the decrease to be overestimated, by
 For commensal-host pairs with relatively small observed decreases, bias correction greatly reduced the magnitude of the negative LFDs or, in several cases, resulted in LFDs that were near 0 or slightly positive.
 
 Although @leopold2020host did not include absolute-abundance measurements, we can consider the impact taxonomic bias would have on an absolute DA analysis in a simple scenario in which total genome concentration of each pre- and post-infection sample is perfectly known.
-The total genomic concentrations of each sample, combined with the species proportions measured by MGS, can be combined into a measurement of species concentrations using the total-abundance normalization method (Equation \@ref(eq:density-prop-meas)).
+We consider the approach of multiplying the total genomic concentrations of each sample with the species proportions measured by MGS as described by Equation \@ref(eq:density-prop-meas).
 In this case, the bias in the MGS measurements will create absolute errors in the estimated LFDs of genome concentration of equal magnitude to the errors in the LFD estimates for proportions.
-The scientific error, however, might become worse.
+If total abundances also differed after pathogen growth, however, we may make directional errors in determining the FD.
 Suppose that total abundance increased by 2-fold due to pathogen growth; in this case, species whose proportions remained approximately constant would have increased in absolute abundance by around 2-fold.
 Bias shifts FD estimates downwards by 2.5-fold to 5.2-fold (depending on host genotype).
 Hence, without bias correction, we would instead conclude that these species decreased.
@@ -126,7 +126,7 @@ hmp_species_diff <- hmp_species_stats %>%
 
 To investigate this question, we analyzed bacterial species profiles of vaginal and stool samples derived from shotgun sequencing in the Human Microbiome Project 
 (@huttenhower2012stru, [SI Analysis](https://mikemc.github.io/differential-abundance-theory/notebook/posts/2022-01-30-hmp-stool-vagina-comparison/)).
-On average, stool profiles had substantially greater order-2 alpha diversity than vaginal profiles (SI Figure \@ref(fig:gut)A; geometric mean (GM) $\md$ geometric standard deviation (GSD) of `r hmp_div_stats['stool', 'gm'] %>% round(1)` $\md$ `r hmp_div_stats['stool', 'gsd'] %>% round(1)` in stool samples and `r hmp_div_stats['vagina', 'gm'] %>% round(1)` $\md$ `r hmp_div_stats['vagina', 'gsd'] %>% round(1)` in vaginal samples).
+On average, stool profiles had substantially greater order-2 alpha diversity (Inverse Simpson index) than vaginal profiles (SI Figure \@ref(fig:gut)A; geometric mean (GM) $\md$ geometric standard deviation (GSD) of `r hmp_div_stats['stool', 'gm'] %>% round(1)` $\md$ `r hmp_div_stats['stool', 'gsd'] %>% round(1)` in stool samples and `r hmp_div_stats['vagina', 'gm'] %>% round(1)` $\md$ `r hmp_div_stats['vagina', 'gsd'] %>% round(1)` in vaginal samples).
 To assess the potential importance of bias for proportion-based DA analyses in the two ecosystems, we quantified the multiplicative variation in the mean efficiency across samples for a large number of possible taxonomic biases under the assumption that the measured profiles reflected the truth.
 Across simulation replicates, the GSD in the mean efficiency was typically lower in stool than in vaginal samples (SI Figure \@ref(fig:gut)B; ratio of GSD in vaginal samples to GSD in stool samples of `r hmp_me_stats['iid', 'gm'] %>% round(1)` $\md$ `r hmp_me_stats['iid', 'gsd'] %>% round(1)` across 1000 simulations).
 Notably, however, the multiplicative variation in species also tended to be lower (SI Figure \@ref(fig:gut)C); the GSD in the proportion of a gut species across gut samples was an average of `r hmp_species_diff %>% round(2)`-fold lower than that of a vaginal species across vaginal samples.
@@ -188,28 +188,27 @@ The second soil core included qPCR measurements of _Bathyarchaeota_ and a second
 In this core, FRAxC and qPCR growth rates differed more substantially, with growth rates from FRAxC being larger by `r round(bathy_core32_fraxc - bathy_core32_qpcr, 3)`/yr for _Bathyarchaeota_ (`r round(bathy_core32_fraxc, 3)`/yr by FRAxC and `r round(bathy_core32_qpcr, 3)`/yr by qPCR) and by `r round(mbgd_core32_fraxc - mbgd_core32_qpcr, 3)`/yr for _Thermoprofundales_/MBG-D (`r round(mbgd_core32_fraxc, 3)`/yr by FRAxC and `r round(mbgd_core32_qpcr, 3)`/yr by qPCR).
 Uncertainty in the FRAxC- and qPCR-derived growth rates is not reported and is likely substantial; however, the fact that the FRAxC-derived rates are larger than qPCR-derived rates in all three cases is consistent with our hypothesis that mean efficiency decreased with depth in a manner that systematically biased FRAxC-derived rates to higher values.
 The differences in growth rate are small in absolute terms; however, the maximum observed difference of 0.086/yr suggests an error large enough to impact results for some taxa classified as positive growers, whose FRAxC growth rates ranged between 0.04/yr and 0.5/yr.
-In summary, the comparison between FRAxC and qPCR measurements supports the overall study conclusions, but also suggests that species at the low end of positive FRAxC-derived rates may be merely persisting or even slowly declining in abundance.
-
+In summary, our comparison between FRAxC and qPCR measurements supports the overall study conclusion that many taxa did grow following sediment burial; however, we should remain uncertain as to whether species with small, positive FRAxC-derived growth rates were in fact growing or rather were slowly declining in abundance.
 
 ## Summary and discussion
 
 The effect that consistent taxonomic bias has on proportion-based DA analyses depends on the MGS protocol, the biological system, and the sample comparisons under investigation.
-Our case studies explore a limited range of possibilities; however, we can begin to form some general conclusions by placing them within the context of the three scenarios described in Section \@ref(differential-abundance). 
+Although our case studies explore a limited range of possibilities, some general patterns stand out. 
 
-We saw several cases where the mean efficiency is stable across samples, so that bias does not affect LFD estimates (Scenario 1).
+In several cases, the mean efficiency remained stable across samples, so that LFD esimates were unaffected by bias.
 In the pre-infection fungal microbiome samples of @leopold2020host, we observed that the mean efficiency remained stable despite substantial bias and large multiplicative variation in species proportions among samples.
 Because the variation in the mean efficiency was much less than that of the individual species, the impact of bias on DA analysis was negligible.
 In the vaginal case study, we also observed that the mean efficiency was relative stable across vaginal microbiomes that were dominated by the same species, despite substantial bias and large LFDs in non-dominant species.
 In both cases, the stability of the mean efficiency can be understood by the fact that it is an additive average over species and so is primarily determined by the most abundant species in the sample.
 
 Yet we also observed cases where the mean efficiency varied substantially.
-In several cases, the (log) mean efficiency co-varied sufficiently strongly with the condition of interest to cause substantial systematic errors in LFD estimates (Scenario 3).
+In several cases, the (log) mean efficiency co-varied sufficiently strongly with the condition of interest to cause substantial systematic errors in LFD estimates.
 Examples include the comparison of foliar fungal microbiomes pre- and post-infection, for which the mean efficiency substantially increased post-infection, and the comparison of vaginal microbiomes with low versus high diversity in the MOMS-PI study, for which the mean efficiency was typically lower in high-diversity samples.
 Our analysis of marine sediment communities is consistent with a systematic decline of the mean efficiency with burial time that is sufficient to substantially inflate the estimated growth rates of slowly changing species.
-The mean efficiency cannot differ by more than the species proportions constituting it.
+The FD in the mean efficiency is bounded by the largest FD of any species' proportion.
 Therefore, the error in the estimated LFDs tend to be practically significant only for species whose LFDs are substantially smaller in magnitude than the largest LFD.
 
-Variation in the mean efficiency may also be substantial, yet unassociated with the condition of interest (Scenario 2).
+Variation in the mean efficiency may also be substantial, yet unassociated with the condition of interest.
 Although we did not directly observe this scenario directly, we have reason to think that it may be common in real microbiome studies.
 Our simulation analysis of gut microbiomes suggest that even in diverse ecosystems, bias will often cause multiplicative variation in the mean efficiency that is comparable to that of individual species.
 This variation is much less problematic for DA results when it not associated with the condition under study, since any loss in precision can in principle be offset by an increase in sample size.
@@ -227,7 +226,7 @@ They are also expected to share traits related to the condition of interest.
 If related species tend to have similar efficiencies and similar associations with the condition, then they may drive an association of the mean efficiency with the condition.
 
 These observations provide reasons to both worry and hope.
-It seems likely that in many studies, the mean efficiency is consistent (first scenario) or is at least not associated with the condition (second scenario), so that DA inferences remain valid.
+It seems likely that in many studies, the mean efficiency is consistent (first scenario) or is at least not associated with the condition (second scenario), so LFD estimates remain accurate (or at least not overconfident).
 Yet it is not obvious which scenario any study falls into.
 There are plausible mechanisms leading to systematic variation of the mean efficiency even in ecosystems with high species diversity.
 Moreover, our explorations suggest that random variation in the mean efficiency is common and distorts comparisons between individual samples.

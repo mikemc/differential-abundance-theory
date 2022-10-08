@@ -1,7 +1,7 @@
 # How bias affects abundance measurements {#abundance-measurement}
 
-This section extends the theoretical results of @mclaren2019cons to describe how taxonomic bias in an MGS experiment affects the relative and absolute abundances measured for various microbial species.
-We show that some approaches to quantifying species abundance yield constant fold errors (FEs), while others yield FEs that depend on overall community composition and thus can vary across samples.
+This section extends the theoretical results of @mclaren2019cons to describe how taxonomic bias in MGS experiments leads to errors in the relative and absolute abundances measured for various microbial species.
+All approaches to abundance quantification have systematic errors driven by taxonomic bias; however, some yield constant fold errors (FEs), while others yield FEs that depend on overall community composition and thus can vary across samples.
 
 ## A model of MGS measurements
 
