@@ -1,6 +1,12 @@
-# Funding
+\clearpage
+
+# Funding {-}
 
 M.R.M. and B.J.C. were supported by NIH/NIGMS grant no. R35GM133745.
 J.T.N. is supported by researchNS and a Nova Scotia Graduate Scholarship.
 A.D.W. was supported by NIH/NIGMS grant no. R35GM133420.
 K.G.L. was supported by US Department of Energy, Office of Science DE-SC0020359, NSF OCE-1948720, DEB-2132774, OCE-215015, and EAR-2121670.
+
+# Acknowledgments {-}
+
+We thank Jen Nguyen and members of the Callahan Lab for valuable discussions.

@@ -16,7 +16,8 @@ rmd_files: [
   "appendix.Rmd",
   "appendix-regression.Rmd",
   "supplemental-figures.Rmd",
-  "references.Rmd",
+  "acknowledgements.Rmd",
+  "references.Rmd"
 ]
 
 before_chapter_script: "_common.R"
