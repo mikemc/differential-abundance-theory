@@ -46,7 +46,7 @@ set.seed(42)
 n_species <- 10
 n_samples <- 50
 
-species <- str_c("Species ", seq(n_species))
+species <- str_c("Sp. ", seq(n_species))
 ```
 
 ## Actual abundances
@@ -167,7 +167,6 @@ species_params %>%
 Question: Is it true that the first species is driving the association?
 
 
-
 The measured (i.e. estimated) proportions and abundances are given by perturbing the actual abundances by the efficiencies, and normalizing to proportions or to the original (correct) total.
 
 ```{r}
@@ -216,12 +215,12 @@ abun <- bind_rows(
 ```{r}
 p_species_all <- abun %>%
   ggplot(aes(x, log2_abundance, color = type)) +
-  labs(y = "Log abundance ") +
+  labs(y = "Log efficiency", x = "Condition (x)") +
   facet_grid(.otu~type, scales = "fixed") +
   geom_quasirandom(alpha = 0.3, groupOnX = TRUE) +
   # stat_summary(fun.data = "mean_cl_boot", geom = "pointrange") +
-  stat_summary(geom = "point") +
-  stat_smooth(aes(x = as.integer(x)),
+  stat_summary(geom = "point", fun.data = mean_se) +
+  stat_smooth(aes(x = as.integer(x)), formula = y~x,
     method = "lm", size = 0.9, fill = 'grey', se = FALSE
   ) +
   theme(legend.position = "none")
@@ -231,11 +230,11 @@ p_species_all
 ```{r}
 p_mean_eff <- mean_eff %>%
   ggplot(aes(x, log2(mean_efficiency))) +
-  labs(y = "Log efficiency ") +
+  labs(y = "Log efficiency", x = "Condition (x)") +
   geom_quasirandom(alpha = 0.3, groupOnX = TRUE) +
   # stat_summary(fun.data = "mean_cl_boot", geom = "pointrange") +
-  stat_summary(geom = "point") +
-  stat_smooth(aes(x = as.integer(x)),
+  stat_summary(geom = "point", fun.data = mean_se) +
+  stat_smooth(aes(x = as.integer(x)), formula = y~x,
     method = "lm", size = 0.9, color = 'black', fill = 'grey', se = FALSE
   )
 p_mean_eff 
@@ -284,21 +283,28 @@ lm_results_slope <- lm_results %>%
 ```{r, fig.dim = c(5.5, 7)}
 # params for arrows showing error
 delta <- lm_results_mean_eff %>% filter(term == "x1") %>% pull(estimate)
-start <- lm_results_slope %>% filter(type == 'Actual', .otu == 'Species 9') %>%
+start <- lm_results_slope %>% filter(type == 'Actual', .otu == 'Sp. 9') %>%
   pull(estimate)
 
 p_coef_ci <- lm_results_slope %>% 
   ggplot(aes(y = .otu, x = estimate, color = type)) +
-  labs(x = "Log fold difference", y = NULL) +
+  labs(x = "Mean LFD", y = NULL, color = "Type") +
   geom_vline(xintercept = 0, color = "grey") +
   geom_pointinterval(aes(xmin = conf.low, xmax = conf.high)) +
   theme(legend.position = 'top') +
   guides(color = guide_legend(reverse = TRUE)) +
   annotate(
-    geom = 'segment', color = "darkgrey",
+    geom = 'segment', color = "darkred",
     arrow = grid::arrow(length = unit(0.1, "inches")), 
     x = start, xend = start - delta, 
-    y = 10.5, yend = 10.5
+    y = 10.5, yend = 10.5,
+    size = .7
+  ) +
+  annotate(
+    geom = 'text', color = "darkred",
+    label = 'Effect of bias',
+    x = start - delta/2,
+    y = 10.8,
   ) +
   coord_cartesian(clip = 'off')
 
@@ -315,19 +321,20 @@ p_coef_ci_mean_eff <- lm_results_mean_eff %>%
       min(lm_results_slope$conf.low), 
       max(lm_results_slope$conf.high)
   )) +
-  labs(x = "Log fold difference", y = NULL) +
+  labs(x = "Mean LFD", y = NULL) +
   geom_vline(xintercept = 0, color = "grey") +
   geom_point() +
   annotate(
-    geom = 'segment', color = "darkgrey",
+    geom = 'segment', color = "darkred",
     arrow = grid::arrow(length = unit(0.1, "inches")), 
     x = 0, xend = delta, 
-    y = 1.0, yend = 1.0
+    y = 1.0, yend = 1.0,
+    size = .7
   )
 
 p_coef_dot <- lm_results_slope %>% 
   ggplot(aes(y = type, x = estimate, fill = type)) +
-  labs(x = "Log fold difference", y = "Type") +
+  labs(x = "Mean LFD", y = "Type") +
   geom_vline(xintercept = 0, color = "grey") +
   stat_dots()
 
@@ -353,7 +360,7 @@ Chose species that show the full range of qualitative behaviors in terms of the 
 <!--  -->
 
 ```{r}
-species_to_plot <- str_c("Species ", c('9', '10', '5', '7', '2'))
+species_to_plot <- str_c("Sp. ", c('9', '10', '5', '7', '2'))
 p_species_focal <- p_species_all
 p_species_focal$data <- p_species_focal$data %>% 
   filter(.otu %in% species_to_plot)
@@ -380,7 +387,7 @@ p_mean_eff1 <- p_mean_eff +
 (p_mean_eff1 + ggtitle("Mean efficiency")) +
   (p_coef_ci_mean_eff + ggtitle("LFD in mean efficiency")) + 
   (p_species_focal + ggtitle("Actual and measured\nabundances of select species")) + 
-  (p_coef_ci1 + ggtitle("Estimated LFDs of all species") +
+  (p_coef_ci1 + ggtitle("Mean LFD estimated from\nactual or measured abundances") +
     theme(legend.box.margin = margin(b = -15))
   ) + 
   plot_layout(ncol = 2, heights = c(0.2, 1)) +
@@ -465,3 +472,66 @@ The prediction for the squared standard error from the theoretical calculation a
 
 TODO: Sort out why it is this version, and not the other, that gives agreement.
 Perhaps the standard errors being returned by R are using the MLE estimate of sigma instead of the OLS estimate?
+
+## 2022-10-08 Modified main figure
+
+New panel showing simulated efficiencies and mean LFDs, to replace the panel showing the change in mean efficiency (former panel B).
+
+```{r}
+p_params <- species_params %>%
+  ggplot(aes(x1, log2_efficiency)) +
+  theme(axis.line = element_blank()) +
+  # panel_border(remove = TRUE) +
+  # theme_minimal_grid() +
+  coord_cartesian(clip = 'off') +
+  geom_vline(xintercept = 0, color = 'grey') +
+  geom_hline(yintercept = 0, color = 'grey') +
+  geom_text(
+    aes(label = str_c('Sp. ', str_extract(.otu, '[0-9]+'))), 
+    size = 4) +
+  labs(
+    x = 'Expected LFD',
+    y = 'Log efficiency'
+  )
+p_params 
+```
+
+Annotate mean efficiency plot,
+
+```{r}
+# params for arrow showing change
+arrow_params <- mean_eff %>%
+  with_groups(x, summarize, across(log2_mean_efficiency, mean)) %>%
+  pull(log2_mean_efficiency)
+
+p_mean_eff2 <- p_mean_eff +
+  annotate(
+    geom = 'segment', color = "darkred",
+    arrow = grid::arrow(length = unit(0.1, "inches")), 
+    x = 2.5, xend = 2.5, 
+    y = arrow_params[1], 
+    yend = arrow_params[2], 
+    size = .7
+  )
+p_mean_eff2 
+```
+
+Assemble with improved titles,
+
+```{r main-figure-2, fig.dim = c(8, 9)}
+
+(p_params + ggtitle("Simulated log efficiencies\nand expected LFDs")) +
+  (p_mean_eff2 + ggtitle("Mean efficiency across\nsamples in each condition")) +
+  # (p_coef_ci_mean_eff + ggtitle("LFD in mean efficiency")) + 
+  (p_species_focal + ggtitle("Actual and measured\nabundances of select species")) + 
+  (p_coef_ci1 + ggtitle("Mean LFD estimated from\nactual or measured abundances") +
+    theme(legend.box.margin = margin(b = -15))
+  ) + 
+  plot_layout(ncol = 2, heights = c(0.4, 1)) +
+  plot_annotation(tag_levels = 'A') &
+  colorblindr::scale_color_OkabeIto() &
+  colorblindr::scale_fill_OkabeIto() &
+  theme(
+    plot.title = element_text(face = "plain")
+  )
+```
