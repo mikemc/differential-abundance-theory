@@ -2,8 +2,8 @@
 
 ## Ratio-based relative DA analysis
 
-Since bias creates constant fold errors (FEs) in the ratios among species, it can be countered by using DA methods that analyze fold differences (FDs) in these ratios.
-A variety of ratio-based methods have been developed under the framework of Compositional Data Analysis (CoDA; REFs).
+Since bias creates constant fold errors (FEs) in the ratios among species, it can be countered by using relative DA methods that analyze fold differences (FDs) in these ratios.
+A variety of ratio-based methods have been developed under the framework of Compositional Data Analysis (CoDA; @gloor2017micr).
 CoDA methods may more generally consider the ratios between products of multiple species, possibly raised to some exponent; a simple example is the geometric mean of several species.
 The mathematical operations of multiplication and exponentiation maintain constant FEs.
 Hence such products provide a method for aggregating species into a higher-level taxonomic units that maintains bias invariance when estimating FDs.
@@ -88,12 +88,14 @@ Our results show that accurate FDs and DA results can be obtained so long as the
 This condition is much weaker than requiring that bias is small (the relative efficiency is close to 1) and so greatly expands the applicability of spike-ins and host normalization in microbiome experiments.
 
 Section \@ref(absolute-abundance) further proposed an additional class of reference species for normalizing MGS measurements: Species whose (absolute) abundance has been measured using a targeted method such as qPCR with species-specific primers.
-To demonstrate the ability for reference calibration to reduce error in FD measurements, we treated the abundance of one species (_Lactobacillus crispatus_) in the @brooks2015thet mock community data as known, and used it to calibrate the abundances of all species. 
-Doing so improved the resulting measurements of FDs in the abundance of all species (Figure \@ref(fig:calibration-example)).
 Direct, targeted measurement of a reference species removes the need for it to have a constant abundance, thus expanding the applicability of reference-species normalization to experiments where spike-ins or housekeeping species are not viable options.
 The targeted measurement need not itself be an unbiased measure of the reference species' abundance; so long as it has constant FE, the abundances of native species obtained by normalization will also have constant FEs.
-In many ecosystems, there may not be a single universally-present species that can serve as a reference in all samples.
-Sample coverage can be increased by making targeted measurements of multiple species or of larger taxonomic groups; see Appendix REF for details.
+To demonstrate the ability for reference calibration to reduce error in FD measurements, we treated the abundance of one species (_Lactobacillus crispatus_) in the @brooks2015thet mock community data as known, and used it to calibrate the abundances of all species. 
+Doing so improved the resulting measurements of FDs in the abundance of all species (Figure \@ref(fig:calibration-example)).
+
+In some ecosystems, there may not be a single universally-present species that can serve as a reference in all samples.
+In such cases, sample coverage can be increased by performing targeted measurement of multiple species with complementary prevalence patterns, using appropriate statistical models to combine information across multiple measurements and impute the appropriate correction factor when all reference taxa are below the detection limit in the targeted or MGS measurement.
+Sample coverage can alternatively increased by targeting a larger taxonomic group (such as a genus or family); however, these higher-order taxa are less likely to have a consistent efficiency across samples (Section \ref{relative-abundance}).
 
 ## Bias sensitivity analysis
 
