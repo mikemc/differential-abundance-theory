@@ -19,7 +19,7 @@ These errors can supersede sizable biological differences (e.g. @lozupone2013met
 
 <!-- P: Taxonomic bias and DA -->
 The standard approach to countering taxonomic bias is to standardize the measurement protocol used within a given study.
-Statistical analyses are then conducted with the tacit assumption that all samples will be affected by bias in the same way and so the differences between samples will be unaffected.
+Statistical analyses are then conducted with the (often tacit) assumption that all samples will be affected by bias in the same way and so the differences between samples will be unaffected.
 This argument is at least intuitively plausible for DA analyses based on multiplicative or fold differences (FDs) in a taxon's abundance.
 If bias caused a species' abundance to be consistently measured as 10-fold greater than its actual value, then we would still recover the correct FDs among samples.
 <!-- (@kevorkian2018esti, @lloyd2020evid). -->

@@ -39,7 +39,7 @@ We can write the total number of assigned reads for the sample as
     = A_\tot^{(a)} \bar B^{(a)} F^{(a)},
 \end{align}
 where 
-$M_{\tot}^{(a)} \equiv \sum_{j\in S} M_j^{(a)}$ is the total read count and $A_{\tot}^{(a)} \equiv \sum_{j\in S}A_j^{(a)}$ is the total abundance for all species $S$, and 
+$M_{\tot}^{(a)} \equiv \sum_{j\in S} M_j^{(a)}$ is the total read count and $A_{\tot}^{(a)} \equiv \sum_{j\in S}A_j^{(a)}$ is the total abundance of all species in $S$, and 
 \begin{align}
   (\#eq:mean-efficiency)
   \bar B^{(a)} \equiv \frac{\sum_{i\in S} A_i^{(a)} B_i}{\sum_{i\in S} A_i^{(a)}}
@@ -74,9 +74,9 @@ From Equations \@ref(eq:mgs-model), \@ref(eq:total-reads), and \@ref(eq:prop-mea
 Taxonomic bias creates a fold-error (FE) in the measured proportion of a species that is equal to its efficiency divided by the mean efficiency in the sample.
 Since the mean efficiency varies across samples, so does the FE.
 This phenomenon can be seen for Species 3 in the two hypothetical communities in Figure \@ref(fig:error-proportions). 
-Species 3, which has an efficiency of 6, is under-measured in Sample 1 (FE < 1) but over-measured (FE > 1) in Sample 2.
-This difference occurs because the even distribution of species Sample 1 yields a mean efficiency of 8.33; in contrast, the lopsided distribution in Sample 2, which is dominated by the low-efficiency Species 1, has a mean efficiency of just 3.15.
-A demonstration in bacterial mock communities is shown in [Figure 3C](https://doi.org/10.7554/eLife.46923.004) of @mclaren2019cons.
+Species 3, which has an efficiency of 6, is under-measured (FE < 1) in Sample 1 but over-measured (FE > 1) in Sample 2.
+This difference occurs because the even distribution of species in Sample 1 yields a mean efficiency of 8.33; in contrast, the lopsided distribution in Sample 2, which is dominated by the low-efficiency Species 1, has a mean efficiency of just 3.15.
+A demonstration of this phenomenon in bacterial mock communities is shown in [Figure 3C](https://doi.org/10.7554/eLife.46923.004) of @mclaren2019cons.
 
 The measured ratio $\tilde R_{i/j}^{(a)}$ between species $i$ and $j$ is given by the ratio of their read counts, 
 \begin{align}
@@ -90,7 +90,7 @@ From Equations \@ref(eq:mgs-model) and \@ref(eq:ratio-meas), it follows that the
 \end{align}
 Taxonomic bias creates a FE in the measured ratio that is equal to the ratio in the species' efficiencies; the FE is therefore constant across samples.
 For instance, in Figure \@ref(fig:error-proportions), the ratio of Species 3 (with an efficiency of 6) to Species 1 (with an efficiency of 1) is over-measured by a factor of 6 in both communities despite their varying compositions.
-A demonstration in bacterial mock communities is shown in [Figure 3D](https://doi.org/10.7554/eLife.46923.004) of @mclaren2019cons.
+A demonstration in bacterial mock communities of the constant FE in species' ratios is shown in [Figure 3D](https://doi.org/10.7554/eLife.46923.004) of @mclaren2019cons.
 
 <!-- begin figure -->
 
@@ -126,7 +126,7 @@ In this way, we see that both proportions and ratios among higher-order taxa may
 Several extensions of the standard MGS experiment make it possible to measure absolute species abundances.
 These extensions fall into two general approaches.
 The first approach leverages information about the abundance of the total community; for example, @vandeputte2017quan measured total-community abundance using flow cytometry and multiplied this number by genus proportions measured by MGS to quantify the absolute abundances of individual genera (@vandeputte2017quan).
-A second approach leverages information about the abundance of one or more individual species; for example, a researcher might 'spike in' a known, fixed amount of an extraneous species to all samples prior to MGS, and normalize the read counts of all species to the spike-in species (@harrison2021theq).
+A second approach leverages information about the abundance of one or more reference species; for example, a researcher might 'spike in' a known, fixed amount of an extraneous species to all samples prior to MGS, and normalize the read counts of all species to the spike-in species (@harrison2021theq).
 We consider each approach in detail to determine how taxonomic bias affects the resulting absolute-abundance measurements.
 
 ### Leveraging information about total-community abundance

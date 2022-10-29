@@ -54,7 +54,7 @@ header-includes:
 
 <!-- **Abstract:** -->
 Differential-abundance (DA) analyses enable microbiome researchers to assess how microbial species vary in relative or absolute abundance with specific host or environmental conditions, such as health status or pH.
-These analyses typically use sequencing-based community measurements that are taxonomically biased to measure some species more efficiently than others.
+These analyses typically use sequencing-based community measurements, which are taxonomically biased to measure some species more efficiently than others.
 Understanding the effects that taxonomic bias has on the results of a DA analysis is essential for achieving reliable and translatable findings; yet currently, these effects are unknown.
 Here, we characterized these effects for DA analyses of both relative and absolute abundances, using a combination of mathematical theory and data analysis of real and simulated case studies.
 We found that, for analyses based on species proportions, taxonomic bias can cause significant errors in DA results if the average measurement efficiency of the community is associated with the condition of interest.
