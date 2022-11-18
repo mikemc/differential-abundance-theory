@@ -115,7 +115,7 @@ The three remaining species (Species 7, 6, and 4) have LFDs near zero, but bias 
 <!-- Figure: Regression example -->
 
 ```{r regression-example, fig.cap = '(ref:regression-example)', out.width = '90%'}
-here::here(
+fs::path(
   "notebook/_posts/2021-08-03-simulate-regression-example/",
   "simulate-regression-example_files/figure-html5",
   "main-figure-2-1.svg"

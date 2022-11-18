@@ -95,7 +95,9 @@ A demonstration in bacterial mock communities of the constant FE in species' rat
 <!-- begin figure -->
 
 ```{r error-proportions, out.width = '100%', fig.cap = '(ref:cap-error-proportions)', cache = TRUE}
-"figures/illustrations/error-proportions.svg" %>%
+fs::path(
+    "figures/illustrations/error-proportions.svg"
+  ) %>%
   include_svg
 ```
 
