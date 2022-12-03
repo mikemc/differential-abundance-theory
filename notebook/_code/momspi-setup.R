@@ -52,18 +52,19 @@ control_genera <- control_species %>% str_extract('^[^_]+')
 
 # Load the MOMSPI Stirrups profiles into phyloseq
 
-path_momspi <- '~/research/momspi'
+# path_momspi <- '~/research/momspi'
+path_momspi <- here::here('notebook/_data/momspi')
 
-otu <- path(path_momspi, "output", "stirrups-profiles", "abundance-matrix.csv.bz2") %>%
+otu <- path(path_momspi, "stirrups-profiles", "abundance-matrix.csv.bz2") %>%
   read_csv(
     col_types = cols(.default = col_double(), sample_name = col_character())
   ) %>%
   otu_table(taxa_are_rows = FALSE)
-sam <- path(path_momspi, "output", "stirrups-profiles", "sample-data.csv.bz2") %>%
+sam <- path(path_momspi, "stirrups-profiles", "sample-data.csv.bz2") %>%
   read_csv(col_types = "ccccccic") %>%
   mutate(across(host_visit_number, factor, ordered = TRUE)) %>%
   sample_data
-tax <- path(path_momspi, "output", "stirrups-profiles", "taxonomy.csv.bz2") %>%
+tax <- path(path_momspi, "stirrups-profiles", "taxonomy.csv.bz2") %>%
   read_csv(col_types = cols(.default = col_character())) %>%
   tax_table %>%
   mutate_tax_table(
@@ -87,7 +88,7 @@ bias_species <- coef(mc_fit) %>%
   enframe("species", "efficiency")
 bias_genus <- bias_species %>%
   mutate(genus = str_extract(species, "^[^_]+"), .before = 1) %>%
-  with_groups(genus, summarize, across(efficiency, gm_mean))
+  with_groups(genus, summarize, across(efficiency, metacal::gm_mean))
 # Match on genus or species, depending on which is available; then set others
 # to average genus efficiency
 bias_all <- tax_table(momspi) %>% as_tibble %>%
@@ -97,7 +98,7 @@ bias_all <- tax_table(momspi) %>% as_tibble %>%
     efficiency = case_when(
       !is.na(efficiency.x) ~ efficiency.x,
       !is.na(efficiency.y) ~ efficiency.y,
-      TRUE ~ gm_mean(bias_genus$efficiency)
+      TRUE ~ metacal::gm_mean(bias_genus$efficiency)
     )
   ) %>%
   select(-efficiency.x, -efficiency.y) %>%
