@@ -1,0 +1,28 @@
+\clearpage
+
+# Declarations {-}
+
+## Availability of data and materials {.unlisted .unnumbered}
+
+The source code and rendered R-markdown analyses supporting our results can be found in the accompanying computational research notebook, viewable online at https://mikemc.github.io/differential-abundance-theory/notebook/ and permanently archived along with the manuscript's source in the Zenodo archive (https://doi.org/10.5281/zenodo.4552717) of the manuscript's GitHub repository (https://github.com/mikemc/differential-abundance-theory).
+The datasets used in these analyses are available in this repository, the metacal R package (https://github.com/mikemc/metacal; archived at https://zenodo.org/record/4380996), the archived repository for @leopold2020host (https://zenodo.org/record/3872145), and in https://github.com/mikemc/momspi-data (archived at https://doi.org/10.5281/zenodo.7394485).
+The Human Microbiome Project microbiome profiles were obtained using the curatedMetagenomicData R package (@pasolli2017acce).
+
+## Competing interests {.unlisted .unnumbered}
+
+The authors declare that they have no competing interests.
+
+## Funding {.unlisted .unnumbered}
+
+M.R.M. and B.J.C. were supported by NIH/NIGMS grant no. R35GM133745.
+J.T.N. is supported by researchNS and a Nova Scotia Graduate Scholarship.
+A.D.W. was supported by NIH/NIGMS grant no. R35GM133420.
+K.G.L. was supported by US Department of Energy Office of Science grant DE-SC0020359 and by NSF grants OCE-1948720, DEB-2132774, OCE-215015, and EAR-2121670.
+
+## Authors' contributions {.unlisted .unnumbered}
+
+M.R.M. designed the study with input from B.J.C. and K.G.L. M.R.M. performed the mathematical analysis. M.R.M., J.T.N, and A.D.W. performed the data analysis. M.R.M. and B.J.C. wrote the manuscript; J.T.N, A.D.W., and K.G.L provided feedback and edited the manuscript.
+
+## Acknowledgments {.unlisted .unnumbered}
+
+We thank Jen Nguyen and members of the Callahan Lab for valuable discussions.

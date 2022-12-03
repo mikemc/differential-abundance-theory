@@ -16,7 +16,7 @@ rmd_files: [
   "appendix.Rmd",
   "appendix-regression.Rmd",
   "supplemental-figures.Rmd",
-  "acknowledgements.Rmd",
+  "declarations.Rmd",
   "references.Rmd"
 ]
 
