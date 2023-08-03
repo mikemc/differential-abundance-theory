@@ -42,3 +42,27 @@ This section describes how these constant or varying FEs affect DA results, find
 
 The fact that some measures have constant FEs while others do not suggests that these DA analyses based on these measures will be more or less robust to bias.
 Here we rigorously evaluate this idea / explore in detail, finding precise conditions for significant error in DA results.
+
+# Cut for microbiome branch
+
+```{r}
+repo <- git2r::repository(".")
+sha <- repo %>% git2r::commits(n = 1) %>% .[[1]] %>% git2r::sha()
+sha_short <- str_sub(sha, 1, 7)
+status <- repo %>% git2r::status()
+```
+
+::: {#preface-note .rmdnote}
+
+This manuscript was rendered from commit `r sha_short` of https://github.com/mikemc/differential-abundance-theory.
+Supporting data analyses can be found in the accompanying [computational research notebook](https://mikemc.github.io/differential-abundance-theory/notebook/).
+Please post comments or questions on [GitHub](https://github.com/mikemc/differential-abundance-theory).
+The manuscript is licensed under a [CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/).
+See the [GitHub Releases](https://github.com/mikemc/differential-abundance-theory/releases) or [Zenodo record](https://doi.org/10.5281/zenodo.4552717) for earlier versions.
+
+```{r}
+if (!identical(status %>% unlist %>% length, 0L))
+  print(status)
+```
+
+:::

@@ -1,7 +1,7 @@
 ---
 title: "Implications of taxonomic bias for microbial differential-abundance analysis"
 author:
-  - Michael R. McLaren^[North Carolina State University; now at Massachusetts Institute of Technology. Send correspondence to m.mclaren42@gmail.com]
+  - Michael R. McLaren^[North Carolina State University; now at Massachusetts Institute of Technology. Send correspondence to mmclaren@mit.edu]
   - Jacob T. Nearing^[Dalhousie University]
   - Amy D. Willis^[University of Washington]
   - Karen G. Lloyd^[University of Tennessee]
@@ -52,35 +52,20 @@ header-includes:
 
 # Abstract {-}
 
-<!-- **Abstract:** -->
-Differential-abundance (DA) analyses enable microbiome researchers to assess how microbial species vary in relative or absolute abundance with specific host or environmental conditions, such as health status or pH.
-These analyses typically use sequencing-based community measurements, which are taxonomically biased to measure some species more efficiently than others.
-Understanding the effects that taxonomic bias has on the results of a DA analysis is essential for achieving reliable and translatable findings; yet currently, these effects are unknown.
-Here, we characterized these effects for DA analyses of both relative and absolute abundances, using a combination of mathematical theory and data analysis of real and simulated case studies.
-We found that, for analyses based on species proportions, taxonomic bias can cause significant errors in DA results if the average measurement efficiency of the community is associated with the condition of interest.
-These errors can be avoided by using more robust DA methods (based on species ratios) or quantified and corrected using appropriate controls.
+### Background {.unlisted .unnumbered}
+
+Differential-abundance (DA) analyses assess how the species in a microbiome vary in their relative or absolute abundance across host or environmental conditions.
+These analyses typically use sequencing-based community measurements, which are known to measure some species more efficiently than others.
+Understanding how this \emph{taxonomic bias} affects DA analyses is essential for reliable and translatable findings.
+
+### Results {.unlisted .unnumbered}
+
+We characterized the effect of taxonomic bias on multiplicative DA analyses of relative and absolute abundances, using mathematical theory and real and simulated case studies.
+We found that taxonomic bias can cause significant errors in a popular class of DA methods---those based on species proportions---if the average measurement efficiency of the community is associated with the condition of interest.
+Our case-study analysis finds examples in which the average efficiency is stable or varies randomly across samples (low error due to bias) and in which it varies with the condition of interest (high error due to bias).
+We show that the error due to bias can be avoided by using alternative DA methods (based on species ratios) or can be quantified and corrected using appropriate controls.
+
+### Conclusions {.unlisted .unnumbered}
+
+Several common methods of DA analysis are susceptible to errors driven by taxonomic bias; however, alternative methods exist which are theoretically robust to bias, provided that it acts consistently across samples.
 Wide adoption of our recommendations can improve the reproducibility, interpretability, and translatability of microbiome DA studies.
-
-
-```{r}
-repo <- git2r::repository(".")
-sha <- repo %>% git2r::commits(n = 1) %>% .[[1]] %>% git2r::sha()
-sha_short <- str_sub(sha, 1, 7)
-status <- repo %>% git2r::status()
-```
-
-::: {#preface-note .rmdnote}
-
-This manuscript was rendered from commit `r sha_short` of https://github.com/mikemc/differential-abundance-theory.
-Supporting data analyses can be found in the accompanying [computational research notebook](https://mikemc.github.io/differential-abundance-theory/notebook/).
-Please post comments or questions on [GitHub](https://github.com/mikemc/differential-abundance-theory).
-The manuscript is licensed under a [CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/).
-See the [GitHub Releases](https://github.com/mikemc/differential-abundance-theory/releases) or [Zenodo record](https://doi.org/10.5281/zenodo.4552717) for earlier versions.
-
-```{r}
-if (!identical(status %>% unlist %>% length, 0L))
-  print(status)
-```
-
-:::
-
