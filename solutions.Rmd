@@ -80,17 +80,28 @@ Future experiments should evaluate the extent to which the taxonomic bias of DNA
 ### Normalize to a reference species
 
 A second approach to obtaining absolute species abundances involves normalizing the MGS count for each species to that of a reference species with constant and/or known abundance (Equation \@ref(eq:density-ratio-meas)).
-Our theory predicts that taxonomic bias induces constant FEs in the abundances obtained by this approach, which will not affect DA results.
-
-Previous studies have used species with a constant abundance as references: spike-ins, computationally-identified 'housekeeping species', and the host.
-Researchers may naturally be concerned about bias between the reference species and the native species being normalized against it (see, for example, @harrison2021theq's recommendations for spike-in experiments).
 Our results show that accurate FDs and DA results can be obtained so long as the relative efficiency of the focal species to the reference is consistent across samples.
-This condition is much weaker than requiring that bias is small (the relative efficiency is close to 1) and so greatly expands the applicability of spike-ins and host normalization in microbiome experiments.
 
-Section \@ref(absolute-abundance) further proposed an additional class of reference species for normalizing MGS measurements: Species whose (absolute) abundance has been measured using a targeted method such as qPCR with species-specific primers.
-Direct, targeted measurement of a reference species removes the need for it to have a constant abundance, thus expanding the applicability of reference-species normalization to experiments where spike-ins or housekeeping species are not viable options.
+A common application of this reference-normalization approach involves adding a 'spike-in' in a known (and typically constant) abundance across samples (@stammler2016adju, @ji2019quan, @tkacz2018abso, @harrison2021theq, @rao2021mult).
+
+Another approach is to use naturally-occurring species that are thought to be constant across samples; we refer to such species as _housekeeping species_ by analogy with the housekeeping genes used for absolute-abundance conversion in gene-expression studies (@silver2006sele).
+Housekeeping species can sometimes be identified using prior scientific knowledge; for example, in shotgun sequencing experiments, researchers have used sequencing reads from the plant or animal host as a reference (@karasov2020ther, @regalado2020comb, @wallace2021thed).
+A related approach involves computationally identifying species that are constant between pairs of samples (@david2014host) or between sample conditions (@mandal2015anal, @kumar2018anal).
+The abundance of a housekeeping species is typically unknown; therefore, to estimate the abundances of other species, we simply set $\tilde A_r^{(a)}$ to 1 in Equation \@ref(eq:density-ratio-meas).
+The resulting abundance measurements have unknown but fixed units, which is sufficient for measuring fold changes across samples.
+
+Some have expressed the need to minimize taxonomic bias between the reference species and the native species being normalized against it (see, for example, @harrison2021theq's recommendations for spike-in experiments).
+Our results show that accurate DA results can be obtained so long as this bias is approximately constant across samples, a much weaker condition.
+
+Our formulation of the reference species approach shows that there is no need for the reference species to have a constant abundance, so long as its abundance is known.
+This observation suggests a new approach to performing reference-normalization, using targeted measurements of the absolute abundance of one or more naturally occurring species.
+These species can then be used as reference species in Equation \@ref(eq:density-ratio-meas) to measure the absolute abundances of all species.
+The most common form of targeted measurement involves using quantitative or digital to measure the concentration of a marker-gene in the extracted DNA.
+It is also possible to directly measure cell concentration by performing digital PCR prior to DNA extraction (@morella2018rapi), flow cytometry with species-specific florescent probes, or CFU counting on selective media.
 The targeted measurement need not itself be an unbiased measure of the reference species' abundance; so long as it has constant FE, the abundances of native species obtained by normalization will also have constant FEs.
-To demonstrate the ability for reference calibration to reduce error in FD measurements, we treated the abundance of one species (_Lactobacillus crispatus_) in the @brooks2015thet mock community data as known, and used it to calibrate the abundances of all species. 
+Direct, targeted measurement of a reference species removes the need for it to have a constant abundance, thus expanding the applicability of reference-species normalization to experiments where spike-ins or housekeeping species are not viable options.
+
+To demonstrate the ability for reference calibration to provide accurate FD measurements in the presence of significant taxonomic bias, we treated the abundance of one species (_Lactobacillus crispatus_) in the @brooks2015thet mock community data as known, and used it to calibrate the abundances of all species. 
 Doing so improved the resulting measurements of FDs in the abundance of all species (Figure \@ref(fig:calibration-example)).
 
 In some ecosystems, there may not be a single universally-present species that can serve as a reference in all samples.

@@ -66,3 +66,13 @@ if (!identical(status %>% unlist %>% length, 0L))
 ```
 
 :::
+
+# Stuff that might go in an appendix with model details
+
+### Leveraging information about a reference species
+
+A common application of this approach involves adding a 'spike-in' in a known (and typically constant) abundance across samples (@stammler2016adju, @ji2019quan, @tkacz2018abso, @harrison2021theq, @rao2021mult).
+In this case, the reference abundance $\tilde A_r^{(a)}$ is determined from the concentration of the spike-in stock multiplied by the ratio of the spike-in to sample volumes.
+
+The abundance of a housekeeping species is typically unknown; therefore, to estimate the abundances of other species, we simply set $\tilde A_r^{(a)}$ to 1 in Equation \@ref(eq:density-ratio-meas).
+The resulting abundance measurements have unknown but fixed units, which is sufficient for measuring fold changes across samples.

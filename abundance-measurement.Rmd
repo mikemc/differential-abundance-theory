@@ -168,15 +168,22 @@ As in the case of proportions (Equation \@ref(eq:prop-error)), the FE depends on
 
 ### Leveraging information about a reference species
 
-Suppose that the absolute abundance of a _reference species_ $r$ has been fixed by the experimenter or been measured by independent means.
-This known or measured abundance $\tilde A_{r}^{(a)}$ can be used in conjunction with the MGS read counts to obtain absolute abundances for all species.
+Suppose that the absolute abundance of a _reference species_ $r$ is known, up to some error. 
+For instance, in some studies, experimenters add a 'spike-in' species to a known (and typically constant) concentration in each sample (@stammler2016adju, @ji2019quan, @tkacz2018abso, @harrison2021theq, @rao2021mult).
+Alternatively, the experimenters may have made targeted measurements (such as with quantitative or digital PCR) of the concentrations of a naturally occurring species.
+The known abundance $\tilde A_{r}^{(a)}$ of the reference species can be used in conjunction with the MGS read counts to obtain absolute abundances for all species.
+
 In the absence of taxonomic bias, the ratio of a species' absolute abundance to its MGS read count is the same for all species in a given sample (Equation \@ref(eq:mgs-model)).
 Hence the known ratio for the reference species can serve as conversion factor for obtaining the absolute abundance of a species $i$ from its read count,
 \begin{align}
   (\#eq:density-ratio-meas)
   \tilde A_i^{(a)} &= M_i^{(a)} \cdot \frac{\tilde A_r^{(a)}}{M_r^{(a)}}.
 \end{align}
-Let $\FE[\tilde A_r^{(a)}] \equiv {\tilde A_r^{(a)}}/{A_r^{(a)}}$ be the FE in the reference measurement.
+
+The reference species' abundance is subject to multiplicative bias and other error.
+For instance, the concentration of the spike-in stock may have been incorrectly measured, or the targeted measurement of a natural reference speices will itself be subject to extraction bias.
+Let $\FE[\tilde A_r^{(a)}] \equiv {\tilde A_r^{(a)}}/{A_r^{(a)}}$ be the FE in the reference species' abundance.
+
 The effect on $\tilde A_i^{(a)}$ of taxonomic bias in the MGS measurement can be determined by substituting Equation \@ref(eq:ratio-error) into Equation \@ref(eq:density-ratio-meas), yielding
 \begin{align}
   (\#eq:density-ratio-error)
@@ -185,18 +192,3 @@ The effect on $\tilde A_i^{(a)}$ of taxonomic bias in the MGS measurement can be
     \FE \left[\tilde A_r^{(a)}\right].
 \end{align}
 The FE in $\tilde A_i^{(a)}$ consists of two terms: the relative efficiency of species $i$ to species $r$ in the MGS measurement (${B_i}/{B_r}$) and the FE in the reference species' abundance (${\tilde A_r^{(a)}}/{A_r^{(a)}}$).
-
-A common application of this approach involves adding a 'spike-in' (as described above) in a known (and typically constant) abundance across samples (@stammler2016adju, @ji2019quan, @tkacz2018abso, @harrison2021theq, @rao2021mult).
-In this case, the reference abundance $\tilde A_r^{(a)}$ is determined from the concentration of the spike-in stock multiplied by the ratio of the spike-in to sample volumes.
-
-Others have instead sought to determine naturally-occurring species that are thought to be constant across samples; we refer to such species as _housekeeping species_ by analogy with the housekeeping genes used for absolute-abundance conversion in gene-expression studies (@silver2006sele).
-Housekeeping species can sometimes be identified using prior scientific knowledge; for example, in shotgun sequencing experiments, researchers have used sequencing reads from the plant or animal host as a reference (@karasov2020ther, @regalado2020comb, @wallace2021thed).
-A related approach involves computationally identifying species that are constant between pairs of samples (@david2014host) or between sample conditions (@mandal2015anal, @kumar2018anal).
-The abundance of a housekeeping species is typically unknown; therefore, to estimate the abundances of other species, we simply set $\tilde A_r^{(a)}$ to 1 in Equation \@ref(eq:density-ratio-meas).
-The resulting abundance measurements have unknown but fixed units, which is sufficient for measuring fold changes across samples.
-
-We suggest an additional way of using the reference-species strategy even in the absence of a spike-in or constant species:
-Performing targeted measurements of the absolute abundance of one or more naturally occurring species.
-These species can then be used as reference species in Equation \@ref(eq:density-ratio-meas) to measure the absolute abundances of all species.
-The most common form of targeted measurement involves using qPCR or ddPCR to measure the concentration of a marker-gene in the extracted DNA.
-It is also possible to directly measure cell concentration by performing ddPCR prior to DNA extraction (@morella2018rapi), flow cytometry with species-specific florescent probes, or CFU counting on selective media.
