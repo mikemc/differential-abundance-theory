@@ -1,0 +1,233 @@
+---
+title: "Momspi_locom_testing"
+author: "Jacob T. Nearing Ph.D."
+date: "2023-10-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Setup
+
+## R Setup
+
+```{r libraries}
+# Tools for microbiome data
+library(speedyseq)
+# Tools for general purpose data manipulation and plotting
+library(tidyverse)
+library(fs)
+# ggplot helpers
+library(ggbeeswarm)
+library(cowplot)
+library(patchwork)
+library(scales)
+# stats helpers
+# library(broom)
+
+library(metacal); packageVersion("metacal")
+library(LOCOM)
+library(ggforce)
+```
+
+```{r ggplot}
+theme_set(theme_cowplot())
+
+colors_brooks <- c(
+  "Atopobium_vaginae" = "#009E73",
+  "Gardnerella_vaginalis" = "#56B4E9",
+  "Lactobacillus_crispatus" = "#D55E00",
+  "Lactobacillus_iners" = "#505050",
+  "Prevotella_bivia" = "#0072B2",
+  "Sneathia_amnii" = "#CC79A7",
+  "Streptococcus_agalactiae" = "#E69F00")
+
+scale_y_custom <- scale_y_continuous(
+    trans = 'log10',
+    breaks = trans_breaks('log10', function(x) 10^x),
+    labels = trans_format('log10', math_format(10^.x))
+  )
+```
+
+## Setup MOMSPI data
+
+Source setup file in _code and use the momspi_raw data that is not filtered (so we can get diversity estimates)
+
+We can filter the data afterward.
+```{r}
+source(here::here("notebook/_code/momspi-setup.R"))
+
+momspi_raw <- adjust_dirchlet(momspi_raw)
+
+```
+
+### Calibrate
+
+```{r}
+momspi_obs <- momspi
+
+#calibrate to "raw" sequence counts as this is the required input for LOCOM
+momspi_cal <- momspi %>% calibrate(bias_all_vec, norm = "none") %>% transform_sample_counts(function (x) round(x, 0))
+```
+
+### Compute diversity indices and divide data
+
+```{r}
+div <- list(
+  'obs' = momspi_obs,
+  'cal' = momspi_cal) %>%
+  map(estimate_richness, measures = c('Shannon', 'InvSimpson')) %>%
+  map_dfr(as_tibble, rownames = '.sample', .id = 'type') %>%
+  transmute(
+    .sample, type,
+    div_q1 = exp(Shannon),
+    div_q2 = InvSimpson,
+  ) %>%
+  pivot_longer(starts_with('div_'), names_to = 'index', values_to = 'diversity')
+
+div_wide <- div %>%
+  pivot_wider(values_from = diversity, names_from = c('index', 'type')) 
+```
+
+```{r}
+div_wide %>%
+  ggplot(aes(x = div_q1_obs)) +
+  scale_x_log10() +
+  annotate('rect', xmin = 0, xmax = 1.5, ymin = -Inf, ymax = Inf, 
+    fill = 'blue', alpha = 0.3) +
+  annotate('rect', xmin = 1.5, xmax = 3, ymin = -Inf, ymax = Inf, 
+    fill = 'grey', alpha = 0.3) +
+  annotate('rect', xmin = 3, xmax = Inf, ymin = -Inf, ymax = Inf, 
+    fill = 'green', alpha = 0.3) +
+  geom_histogram() +
+  geom_vline(xintercept = c(1.5, 3), color = 'black')
+```
+
+```{r}
+div_wide <- div_wide %>%
+  mutate(
+    div_group = case_when(
+      div_q1_obs < 1.5 ~ 'Low',
+      div_q1_obs > 3 ~ 'High',
+      TRUE ~ 'Medium'
+    ) %>% factor(levels = c('Low', 'Medium', 'High'))
+  )
+```
+
+```{r}
+momspi_div_obs <- momspi_obs %>%
+  left_join_sample_data(div_wide, by = '.sample') %>%
+  filter_sample_data(div_group %in% c('Low', 'High'))
+
+
+momspi_div_cal <- momspi_cal %>%
+  left_join_sample_data(div_wide, by = '.sample') %>%
+  filter_sample_data(div_group %in% c('Low', 'High'))
+
+
+taxa_to_test <- momspi_cal %>%
+    transform_sample_counts(close_elts) %>%
+    filter_taxa2(~ mean(. >= 1e-2) >= 0.05 | mean(. >= 1e-3) >= 0.15) %>%
+    taxa_names %>%
+    print
+
+taxa_to_test <- gsub("-", ".", taxa_to_test)
+```
+
+
+
+# Running LOCOM
+
+## Testing package tutorial
+```{r}
+library(LOCOM)
+data("throat.otu.table")
+data("throat.meta")
+data("throat.otu.taxonomy")
+
+# filtering out three samples with antibiotic use
+filter.out.sam <- which(throat.meta$AntibioticUsePast3Months_TimeFromAntibioticUsage != "None")
+throat.otu.table.filter <- throat.otu.table[-filter.out.sam,]
+throat.meta.filter <- throat.meta[-filter.out.sam,]
+Y <- ifelse(throat.meta.filter$SmokingStatus == "NonSmoker", 0, 1)
+C <- ifelse(throat.meta.filter$Sex == "Male", 0, 1)
+
+# filtering out rare OTUs
+prop.presence <- colMeans(throat.otu.table.filter > 0)
+filter.out.otu <- which(prop.presence < 0.2)
+if (length(filter.out.otu) > 0) {
+    throat.otu.table.filter <- throat.otu.table.filter[, -filter.out.otu]
+    prop.presence <- prop.presence[-filter.out.otu]
+}
+
+# running locom
+res <- locom(otu.table = throat.otu.table.filter, Y = Y, C = C, seed = 1, n.cores=4, n.perm.max = 1000)
+res$p.global
+res$detected.otu
+```
+
+## Observed data
+```{r}
+trait_obs <- momspi_div_obs@sam_data$div_group
+trait_obs <- ifelse(trait_obs=="Low", 1, 0)
+otu_tab_obs <- data.frame(momspi_div_obs@otu_table)
+
+
+table(trait_obs)
+dim(otu_tab_obs)
+
+test <- sample(c(0:1), length(trait_obs), replace=TRUE)
+
+#it seems locom doesn't run without a covariate?
+obs_res <- locom(otu.table = otu_tab_obs, Y=trait_obs, C=test, seed=1, n.cores = 2, n.perm.max = 1000)
+
+locom_effect_size_obs <- obs_res$effect.size[match(taxa_to_test, colnames(obs_res$effect.size))]
+names(locom_effect_size_obs) <- taxa_to_test
+```
+
+## Calibrated data
+
+```{r}
+trait_cal <- momspi_div_cal@sam_data$div_group
+trait_cal <- ifelse(trait_cal=="Low", 1, 0)
+otu_tab_cal <- data.frame(momspi_div_cal@otu_table)
+
+
+table(trait_cal)
+dim(otu_tab_cal)
+
+#test <- sample(c(0:1), length(trait), replace=TRUE)
+
+#it seems locom doesn't run without a covariate?
+cal_res <- locom(otu.table = otu_tab_cal, Y=trait_cal, C=test, seed=1, n.cores = 2, n.perm.max = 1000)
+
+locom_effect_size_cal <- cal_res$effect.size[match(taxa_to_test, colnames(cal_res$effect.size))]
+locom_effect_size_cal
+names(locom_effect_size_cal) <- taxa_to_test
+```
+
+It seems that calibration causes some samples to be removed? Need to look into this deeper...
+
+```{r}
+plotting_frame <- data.frame(sample=taxa_to_test,
+                             estimate=c(locom_effect_size_cal,locom_effect_size_obs),
+                             type=c(rep("cal", 30), rep("obs", 30)))
+
+
+#take negative of estimate to flip sign to match original analysis...
+plotting_frame %>% mutate(
+      .sample_fct = fct_reorder(sample, -estimate, .fun = max) %>%
+        fct_relabel(function(x) str_replace_all(x, '_', ' '))
+    ) %>% 
+  ggplot(aes(y=.sample_fct, x=-estimate, color=type)) +
+  geom_vline(xintercept = 0, color="grey") +
+  geom_point(size=1.5) +
+  theme_minimal_hgrid() +
+  xlab("Locom effect size") +
+  ylab("Species-level OTU")
+```
+
+Locom doesn't return effect size deviations so we cannot calculate standard error out of the box.
+

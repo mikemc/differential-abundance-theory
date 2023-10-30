@@ -10,7 +10,7 @@ library(speedyseq)
 library(tidyverse)
 library(fs)
 
-# library(metacal); packageVersion("metacal")
+library(metacal); packageVersion("metacal")
 
 colors_brooks <- c(
   "Atopobium_vaginae" = "#009E73",
@@ -70,6 +70,8 @@ tax <- path(path_momspi, "stirrups-profiles", "taxonomy.csv.bz2") %>%
   mutate_tax_table(
     species = case_when(!is.na(genus) ~ .otu)
   )
+
+
 momspi_raw <- phyloseq(otu, sam, tax) %>%
   mutate_tax_table(across(.otu, str_replace, 
       "(?<=Lactobacillus_crispatus)_cluster", "")) %>%
@@ -117,7 +119,7 @@ adjust_dirchlet <- function(ps) {
     orient_taxa(as = 'cols') %>%
     as('matrix') %>%
     colMeans
-  stopifnot(sum(taxa_mean_prop) == 1)
+  stopifnot(all.equal(sum(taxa_mean_prop), 1))
   prior_vec <- taxa_mean_prop * ntaxa(ps)
   stopifnot(identical(length(prior_vec), ntaxa(ps)))
   # Note the need for the seq_along trick to get phyloseq to allow this
